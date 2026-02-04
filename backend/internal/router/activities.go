@@ -19,6 +19,9 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 
 	// Case 1: booth scans the user's QR code (booth identified via cookie/session)
 	mux.HandleFunc("POST /booth/{userQRCode}", h.BoothCheckIn)
+	mux.HandleFunc("POST /booth/login", h.BoothCheckIn)
+	mux.HandleFunc("GET /booth/count", h.BoothCheckIn)
+	
 	// Case 2: user scans an activity QR code to check in
 	mux.HandleFunc("POST /{activityQRCode}", h.ActivityCheckIn)
 

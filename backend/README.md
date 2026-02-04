@@ -1,5 +1,15 @@
 # 如何啟動
 
+## 如果你是寫前端的
+
+你要看 OpenAPI docs 請打：
+
+```bash
+make run-docs
+```
+
+注意一下這邊什麼都沒有喔，他就只是個 html 你並沒有真的把後端跑起來 :D
+
 ## 先啟動 database:
 
 ```bash

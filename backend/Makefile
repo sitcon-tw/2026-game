@@ -1,7 +1,7 @@
 BINARY_NAME=2026-game
 
 build:
-	go build -o tmp/$(BINARY_NAME) ./cmd/backend
+	go build -o tmp/$(BINARY_NAME) ./cmd
 	chmod +x tmp/$(BINARY_NAME)
 
 run: build
@@ -23,3 +23,8 @@ lint:
 
 generate-docs:
 	swag init -g cmd/main.go -o ./docs
+
+run-docs:
+	go build -o tmp/docs ./cmd/docs
+	chmod +x tmp/docs
+	./tmp/docs

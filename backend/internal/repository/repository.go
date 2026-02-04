@@ -25,7 +25,9 @@ type Repository interface {
 	IncrementUnlockLevel(ctx context.Context, tx pgx.Tx, userID string) error
 	ListFriends(ctx context.Context, tx pgx.Tx, userID string) ([]models.User, error)
 	UpdateCurrentLevel(ctx context.Context, tx pgx.Tx, userID string, newLevel int) error
-	GetLeaderboard(ctx context.Context, tx pgx.Tx, userID string) (top10 []models.RankRow, around []models.RankRow, me *models.RankRow, err error)
+	GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]models.User, error)
+	GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error)
+	GetAroundUsers(ctx context.Context, tx pgx.Tx, userID string, span int) ([]models.User, error)
 }
 
 // PGRepository is the production repository backed by pgx.
