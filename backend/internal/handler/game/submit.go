@@ -1,0 +1,72 @@
+package game
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+
+	"github.com/sitcon-tw/2026-game/pkg/middleware"
+	"github.com/sitcon-tw/2026-game/pkg/res"
+)
+
+// Submit handles POST /game.
+// @Summary      Submit game result
+// @Description  Increments current_level by 1 if it does not exceed unlock_level.
+// @Tags         game
+// @Produce      json
+// @Success      200  {object}  SubmitResponse
+// @Failure      400  {object}  res.ErrorResponse "current level cannot exceed unlock level"
+// @Failure      401  {object}  res.ErrorResponse "unauthorized"
+// @Failure      500  {object}  res.ErrorResponse
+// @Router       /game [post]
+func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.UserFromContext(r.Context())
+	if !ok || user == nil {
+		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
+		return
+	}
+
+	tx, err := h.Repo.StartTransaction(r.Context())
+	if err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		return
+	}
+	defer h.Repo.DeferRollback(r.Context(), tx)
+
+	// Re-fetch latest user row to avoid stale data
+	fresh, err := h.Repo.GetUserByID(r.Context(), tx, user.ID)
+	if err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to load user")
+		return
+	}
+	if fresh == nil {
+		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("user not found"), "unauthorized")
+		return
+	}
+
+	// Increment current level by 1 but do not exceed unlock_level
+	newLevel := fresh.CurrentLevel + 1
+	if newLevel > fresh.UnlockLevel {
+		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("level exceeds unlock"), "current level cannot exceed unlock level")
+		return
+	}
+
+	if err := h.Repo.UpdateCurrentLevel(r.Context(), tx, fresh.ID, newLevel); err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update level")
+		return
+	}
+
+	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		return
+	}
+
+	resp := SubmitResponse{
+		CurrentLevel: newLevel,
+		UnlockLevel:  fresh.UnlockLevel,
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(resp)
+}

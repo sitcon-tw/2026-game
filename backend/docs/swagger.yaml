@@ -1,4 +1,282 @@
+basePath: /api
+definitions:
+  friend.FriendCountResponse:
+    properties:
+      count:
+        type: integer
+      max:
+        type: integer
+    type: object
+  game.RankEntry:
+    properties:
+      level:
+        type: integer
+      nickname:
+        type: string
+      rank:
+        type: integer
+    type: object
+  game.RankResponse:
+    properties:
+      around:
+        items:
+          $ref: '#/definitions/game.RankEntry'
+        type: array
+      me:
+        $ref: '#/definitions/game.RankEntry'
+      top10:
+        items:
+          $ref: '#/definitions/game.RankEntry'
+        type: array
+    type: object
+  game.SubmitResponse:
+    properties:
+      current_level:
+        type: integer
+      unlock_level:
+        type: integer
+    type: object
+  models.User:
+    properties:
+      createdAt:
+        type: string
+      currentLevel:
+        type: integer
+      id:
+        type: string
+      lastPassTime:
+        type: string
+      nickname:
+        type: string
+      qrcodeToken:
+        type: string
+      unlockLevel:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  res.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8000
 info:
-  contact: {}
-paths: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the SITGAME API server
+  termsOfService: http://swagger.io/terms/
+  title: SITGAME API
+  version: "1.0"
+paths:
+  /activities/:
+    get:
+      description: Returns activities and whether the current user checked in.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: List activities with user's check-in status
+      tags:
+      - activities
+  /activities/{activityQRCode}:
+    post:
+      description: User checks in to an activity by scanning its QR code.
+      parameters:
+      - description: Activity QR code token
+        in: path
+        name: activityQRCode
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: User scans activity QR code
+      tags:
+      - activities
+  /activities/booth/{userQRCode}:
+    post:
+      description: Booth staff scans a user's QR code to check in.
+      parameters:
+      - description: User QR code token
+        in: path
+        name: userQRCode
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: Booth scans user's QR code
+      tags:
+      - activities
+  /friends/{userQRCode}:
+    post:
+      description: Adds a friend by scanning their QR code.
+      parameters:
+      - description: User QR code token
+        in: path
+        name: userQRCode
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: Add friend by QR code
+      tags:
+      - friends
+  /friends/count:
+    get:
+      description: Returns how many friends the current user has.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/friend.FriendCountResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: Count friends
+      tags:
+      - friends
+  /game:
+    post:
+      description: Increments current_level by 1 if it does not exceed unlock_level.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/game.SubmitResponse'
+        "400":
+          description: current level cannot exceed unlock level
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: Submit game result
+      tags:
+      - game
+  /game/rank:
+    get:
+      description: Returns ranking info for the current user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/game.RankResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: Get game rank
+      tags:
+      - game
+  /users/login:
+    get:
+      description: Initiates login flow and issues session cookie.
+      parameters:
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Missing token
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+        "401":
+          description: Inauthorized
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: Login user
+      tags:
+      - users
+  /users/me:
+    get:
+      description: Returns the authenticated user's profile data.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/res.ErrorResponse'
+      summary: Get current user profile
+      tags:
+      - users
+schemes:
+- http
+- https
 swagger: "2.0"

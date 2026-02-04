@@ -1,0 +1,59 @@
+package friend
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+
+	"github.com/sitcon-tw/2026-game/pkg/middleware"
+	"github.com/sitcon-tw/2026-game/pkg/res"
+	"github.com/sitcon-tw/2026-game/pkg/utils"
+)
+
+// Count handles GET /friends/count.
+// @Summary      Count friends
+// @Description  Returns how many friends the current user has.
+// @Tags         friends
+// @Produce      json
+// @Success      200  {object}  FriendCountResponse
+// @Failure      401  {object}  res.ErrorResponse
+// @Failure      500  {object}  res.ErrorResponse
+// @Router       /friends/count [get]
+func (h *Handler) Count(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.UserFromContext(r.Context())
+	if !ok || user == nil {
+		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
+		return
+	}
+
+	tx, err := h.Repo.StartTransaction(r.Context())
+	if err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		return
+	}
+	defer h.Repo.DeferRollback(r.Context(), tx)
+
+	total, err := h.Repo.CountFriends(r.Context(), tx, user.ID)
+	if err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to count friends")
+		return
+	}
+	visited, err := h.Repo.CountVisitedActivities(r.Context(), tx, user.ID)
+	if err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to count visited activities")
+		return
+	}
+	max := utils.FriendCapacity(visited)
+
+	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(FriendCountResponse{
+		Count: total,
+		Max:   max,
+	})
+}

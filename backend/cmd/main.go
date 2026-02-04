@@ -7,6 +7,7 @@ import (
 	swaggerDocs "github.com/sitcon-tw/2026-game/docs"
 
 	scalar "github.com/MarceloPetrucio/go-scalar-api-reference"
+	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/internal/router"
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/db"
@@ -41,7 +42,9 @@ func main() {
 	}
 	defer db.Close()
 
-	mux := initRoutes()
+	repo := repository.New(db, logger)
+
+	mux := initRoutes(repo, logger)
 
 	handler := middleware.Logger(logger)(mux)
 
@@ -53,11 +56,23 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%s", cfg.AppPort), handler)
 }
 
-func initRoutes() *http.ServeMux {
+func initRoutes(repo repository.Repository, logger *zap.Logger) *http.ServeMux {
 	root := http.NewServeMux()
 	apiMux := http.NewServeMux()
 
-	apiMux.Handle("/users/", http.StripPrefix("/users", router.UserRoutes()))
+	// Public routes
+	apiMux.Handle("/users/", http.StripPrefix("/users", router.UserRoutes(repo, logger)))
+	apiMux.Handle("/activities/", http.StripPrefix("/activities", router.ActivityRoutes(repo, logger)))
+
+	// Authenticated route group
+	protected := http.NewServeMux()
+	protected.Handle("/friends/", http.StripPrefix("/friends", router.FriendRoutes(repo, logger)))
+	protected.Handle("/game/", http.StripPrefix("/game", router.GameRoutes(repo, logger)))
+
+	protectedHandler := middleware.Auth(repo, logger)(protected)
+	// Protect only the above group
+	apiMux.Handle("/friends/", protectedHandler)
+	apiMux.Handle("/game/", protectedHandler)
 
 	root.Handle("/api/", http.StripPrefix("/api", apiMux))
 
