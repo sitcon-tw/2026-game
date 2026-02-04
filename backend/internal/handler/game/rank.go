@@ -10,8 +10,8 @@ import (
 )
 
 // Rank handles GET /game/rank.
-// @Summary      Get game rank
-// @Description  Returns ranking info for the current user.
+// @Summary      取得遊戲的排行資料
+// @Description  排行資料會包含三個部分：1. 全站前30名玩家的暱稱、等級與排名 2. 以目前使用者為中心，前後各5名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。
 // @Tags         game
 // @Produce      json
 // @Success      200  {object}  RankResponse  ""

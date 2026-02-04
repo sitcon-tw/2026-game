@@ -7,20 +7,20 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/res"
+	"github.com/sitcon-tw/2026-game/pkg/utils"
 )
 
 var errUnauthorized = errors.New("unauthorized")
 
 // Login godoc
-// @Summary      Login user
-// @Description  Initiates login flow and issues session cookie.
+// @Summary      使用者登入
+// @Description  這邊在做的事情基本上就是幫你把 token 驗證，然後把使用者丟進資料庫，接著在把這個 token 丟到 cookie 讓你不用每次都要手動帶。
 // @Tags         users
 // @Produce      json
 // @Success      200  {object}  models.User
@@ -28,9 +28,9 @@ var errUnauthorized = errors.New("unauthorized")
 // @Failure      401  {object}  res.ErrorResponse "Inauthorized"
 // @Failure      500  {object}  res.ErrorResponse
 // @Param        Authorization  header  string  true  "Bearer {token}"
-// @Router       /users/login [get]
+// @Router       /users/login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	token := bearerToken(r.Header.Get("Authorization"))
+	token := utils.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
 		err := errors.New("missing token")
 		res.Fail(w, h.Logger, http.StatusBadRequest, err, "Missing token")
@@ -99,17 +99,6 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(user)
-}
-
-func bearerToken(header string) string {
-	const prefix = "Bearer "
-	if header == "" {
-		return ""
-	}
-	if !strings.HasPrefix(header, prefix) {
-		return ""
-	}
-	return strings.TrimSpace(strings.TrimPrefix(header, prefix))
 }
 
 func (h *Handler) fetchOpassUserID(ctx context.Context, authToken string) (string, error) {

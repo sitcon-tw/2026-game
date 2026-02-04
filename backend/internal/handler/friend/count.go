@@ -11,8 +11,8 @@ import (
 )
 
 // Count handles GET /friends/count.
-// @Summary      Count friends
-// @Description  Returns how many friends the current user has.
+// @Summary      取得好友數量及上限
+// @Description  取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。
 // @Tags         friends
 // @Produce      json
 // @Success      200  {object}  FriendCountResponse

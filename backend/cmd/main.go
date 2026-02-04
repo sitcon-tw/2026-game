@@ -70,6 +70,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) *http.ServeMux {
 	protected.Handle("/game/", http.StripPrefix("/game", router.GameRoutes(repo, logger)))
 
 	protectedHandler := middleware.Auth(repo, logger)(protected)
+
 	// Protect only the above group
 	apiMux.Handle("/friends/", protectedHandler)
 	apiMux.Handle("/game/", protectedHandler)
@@ -86,7 +87,6 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) *http.ServeMux {
 func scalarDocsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		html, err := scalar.ApiReferenceHTML(&scalar.Options{
-			// Use generated swagger spec as inline content to avoid filesystem lookups
 			SpecContent: swaggerDocs.SwaggerInfo.ReadDoc(),
 			CustomOptions: scalar.CustomOptions{
 				PageTitle: "SITGAME API Reference",

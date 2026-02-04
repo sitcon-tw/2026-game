@@ -12,8 +12,8 @@ import (
 )
 
 // AddByQRCode handles POST /friends/{userQRCode}.
-// @Summary      Add friend by QR code
-// @Description  Adds a friend by scanning their QR code.
+// @Summary      用 QR code 加好友
+// @Description  用 QR code 掃別人，別人就會變成你的好友，你也會變成他的好友。雙方好友數量都會增加 1，並且雙方的 unlock_level 都會增加 1。若已經是好友則不會重複加入。每個人最多只能有一定數量的好友，這個數量會隨著你參加過的活動數量（攤位、打卡...）而增加。
 // @Tags         friends
 // @Produce      json
 // @Param        userQRCode  path      string  true  "User QR code token"

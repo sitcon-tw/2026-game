@@ -22,19 +22,101 @@ const docTemplate = `{
     "paths": {
         "/activities/": {
             "get": {
-                "description": "Returns activities and whether the current user checked in.",
+                "description": "取得活動列表跟使用者在每個攤位、打卡、挑戰的狀態。我還沒做 owo",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "activities"
                 ],
-                "summary": "List activities with user's check-in status",
+                "summary": "取得活動列表與使用者打卡狀態",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/booth/count": {
+            "get": {
+                "description": "取得目前攤位的打卡人數，需要攤位的 token cookie。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "取得攤位打卡人數",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized booth",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/booth/login": {
+            "post": {
+                "description": "攤位使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後攤位就可以使用此 cookie 來辨識自己身份。來使用 /activities/booth/ 底下的功能。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "攤位登入",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "missing token",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized booth",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
                         }
                     },
                     "500": {
@@ -48,14 +130,14 @@ const docTemplate = `{
         },
         "/activities/booth/{userQRCode}": {
             "post": {
-                "description": "Booth staff scans a user's QR code to check in.",
+                "description": "攤位工作人員使用攤位專用的 QR code 掃描器掃描使用者的 QR code，幫使用者在該攤位打卡。需要攤位的 token cookie。使用者每到一個攤位打卡，自己的 unlock_level 就會增加 1。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "activities"
                 ],
-                "summary": "Booth scans user's QR code",
+                "summary": "攤位掃描使用者 QR code 打卡",
                 "parameters": [
                     {
                         "type": "string",
@@ -69,7 +151,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized booth",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
                         }
                     },
                     "500": {
@@ -83,14 +180,14 @@ const docTemplate = `{
         },
         "/activities/{activityQRCode}": {
             "post": {
-                "description": "User checks in to an activity by scanning its QR code.",
+                "description": "使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在活動打卡。我還沒做 owo",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "activities"
                 ],
-                "summary": "User scans activity QR code",
+                "summary": "使用者掃描活動 QR code 打卡",
                 "parameters": [
                     {
                         "type": "string",
@@ -118,14 +215,14 @@ const docTemplate = `{
         },
         "/friends/count": {
             "get": {
-                "description": "Returns how many friends the current user has.",
+                "description": "取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "friends"
                 ],
-                "summary": "Count friends",
+                "summary": "取得好友數量及上限",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -150,14 +247,14 @@ const docTemplate = `{
         },
         "/friends/{userQRCode}": {
             "post": {
-                "description": "Adds a friend by scanning their QR code.",
+                "description": "用 QR code 掃別人，別人就會變成你的好友，你也會變成他的好友。雙方好友數量都會增加 1，並且雙方的 unlock_level 都會增加 1。若已經是好友則不會重複加入。每個人最多只能有一定數量的好友，這個數量會隨著你參加過的活動數量（攤位、打卡...）而增加。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "friends"
                 ],
-                "summary": "Add friend by QR code",
+                "summary": "用 QR code 加好友",
                 "parameters": [
                     {
                         "type": "string",
@@ -185,14 +282,14 @@ const docTemplate = `{
         },
         "/game": {
             "post": {
-                "description": "Increments current_level by 1 if it does not exceed unlock_level.",
+                "description": "提交你的遊戲紀錄，會幫你把你目前的最大可遊玩 level 提升 1 級。一樣需要 cookie 登入，需要注意的點是，當前等級不能超過解鎖等級。以及這整個是沒有任何驗證的，代表別人可以狂 call API，未來需要修個。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "game"
                 ],
-                "summary": "Submit game result",
+                "summary": "提交遊戲紀錄",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -223,14 +320,14 @@ const docTemplate = `{
         },
         "/game/rank": {
             "get": {
-                "description": "Returns ranking info for the current user.",
+                "description": "排行資料會包含三個部分：1. 全站前30名玩家的暱稱、等級與排名 2. 以目前使用者為中心，前後各5名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "game"
                 ],
-                "summary": "Get game rank",
+                "summary": "取得遊戲的排行資料",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -254,15 +351,15 @@ const docTemplate = `{
             }
         },
         "/users/login": {
-            "get": {
-                "description": "Initiates login flow and issues session cookie.",
+            "post": {
+                "description": "這邊在做的事情基本上就是幫你把 token 驗證，然後把使用者丟進資料庫，接著在把這個 token 丟到 cookie 讓你不用每次都要手動帶。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Login user",
+                "summary": "使用者登入",
                 "parameters": [
                     {
                         "type": "string",
@@ -302,14 +399,14 @@ const docTemplate = `{
         },
         "/users/me": {
             "get": {
-                "description": "Returns the authenticated user's profile data.",
+                "description": "取得目前登入使用者的資料，需要登入後才能取得。會取得包括目前的 level、解鎖多少 level、QR code token 等等資訊。備註：要取得 QR code token 就是用這邊。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Get current user profile",
+                "summary": "取得使用者資料",
                 "responses": {
                     "200": {
                         "description": "OK",

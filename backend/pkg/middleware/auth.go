@@ -12,6 +12,7 @@ import (
 type contextKey string
 
 const userContextKey contextKey = "authUser"
+const boothContextKey contextKey = "boothActivity"
 
 // Auth verifies the token cookie against the users table.
 // On success, it injects the *models.User into request context under userContextKey.
@@ -63,4 +64,14 @@ func UserFromContext(ctx context.Context) (*models.User, bool) {
 
 func contextWithUser(ctx context.Context, user *models.User) context.Context {
 	return context.WithValue(ctx, userContextKey, user)
+}
+
+// BoothFromContext retrieves the authenticated booth activity set by BoothAuth middleware.
+func BoothFromContext(ctx context.Context) (*models.Activities, bool) {
+	booth, ok := ctx.Value(boothContextKey).(*models.Activities)
+	return booth, ok
+}
+
+func contextWithBooth(ctx context.Context, booth *models.Activities) context.Context {
+	return context.WithValue(ctx, boothContextKey, booth)
 }

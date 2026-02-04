@@ -5,6 +5,7 @@ import (
 
 	"github.com/sitcon-tw/2026-game/internal/handler/activities"
 	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"go.uber.org/zap"
 )
 
@@ -14,15 +15,15 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 
 	h := activities.New(repo, logger)
 
+	// booth scans the user's QR code (booth identified via cookie/session)
+	mux.HandleFunc("POST /booth/login", h.BoothLogin)
+	mux.Handle("POST /booth/{userQRCode}", middleware.BoothAuth(repo, logger)(http.HandlerFunc(h.BoothCheckIn)))
+	mux.Handle("GET /booth/count", middleware.BoothAuth(repo, logger)(http.HandlerFunc(h.BoothCount)))
+
 	// List activities with user's check-in status
 	mux.HandleFunc("GET /", h.List)
 
-	// Case 1: booth scans the user's QR code (booth identified via cookie/session)
-	mux.HandleFunc("POST /booth/{userQRCode}", h.BoothCheckIn)
-	mux.HandleFunc("POST /booth/login", h.BoothCheckIn)
-	mux.HandleFunc("GET /booth/count", h.BoothCheckIn)
-	
-	// Case 2: user scans an activity QR code to check in
+	// user scans an activity QR code to check in
 	mux.HandleFunc("POST /{activityQRCode}", h.ActivityCheckIn)
 
 	return mux

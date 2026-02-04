@@ -23,16 +23,16 @@ func Logger(logger *zap.Logger) func(http.Handler) http.Handler {
 
 			start := time.Now()
 
-			wrapped := &wrapperWriter {
+			wrapped := &wrapperWriter{
 				ResponseWriter: w,
-				statusCode:         http.StatusOK,
+				statusCode:     http.StatusOK,
 			}
 
 			next.ServeHTTP(wrapped, r)
 
 			logger.Info("http request",
 				zap.String("method", r.Method),
-				zap.String("path", r.URL.Path), 
+				zap.String("path", r.URL.Path),
 				zap.Int("status", wrapped.statusCode),
 				zap.String("remote_ip", r.RemoteAddr),
 				zap.Duration("latency", time.Since(start)),

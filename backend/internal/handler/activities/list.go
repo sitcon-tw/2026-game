@@ -7,8 +7,8 @@ import (
 )
 
 // List handles GET /activities.
-// @Summary      List activities with user's check-in status
-// @Description  Returns activities and whether the current user checked in.
+// @Summary      取得活動列表與使用者打卡狀態
+// @Description  取得活動列表跟使用者在每個攤位、打卡、挑戰的狀態。我還沒做 owo
 // @Tags         activities
 // @Produce      json
 // @Success      200  {string}  string  ""

@@ -19,7 +19,6 @@ func main() {
 func scalarDocsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		html, err := scalar.ApiReferenceHTML(&scalar.Options{
-			// Use generated swagger spec as inline content to avoid filesystem lookups
 			SpecContent: swaggerDocs.SwaggerInfo.ReadDoc(),
 			CustomOptions: scalar.CustomOptions{
 				PageTitle: "SITGAME API Reference",

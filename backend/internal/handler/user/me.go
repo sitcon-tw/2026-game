@@ -10,8 +10,8 @@ import (
 )
 
 // Me godoc
-// @Summary      Get current user profile
-// @Description  Returns the authenticated user's profile data.
+// @Summary      取得使用者資料
+// @Description  取得目前登入使用者的資料，需要登入後才能取得。會取得包括目前的 level、解鎖多少 level、QR code token 等等資訊。備註：要取得 QR code token 就是用這邊。
 // @Tags         users
 // @Produce      json
 // @Success      200  {object}  models.User

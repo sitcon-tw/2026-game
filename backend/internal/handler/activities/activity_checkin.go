@@ -7,8 +7,8 @@ import (
 )
 
 // ActivityCheckIn handles POST /activities/{activityQRCode}.
-// @Summary      User scans activity QR code
-// @Description  User checks in to an activity by scanning its QR code.
+// @Summary      使用者掃描活動 QR code 打卡
+// @Description  使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在活動打卡。我還沒做 owo
 // @Tags         activities
 // @Produce      json
 // @Param        activityQRCode  path      string  true  "Activity QR code token"

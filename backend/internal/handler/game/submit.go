@@ -10,8 +10,8 @@ import (
 )
 
 // Submit handles POST /game.
-// @Summary      Submit game result
-// @Description  Increments current_level by 1 if it does not exceed unlock_level.
+// @Summary      提交遊戲紀錄
+// @Description  提交你的遊戲紀錄，會幫你把你目前的 level 提升 1 級。一樣需要 cookie 登入，需要注意的點是，當前等級不能超過解鎖等級。以及這整個是沒有任何驗證的，代表別人可以狂 call API，未來需要修個。
 // @Tags         game
 // @Produce      json
 // @Success      200  {object}  SubmitResponse
