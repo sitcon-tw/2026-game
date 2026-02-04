@@ -15,7 +15,7 @@ import (
 // @Description  取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。
 // @Tags         friends
 // @Produce      json
-// @Success      200  {object}  FriendCountResponse
+// @Success      200  {object}  CountResponse
 // @Failure      401  {object}  res.ErrorResponse
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /friends/count [get]

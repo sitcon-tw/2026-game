@@ -9,11 +9,10 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
+            "url": "https://sitcon.org",
+            "email": "contact@sitcon.org"
         },
         "version": "{{.Version}}"
     },
@@ -227,7 +226,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/friend.FriendCountResponse"
+                            "$ref": "#/definitions/friend.CountResponse"
                         }
                     },
                     "401": {
@@ -282,7 +281,7 @@ const docTemplate = `{
         },
         "/game": {
             "post": {
-                "description": "提交你的遊戲紀錄，會幫你把你目前的最大可遊玩 level 提升 1 級。一樣需要 cookie 登入，需要注意的點是，當前等級不能超過解鎖等級。以及這整個是沒有任何驗證的，代表別人可以狂 call API，未來需要修個。",
+                "description": "提交你的遊戲紀錄，會幫你把你目前的 level 提升 1 級。一樣需要 cookie 登入，需要注意的點是，當前等級不能超過解鎖等級。以及這整個是沒有任何驗證的，代表別人可以狂 call API，未來需要修個。",
                 "produces": [
                     "application/json"
                 ],
@@ -431,7 +430,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "friend.FriendCountResponse": {
+        "friend.CountResponse": {
             "type": "object",
             "properties": {
                 "count": {
