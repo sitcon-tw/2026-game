@@ -19,11 +19,10 @@ import (
 // @title SITGAME API
 // @version 1.0
 // @description This is the SITGAME API server
-// @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
+// @contact.url https://sitcon.org
+// @contact.email contact@sitcon.org
 
 // @host localhost:8000
 // @BasePath /api
