@@ -21,7 +21,7 @@ const docTemplate = `{
     "paths": {
         "/activities/": {
             "get": {
-                "description": "取得活動列表跟使用者在每個攤位、打卡、挑戰的狀態。我還沒做 owo",
+                "description": "取得活動列表跟使用者在每個攤位、打卡、挑戰的狀態。需要登入才會回傳使用者的打卡狀態。",
                 "produces": [
                     "application/json"
                 ],
@@ -33,7 +33,16 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/activities.activityWithStatus"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
                         }
                     },
                     "500": {
@@ -179,7 +188,7 @@ const docTemplate = `{
         },
         "/activities/{activityQRCode}": {
             "post": {
-                "description": "使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在活動打卡。我還沒做 owo",
+                "description": "使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在活動打卡。需要已登入的使用者 cookie。",
                 "produces": [
                     "application/json"
                 ],
@@ -200,7 +209,76 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "bad request",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/discount/{couponToken}": {
+            "post": {
+                "description": "用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discount"
+                ],
+                "summary": "工作人員掃 QR Code 來使用折扣券",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Discount coupon token",
+                        "name": "couponToken",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/discount.discountUsedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "missing token | invalid coupon",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized staff",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
                         }
                     },
                     "500": {
@@ -319,7 +397,7 @@ const docTemplate = `{
         },
         "/game/rank": {
             "get": {
-                "description": "排行資料會包含三個部分：1. 全站前30名玩家的暱稱、等級與排名 2. 以目前使用者為中心，前後各5名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。",
+                "description": "排行資料會包含三個部分：1. 全站的分頁排行 (每頁30名) 2. 以目前使用者為中心，前後各5名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。",
                 "produces": [
                     "application/json"
                 ],
@@ -430,6 +508,40 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "activities.activityWithStatus": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "qrcode_token": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "visited": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "discount.discountUsedResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "used_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "friend.CountResponse": {
             "type": "object",
             "properties": {
@@ -467,7 +579,10 @@ const docTemplate = `{
                 "me": {
                     "$ref": "#/definitions/game.RankEntry"
                 },
-                "top10": {
+                "page": {
+                    "type": "integer"
+                },
+                "rank": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/game.RankEntry"

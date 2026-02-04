@@ -8,11 +8,13 @@ type RankEntry struct {
 }
 
 // RankResponse is returned by GET /game/rank.
-// Top10 contains the global top 10 users; Around contains the caller's ±5 neighbors (inclusive); Me is the caller.
+// Rank contains the global ranking list (paged); Around contains the caller's ±5 neighbors (inclusive);
+// Me is the caller; Page echoes the requested page number for Rank.
 type RankResponse struct {
-	Top10  []RankEntry `json:"top10"`
+	Rank   []RankEntry `json:"rank"`
 	Around []RankEntry `json:"around"`
 	Me     *RankEntry  `json:"me"`
+	Page   int         `json:"page"`
 }
 
 // SubmitResponse is returned by POST /game.

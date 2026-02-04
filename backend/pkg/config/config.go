@@ -34,6 +34,8 @@ type EnvConfig struct {
 
 	// Other
 	OPassURL string `env:"OPASS_URL" envDefault:"https://ccip.opass.app/"`
+	// Staff API key for discount verification
+	StaffAPIKey string `env:"STAFF_API_KEY" envDefault:"dev-staff-key"`
 }
 
 var (

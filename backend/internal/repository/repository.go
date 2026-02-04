@@ -40,6 +40,12 @@ type Repository interface {
 	GetActivityByID(ctx context.Context, tx pgx.Tx, id string) (*models.Activities, error)
 	AddVisited(ctx context.Context, tx pgx.Tx, userID, activityID string) (bool, error)
 	CountVisitedByActivity(ctx context.Context, tx pgx.Tx, activityID string) (int, error)
+	ListActivities(ctx context.Context, tx pgx.Tx) ([]models.Activities, error)
+	ListVisitedActivityIDs(ctx context.Context, tx pgx.Tx, userID string) ([]string, error)
+
+	// Discount operations
+	GetDiscountByToken(ctx context.Context, tx pgx.Tx, token string) (*models.DiscountCoupon, error)
+	MarkDiscountUsed(ctx context.Context, tx pgx.Tx, id string) (*models.DiscountCoupon, error)
 }
 
 // PGRepository is the production repository backed by pgx.

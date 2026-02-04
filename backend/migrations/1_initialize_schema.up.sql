@@ -42,9 +42,22 @@ CREATE TABLE "public"."visted" (
     CONSTRAINT "pk_table_5_id" PRIMARY KEY ("user_id", "activity_id")
 );
 
+CREATE TABLE "public"."discount_coupons" (
+    "id" text NOT NULL,
+    "token" text NOT NULL,
+    "user_id" text NOT NULL,
+    "price" integer NOT NULL,
+    "used_at" timestamp NOT NULL,
+    "created_at" timestamp NOT NULL,
+    CONSTRAINT "pk_table_5_id" PRIMARY KEY ("id", "user_id")
+);
+-- Indexes
+CREATE UNIQUE INDEX "discount_coupons_index_2" ON "public"."discount_coupons" ("token");
+
 -- Foreign key constraints
 -- Schema: public
 ALTER TABLE "public"."friends" ADD CONSTRAINT "fk_friends_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
 ALTER TABLE "public"."friends" ADD CONSTRAINT "fk_friends_friend_id_users_id" FOREIGN KEY("friend_id") REFERENCES "public"."users"("id");
 ALTER TABLE "public"."visted" ADD CONSTRAINT "fk_visted_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
 ALTER TABLE "public"."visted" ADD CONSTRAINT "fk_visted_activity_id_activities_id" FOREIGN KEY("activity_id") REFERENCES "public"."activities"("id");
+ALTER TABLE "public"."discount_coupons" ADD CONSTRAINT "fk_discount_coupons_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");

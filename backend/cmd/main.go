@@ -62,6 +62,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) *http.ServeMux {
 	// Public routes
 	apiMux.Handle("/users/", http.StripPrefix("/users", router.UserRoutes(repo, logger)))
 	apiMux.Handle("/activities/", http.StripPrefix("/activities", router.ActivityRoutes(repo, logger)))
+	apiMux.Handle("/discount/", http.StripPrefix("/discount", router.DiscountRoutes(repo, logger)))
 
 	// Authenticated route group
 	protected := http.NewServeMux()

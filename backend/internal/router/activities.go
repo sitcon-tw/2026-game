@@ -21,10 +21,10 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 	mux.Handle("GET /booth/count", middleware.BoothAuth(repo, logger)(http.HandlerFunc(h.BoothCount)))
 
 	// List activities with user's check-in status
-	mux.HandleFunc("GET /", h.List)
+	mux.Handle("GET /", middleware.Auth(repo, logger)(http.HandlerFunc(h.List)))
 
 	// user scans an activity QR code to check in
-	mux.HandleFunc("POST /{activityQRCode}", h.ActivityCheckIn)
+	mux.Handle("POST /{activityQRCode}", middleware.Auth(repo, logger)(http.HandlerFunc(h.ActivityCheckIn)))
 
 	return mux
 }
