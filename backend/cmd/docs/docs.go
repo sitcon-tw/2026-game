@@ -12,7 +12,7 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/docs", scalarDocsHandler())
-	
+
 	fmt.Print("嗨嗨，你的 docs 跑在 http://localhost:8000/docs 喔，記得你現在的東西只有文檔，是沒有任何後端在跑的喔，他只是個 html owo")
 	http.ListenAndServe(fmt.Sprintf(":%s", "8000"), mux)
 }

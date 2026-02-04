@@ -68,7 +68,7 @@ func (h *Handler) requireBoothByID(ctx context.Context, tx pgx.Tx, id string) (*
 	if err != nil {
 		return nil, err
 	}
-	if booth == nil || booth.Type != models.BoothTypeBooth {
+	if booth == nil || booth.Type != models.ActivitiesTypeBooth {
 		return nil, errors.New("booth not found")
 	}
 	return booth, nil

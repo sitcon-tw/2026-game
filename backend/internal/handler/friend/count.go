@@ -52,7 +52,7 @@ func (h *Handler) Count(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(FriendCountResponse{
+	_ = json.NewEncoder(w).Encode(CountResponse{
 		Count: total,
 		Max:   max,
 	})

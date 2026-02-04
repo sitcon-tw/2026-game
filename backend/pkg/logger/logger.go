@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// New creates a new zap.Logger based on the application environment.
 func New() *zap.Logger {
 	cfg := config.Env()
 	logger := &zap.Logger{}

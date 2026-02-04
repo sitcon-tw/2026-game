@@ -32,7 +32,7 @@ func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
-			if booth == nil || booth.Type != models.BoothTypeBooth {
+			if booth == nil || booth.Type != models.ActivitiesTypeBooth {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

@@ -7,9 +7,6 @@ build:
 run: build
 	./tmp/$(BINARY_NAME)
 
-web:
-	cd website && pnpm run dev
-
 dev:
 	swag init -g cmd/main.go -o ./docs && air --build.cmd "go build -o tmp/$(BINARY_NAME) ./cmd" --build.bin "./tmp/$(BINARY_NAME)"
 

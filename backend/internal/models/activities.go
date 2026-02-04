@@ -6,9 +6,12 @@ import "time"
 type ActivitiesTypes string
 
 const (
-	BoothTypeBooth     ActivitiesTypes = "booth"
-	BoothTypeCheck     ActivitiesTypes = "check"
-	BoothTypeChallenge ActivitiesTypes = "challenge"
+	// ActivitiesTypeBooth represents a booth activity.
+	ActivitiesTypeBooth ActivitiesTypes = "booth"
+	// ActivitiesTypeCheck represents a game activity.
+	ActivitiesTypeCheck ActivitiesTypes = "check"
+	// ActivitiesTypeChallenge represents a challenge activity.
+	ActivitiesTypeChallenge ActivitiesTypes = "challenge"
 )
 
 // Activities mirrors the activities table.

@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/caarlos0/env/v10"
+	// Load environment variables from .env file on init
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -30,7 +31,7 @@ type EnvConfig struct {
 	DBPassword string `env:"DB_PASSWORD" envDefault:"2026-game-password"`
 	DBName     string `env:"DB_NAME" envDefault:"2026-game"`
 	DBSSLMode  string `env:"DB_SSL_MODE" envDefault:"disable"`
-	
+
 	// Other
 	OPassURL string `env:"OPASS_URL" envDefault:"https://ccip.opass.app/"`
 }
