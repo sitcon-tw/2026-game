@@ -1,0 +1,493 @@
+# Monorepo Structure Context
+- **Frontend App:** `frontend/`
+<!-- - **Shared UI:** `packages/ui` -->
+<!-- - **Backend:** `backend/` -->
+
+---
+
+# [Scope: frontend] Frontend Developer Instructions
+
+> SITCON 2026 OMO Rhythm Game - Frontend Copilot Instructions
+
+## 1. Project Overview & Role
+**Project:** SITCON 2026 "Grand Game" (大地遊戲) - An OMO (Online-Merge-Offline) web application.
+**Role:** Frontend Engineer (Mobile-First PWA).
+**Goal:** Create a responsive, interactive web app where users unlock levels by scanning physical QR codes at the venue and play a "Simon Says" style rhythm game on their phones.
+
+---
+
+## 2. Tech Stack & Conventions
+- **Framework:** Next.js 14+ (App Router)
+- **Styling:** Tailwind CSS (Mobile-first approach)
+- **State Management:** Zustand (Global state: user progress, unlocked levels, audio settings)
+- **Animation:** Framer Motion (Critical for game button feedback and page transitions)
+- **Audio:** Web Audio API or Howler.js (Low latency is required for rhythm game)
+- **Scanner:** `html5-qrcode` or `@yudiel/react-qr-scanner`
+- **Language:** TypeScript (Strict mode)
+- **Path Alias:** Use `@/...` for all imports (configured in `tsconfig.json`)
+
+---
+
+## 3. Global Design System
+
+### 3.1 Color Palette
+
+```css
+/* Primary Colors */
+--bg-primary: #EFEBE9;        /* Beige/Cream - Main background */
+--bg-secondary: #D7CCC8;      /* Lighter brown - Cards, sections */
+--bg-header: #5D4037;         /* Dark brown - Header bar */
+--bg-header-accent: #8D6E63;  /* Medium brown - Header gradient */
+
+/* Text Colors */
+--text-primary: #5D4037;      /* Dark brown - Main text */
+--text-secondary: #8D6E63;    /* Medium brown - Secondary text */
+--text-light: #EFEBE9;        /* Cream - Text on dark backgrounds */
+--text-gold: #D4AF37;         /* Gold - Highlights, titles */
+
+/* Accent Colors */
+--accent-gold: #D4AF37;       /* Gold - Stars, highlights, progress */
+--accent-gold-light: #FFD54F; /* Light gold - Hover states */
+
+/* Game Button Colors (Vibrant) */
+--btn-red: #D32F2F;
+--btn-yellow: #FBC02D;
+--btn-green: #7CB342;
+--btn-blue: #0288D1;
+--btn-orange: #FF8F00;
+--btn-purple: #7B1FA2;
+--btn-pink: #E91E63;
+--btn-cyan: #00ACC1;
+
+/* Status Colors */
+--status-success: #4CAF50;
+--status-error: #F44336;
+--status-locked: #9E9E9E;
+```
+
+### 3.2 Typography
+
+```css
+/* Font Family */
+--font-heading: 'Noto Serif TC', serif;
+--font-body: 'Noto Sans TC', sans-serif;
+
+/* Font Sizes */
+--text-xs: 0.75rem;    /* 12px */
+--text-sm: 0.875rem;   /* 14px */
+--text-base: 1rem;     /* 16px */
+--text-lg: 1.125rem;   /* 18px */
+--text-xl: 1.25rem;    /* 20px */
+--text-2xl: 1.5rem;    /* 24px */
+--text-3xl: 1.875rem;  /* 30px */
+```
+
+### 3.3 Spacing & Layout
+
+```css
+/* Layout Constants */
+--header-height: 80px;
+--navbar-height: 64px;
+--content-max-width: 430px;
+--border-radius: 12px;
+--border-radius-lg: 16px;
+```
+
+### 3.4 Decorative Elements
+
+Based on design mockups:
+- **Gold 4-pointed stars** (✦) as decorative accents
+- **Curved gold lines** as page dividers
+- **Abstract swirl patterns** in backgrounds
+
+---
+
+## 4. Layout System
+
+### 4.1 App Shell Structure
+
+```
+┌─────────────────────────────────────┐
+│            HEADER (80px)            │
+│  [Back] [Title] [Rank] [Progress]   │
+├─────────────────────────────────────┤
+│                                     │
+│           MAIN CONTENT              │
+│         (flex-1, scrollable)        │
+│                                     │
+├─────────────────────────────────────┤
+│         BOTTOM NAVBAR (64px)        │
+│   [🎵] [🔄] [👥] [📱] [👤]          │
+└─────────────────────────────────────┘
+```
+
+### 4.2 Header Component
+**Path:** `@/components/layout/Header.tsx`
+
+#### Visual Specification
+- **Height:** 80px fixed
+- **Background:** Gradient `#5D4037` → `#8D6E63`
+- **Border:** Bottom gold accent line (2px)
+
+#### Elements
+1. **Back Button (←)** - Circular, 32px, only when `canGoBack`
+2. **Title** - "SITCON 大地遊戲" in gold (#D4AF37), serif font
+3. **Rank Badge** - "第10名" format, cream color
+4. **Level Badge** - "第 4 關" format, top-right
+5. **Progress Bar** - Gold fill, 6px height
+
+#### Conditional Elements (Game Screen Only)
+- **Play Button (▶):** 36px circle, triggers sequence
+- **Help Button (?):** 36px circle, shows tutorial
+
+```tsx
+const HEADER_CONFIG = {
+  '/levels': { showBack: false, showPlay: false, showHelp: false },
+  '/game/[id]': { showBack: true, showPlay: true, showHelp: true },
+  '/unlock': { showBack: false, showPlay: false, showHelp: false },
+  '/scanner': { showBack: false, showPlay: false, showHelp: false },
+  '/leaderboard': { showBack: false, showPlay: false, showHelp: false },
+  '/rewards': { showBack: true, showPlay: false, showHelp: false },
+};
+```
+
+### 4.3 Bottom Navigation Bar
+**Path:** `@/components/layout/BottomNav.tsx`
+
+#### Visual Specification
+- **Height:** 64px fixed
+- **Background:** `#5D4037`
+- **Position:** Fixed bottom with safe area padding
+
+#### Navigation Items
+| Icon | Label | Route |
+|------|-------|-------|
+| 🎵 | 關卡 | `/levels` |
+| 🔄 | 解鎖 | `/unlock` |
+| 👥 | 排行榜 | `/leaderboard` |
+| 📱 | 掃描 | `/scanner` |
+| 👤 | 個人 | `/profile` |
+
+- **Inactive:** Cream (#EFEBE9), opacity 0.6
+- **Active:** Gold (#D4AF37), full opacity
+
+### 4.4 Root Layout
+**Path:** `@/app/layout.tsx`
+
+```tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="zh-TW">
+      <body className="bg-primary min-h-dvh">
+        <div className="flex flex-col h-dvh max-w-[430px] mx-auto">
+          <Header />
+          <main className="flex-1 overflow-y-auto pb-navbar">
+            {children}
+          </main>
+          <BottomNav />
+        </div>
+      </body>
+    </html>
+  );
+}
+```
+
+---
+
+## 5. Page Specifications
+
+### 5.1 Splash Screen (初始畫面)
+**Path:** `@/app/page.tsx`
+
+- **Background:** Dark metallic gradient
+- **Logo:** SITCON emblem (metallic disc)
+- **Title:** "SITCON" + "大地遊戲" (gold) + "WIDE GAME"
+- **Decorative:** Gold stars (✦)
+- **Audio Progress:** Waveform with timestamp
+- **CTA:** "進入遊戲" button → `/levels`
+
+### 5.2 Level Selection (關卡選擇)
+**Path:** `@/app/levels/page.tsx`
+
+- **Grid:** 4 columns, 12px gap
+- **Card:** Square, 12px radius
+
+| State | Background | Opacity |
+|-------|------------|---------|
+| Completed | White | 100% |
+| Unlocked | Beige | 80% |
+| Locked | Gray | 40% |
+
+### 5.3 Game Screen (遊戲畫面)
+**Path:** `@/app/game/[id]/page.tsx`
+
+#### Button Count by Level
+| Level | Buttons | Grid |
+|-------|---------|------|
+| 1 | 2 | 1×2 |
+| 2-5 | 4 | 2×2 |
+| 6-10 | 8 | 2×4 |
+| 11-15 | 12 | 3×4 |
+| 16-20 | 16 | 4×4 |
+| 21-25 | 20 | 4×5 |
+| 26-30 | 24 | 4×6 |
+| 31-35 | 28 | 4×7 |
+| 36-40 | 32 | 4×8 |
+
+#### Button Colors (repeating pattern)
+```typescript
+const COLORS = ['#D32F2F', '#FBC02D', '#7CB342', '#0288D1', '#FF8F00', '#7B1FA2', '#E91E63', '#00ACC1'];
+```
+
+#### Button States
+- **Idle:** Normal
+- **Active:** brightness(1.3), glow shadow, scale(1.05)
+- **Pressed:** scale(0.95)
+
+#### Success Overlay
+- Mascot image + "通關成功！"
+- Buttons: "回關卡" | "下一關"
+
+### 5.4 Unlock Methods (解鎖關卡的方式)
+**Path:** `@/app/unlock/page.tsx`
+
+Methods:
+1. **攤位** - Booth interaction
+2. **認識新朋友** - Friend QR scan
+3. **打卡** - Venue check-in
+4. **闘關** - Challenges
+
+### 5.5 Booth List (攤位清單)
+**Path:** `@/app/unlock/booths/page.tsx`
+
+- **Visited:** Full opacity, checkmark
+- **Not Visited:** opacity 0.5
+
+### 5.6 QR Scanner (掃描介面)
+**Path:** `@/app/scanner/page.tsx`
+
+**Two Modes:**
+1. **Scanner** - Camera viewfinder
+2. **My QR Code** - Display user's QR (sepia color)
+
+Info text: "還可以認識 N 位朋友"
+
+### 5.7 "Too Extroverted" Modal (你太E了)
+**Path:** `@/components/modals/TooExtrovertedModal.tsx`
+
+- Title: "你太E了"
+- Message: "請透過其他方式獲得 X 關..."
+- **Button: "仍要認識"** ← REQUIRED
+
+### 5.8 Leaderboard (排行榜)
+**Path:** `@/app/leaderboard/page.tsx`
+
+- Top 10 + Current user (highlighted) + ±5 neighbors
+- Sort: Completed levels (desc) → Completion time (earlier wins)
+
+### 5.9 Rewards (折價券)
+**Path:** `@/app/rewards/page.tsx`
+
+#### Coupon Tiers
+| Tier | Condition |
+|------|-----------|
+| A | Top 3 |
+| B | All booths + venues |
+| C | Top 30% |
+| D | Top 60% |
+| E | 10 levels |
+
+- **Deadline:** 16:00 (server time)
+- **Style:** Vintage tickets with "USED" stamp
+
+### 5.10 Milestone Rewards (獎品兌換頁)
+**Path:** `@/app/rewards/milestones/page.tsx`
+
+Vertical timeline: 5關, 20關, 50關, 70關, 100關
+
+---
+
+## 6. Core Logic
+
+### 6.1 Game Engine
+```typescript
+type GameState = 'IDLE' | 'PLAYING_SEQUENCE' | 'WAITING_INPUT' | 'SUCCESS' | 'FAIL';
+```
+
+### 6.2 Unlock System
+- Initial: **5 levels unlocked**
+- Friend limit: **20** (removed after all booths+venues)
+
+### 6.3 Coupon System
+- Deadline: **16:00**
+- Redemption: **All at once**
+
+---
+
+## 7. Data Models
+
+```typescript
+interface User {
+  id: string;
+  name: string;
+  qrToken: string;
+  unlockedLevels: number[];
+  completedLevels: number[];
+  interactions: {
+    booths: string[];
+    friends: string[];
+    venues: string[];
+    challenges: string[];
+  };
+  stats: { rank: number; friendUnlockCount: number; };
+}
+
+interface LevelConfig {
+  id: number;
+  buttonCount: number;
+  gridCols: number;
+  gridRows: number;
+  sequenceLength: number;
+  tempo: number;
+}
+
+type CouponTier = 'A' | 'B' | 'C' | 'D' | 'E';
+```
+
+---
+
+## 8. Directory Structure
+
+```
+frontend/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── levels/page.tsx
+│   ├── game/[id]/page.tsx
+│   ├── unlock/
+│   │   ├── page.tsx
+│   │   ├── booths/page.tsx
+│   │   └── venues/page.tsx
+│   ├── scanner/page.tsx
+│   ├── leaderboard/page.tsx
+│   ├── rewards/
+│   │   ├── page.tsx
+│   │   ├── detail/page.tsx
+│   │   └── milestones/page.tsx
+│   └── profile/page.tsx
+├── components/
+│   ├── layout/
+│   │   ├── Header.tsx
+│   │   ├── BottomNav.tsx
+│   │   └── PageContainer.tsx
+│   ├── game/
+│   │   ├── RhythmBoard.tsx
+│   │   ├── GameButton.tsx
+│   │   └── GameOverlay.tsx
+│   ├── levels/
+│   │   ├── LevelGrid.tsx
+│   │   └── LevelCard.tsx
+│   ├── scanner/
+│   │   ├── QRScanner.tsx
+│   │   └── QRDisplay.tsx
+│   ├── unlock/
+│   │   ├── UnlockMethodCard.tsx
+│   │   └── BoothList.tsx
+│   ├── leaderboard/
+│   │   └── LeaderboardTable.tsx
+│   ├── rewards/
+│   │   ├── CouponGauge.tsx
+│   │   ├── CouponTicket.tsx
+│   │   └── MilestoneTimeline.tsx
+│   ├── modals/
+│   │   ├── TutorialModal.tsx
+│   │   ├── SuccessModal.tsx
+│   │   └── TooExtrovertedModal.tsx
+│   └── ui/
+│       ├── Button.tsx
+│       ├── Card.tsx
+│       └── Modal.tsx
+├── hooks/
+│   ├── useGameEngine.ts
+│   ├── useAudio.ts
+│   ├── useScanner.ts
+│   ├── useUnlockSystem.ts
+│   └── useServerTime.ts
+├── stores/
+│   ├── userStore.ts
+│   └── gameStore.ts
+├── lib/
+│   ├── api.ts
+│   ├── constants.ts
+│   └── utils.ts
+├── types/index.ts
+├── styles/globals.css
+└── public/
+    ├── fonts/
+    ├── images/
+    └── sounds/
+```
+
+---
+
+## 9. Tailwind Configuration
+
+```javascript
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#EFEBE9',
+        brown: { DEFAULT: '#5D4037', light: '#8D6E63' },
+        gold: { DEFAULT: '#D4AF37', light: '#FFD54F' },
+        game: {
+          red: '#D32F2F', yellow: '#FBC02D', green: '#7CB342', blue: '#0288D1',
+          orange: '#FF8F00', purple: '#7B1FA2', pink: '#E91E63', cyan: '#00ACC1',
+        },
+      },
+      fontFamily: {
+        serif: ['Noto Serif TC', 'serif'],
+        sans: ['Noto Sans TC', 'sans-serif'],
+      },
+      spacing: { header: '80px', navbar: '64px' },
+    },
+  },
+};
+```
+
+---
+
+## 10. Critical Notes
+
+### Path Aliases
+```typescript
+// ✅ Always use
+import { Button } from '@/components/ui/Button';
+
+// ❌ Never use relative paths
+import { Button } from '../../components/ui/Button';
+```
+
+### Layout Visibility
+| Page | Back | Play/Help | BottomNav |
+|------|------|-----------|-----------|
+| Splash | ❌ | ❌ | ❌ |
+| Levels | ❌ | ❌ | ✅ |
+| Game | ✅ | ✅ | ✅ |
+| Unlock | ❌ | ❌ | ✅ |
+| Scanner | ❌ | ❌ | ✅ |
+
+### Checklist
+- [ ] `@/` path aliases everywhere
+- [ ] Hide Play/Help except game screen
+- [ ] Initial levels = 5
+- [ ] Button count: +4 every 5 levels, max 32
+- [ ] Friend limit = 20
+- [ ] "仍要認識" button on "你太E了" modal
+- [ ] Coupon deadline = 16:00 (server time)
+- [ ] Coupons used all at once
+- [ ] Leaderboard: Top 10 + User + ±5
+- [ ] Preload audio
+- [ ] Gold stars (✦) decorations
+- [ ] Serif headings, sans-serif body
