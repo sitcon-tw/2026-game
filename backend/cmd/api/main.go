@@ -22,6 +22,7 @@ const (
 	readHeaderTimeout = 5 * time.Second
 	writeTimeout      = 15 * time.Second
 	idleTimeout       = 60 * time.Second
+	maxAge            = 300
 )
 
 // @title SITGAME API
@@ -77,13 +78,14 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger(logger))
 
+	//nolint:golines // keep struct aligned
 	corsMiddleware := cors.Handler(cors.Options{
 		AllowedOrigins:   config.Env().CORSAllowedOrigins,
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge:           300,
+		MaxAge:           maxAge,
 	})
 	r.Use(corsMiddleware)
 
