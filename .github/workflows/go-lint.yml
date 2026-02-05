@@ -1,4 +1,4 @@
-name: Go Lint & Format
+name: Go Lint
 
 on:
   push:
@@ -28,10 +28,6 @@ jobs:
 
       - name: Install golint
         run: go install golang.org/x/lint/golint@latest
-
-      - name: golint
-        working-directory: backend
-        run: golint ./...
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
