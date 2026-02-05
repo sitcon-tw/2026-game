@@ -2,13 +2,7 @@
 
 ## 如果你是寫前端的
 
-你要看 OpenAPI docs 請打：
-
-```bash
-make run-docs
-```
-
-注意一下這邊什麼都沒有喔，他就只是個 html 你並沒有真的把後端跑起來 :D
+可以到 https://sitcon.org/2026/game/ 這裡來看 docs
 
 ## 先啟動 database:
 
