@@ -15,7 +15,7 @@ type ErrorResponse struct {
 // Fail logs the error and returns a JSON error payload with the given status code.
 // The message is returned to the client; the error is only logged.
 func Fail(w http.ResponseWriter, logger *zap.Logger, status int, err error, message string) {
-	if logger != nil && err != nil {
+	if logger != nil && err != nil && status >= 500 {
 		logger.Error("request failed",
 			zap.Int("status", status),
 			zap.Error(err),
