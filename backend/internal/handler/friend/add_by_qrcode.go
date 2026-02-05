@@ -7,9 +7,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/sitcon-tw/2026-game/internal/models"
+	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
-	"github.com/sitcon-tw/2026-game/pkg/utils"
 )
 
 // AddByQRCode handles POST /friends/{userQRCode}.
@@ -22,9 +24,10 @@ import (
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /friends/{userQRCode} [post]
 func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
-	currentUser, ok := middleware.UserFromContext(r.Context())
-	if !ok || currentUser == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
+	ctx := r.Context()
+
+	currentUser, ok := h.getCurrentUserOrFail(ctx, w)
+	if !ok {
 		return
 	}
 
@@ -34,73 +37,97 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx, err := h.Repo.StartTransaction(r.Context())
+	tx, err := h.Repo.StartTransaction(ctx)
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
-	defer h.Repo.DeferRollback(r.Context(), tx)
+	defer h.Repo.DeferRollback(ctx, tx)
 
-	targetUser, err := h.Repo.GetUserByQRCode(r.Context(), tx, qr)
+	targetUser, ok := h.getTargetUserOrFail(ctx, w, tx, qr, currentUser.ID)
+	if !ok {
+		return
+	}
+
+	// friend capacity for both users
+	err = h.ensureFriendCapacityForUsers(ctx, tx, currentUser.ID, targetUser.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch target user")
-		return
-	}
-	if targetUser == nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("user not found"), "user not found")
-		return
-	}
-	if targetUser.ID == currentUser.ID {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("cannot add self"), "cannot add yourself")
-		return
-	}
-
-	// friend budget check for both users
-	if err := h.ensureFriendCapacity(r.Context(), tx, currentUser.ID); err != nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, err, err.Error())
-		return
-	}
-	if err := h.ensureFriendCapacity(r.Context(), tx, targetUser.ID); err != nil {
 		res.Fail(w, h.Logger, http.StatusBadRequest, err, err.Error())
 		return
 	}
 
-	// NOTE: Should we change this feature so that only the scanning user can get the scan results?
-	insertedA, err := h.Repo.AddFriend(r.Context(), tx, currentUser.ID, targetUser.ID)
+	insertedA, err := h.Repo.AddFriend(ctx, tx, currentUser.ID, targetUser.ID)
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to add friend")
 		return
 	}
-	insertedB, err := h.Repo.AddFriend(r.Context(), tx, targetUser.ID, currentUser.ID)
+	insertedB, err := h.Repo.AddFriend(ctx, tx, targetUser.ID, currentUser.ID)
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to add friend")
 		return
 	}
 
-	// Already friends: no insertion in either direction.
 	if !insertedA && !insertedB {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("already friends"), "already friends")
 		return
 	}
 
-	// Only increment unlock levels if a new friendship was created (both directions inserted or one of them)
 	if insertedA || insertedB {
-		if err := h.Repo.IncrementUnlockLevel(r.Context(), tx, currentUser.ID); err != nil {
+		err = h.Repo.IncrementUnlockLevel(ctx, tx, currentUser.ID)
+		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user")
 			return
 		}
-		if err := h.Repo.IncrementUnlockLevel(r.Context(), tx, targetUser.ID); err != nil {
+		err = h.Repo.IncrementUnlockLevel(ctx, tx, targetUser.ID)
+		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update target user")
 			return
 		}
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(ctx, tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) getCurrentUserOrFail(ctx context.Context, w http.ResponseWriter) (*models.User, bool) {
+	currentUser, ok := middleware.UserFromContext(ctx)
+	if !ok || currentUser == nil {
+		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
+		return nil, false
+	}
+	return currentUser, true
+}
+
+func (h *Handler) getTargetUserOrFail(
+	ctx context.Context,
+	w http.ResponseWriter,
+	tx pgx.Tx,
+	qr string,
+	currentUserID string,
+) (*models.User, bool) {
+	targetUser, err := h.Repo.GetUserByQRCode(ctx, tx, qr)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("user not found"), "user not found")
+			return nil, false
+		}
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch target user")
+		return nil, false
+	}
+	if targetUser == nil {
+		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("user not found"), "user not found")
+		return nil, false
+	}
+	if targetUser.ID == currentUserID {
+		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("cannot add yourself"), "cannot add yourself")
+		return nil, false
+	}
+	return targetUser, true
 }
 
 func (h *Handler) ensureFriendCapacity(ctx context.Context, tx pgx.Tx, userID string) error {
@@ -113,10 +140,18 @@ func (h *Handler) ensureFriendCapacity(ctx context.Context, tx pgx.Tx, userID st
 		return err
 	}
 
-	// NOTE: It is 20 in the original spec, but changed to 10 for better gameplay balance.
-	budget := utils.FriendCapacity(visitedCount)
+	budget := helpers.FriendCapacity(visitedCount)
 	if friendCount >= budget {
 		return errors.New("friend limit reached, visit more activities")
+	}
+	return nil
+}
+
+func (h *Handler) ensureFriendCapacityForUsers(ctx context.Context, tx pgx.Tx, userIDs ...string) error {
+	for _, id := range userIDs {
+		if err := h.ensureFriendCapacity(ctx, tx, id); err != nil {
+			return err
+		}
 	}
 	return nil
 }

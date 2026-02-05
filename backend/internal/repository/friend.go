@@ -45,7 +45,7 @@ ORDER BY u.created_at`
 	var users []models.User
 	for rows.Next() {
 		var u models.User
-		if err := rows.Scan(
+		err = rows.Scan(
 			&u.ID,
 			&u.Nickname,
 			&u.QRCodeToken,
@@ -54,12 +54,14 @@ ORDER BY u.created_at`
 			&u.LastPassTime,
 			&u.CreatedAt,
 			&u.UpdatedAt,
-		); err != nil {
+		)
+		if err != nil {
 			return nil, err
 		}
 		users = append(users, u)
 	}
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, err
 	}
 	return users, nil

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -43,11 +44,11 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 
 	activity, err := h.Repo.GetActivityByQRCode(r.Context(), tx, qr)
 	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("activity not found"), "activity not found")
+			return
+		}
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch activity")
-		return
-	}
-	if activity == nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("activity not found"), "activity not found")
 		return
 	}
 
@@ -58,13 +59,15 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inserted {
-		if err := h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID); err != nil {
+		err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
+		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user unlock level")
 			return
 		}
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}

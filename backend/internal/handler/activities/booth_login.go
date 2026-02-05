@@ -8,9 +8,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
+	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/config"
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/res"
-	"github.com/sitcon-tw/2026-game/pkg/utils"
 )
 
 // BoothLogin handles POST /activities/booth/login.
@@ -25,7 +26,7 @@ import (
 // @Param        Authorization  header  string  true  "Bearer {token}"
 // @Router       /activities/booth/login [post]
 func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
-	token := utils.BearerToken(r.Header.Get("Authorization"))
+	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing token"), "missing token")
 		return
@@ -44,7 +45,8 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
@@ -66,6 +68,9 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) requireBoothByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Activities, error) {
 	booth, err := h.Repo.GetActivityByToken(ctx, tx, token)
 	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, errors.New("booth not found")
+		}
 		return nil, err
 	}
 	if booth == nil || booth.Type != models.ActivitiesTypeBooth {

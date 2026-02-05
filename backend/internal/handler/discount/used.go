@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/config"
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/res"
-	"github.com/sitcon-tw/2026-game/pkg/utils"
 )
 
 // DiscountUsed handles POST /discount/{couponToken}.
@@ -25,7 +26,7 @@ import (
 // @Router       /discount/{couponToken} [post]
 // @Param        Authorization  header  string  true  "Bearer {token}"
 func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
-	token := utils.BearerToken(r.Header.Get("Authorization"))
+	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing token"), "missing token")
 		return
@@ -50,11 +51,11 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 
 	coupon, err := h.Repo.GetDiscountByToken(r.Context(), tx, couponToken)
 	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("coupon not found"), "coupon not found")
+			return
+		}
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch coupon")
-		return
-	}
-	if coupon == nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("coupon not found"), "coupon not found")
 		return
 	}
 	if !coupon.UsedAt.IsZero() {
@@ -68,7 +69,8 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}

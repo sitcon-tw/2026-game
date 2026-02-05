@@ -2,9 +2,11 @@ package activities
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -42,11 +44,11 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.Repo.GetUserByQRCode(r.Context(), tx, userQR)
 	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			res.Fail(w, h.Logger, http.StatusBadRequest, nil, "user not found")
+			return
+		}
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch user")
-		return
-	}
-	if user == nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, nil, "user not found")
 		return
 	}
 
@@ -58,13 +60,15 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 
 	// Only reward on first-time visit.
 	if inserted {
-		if err := h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID); err != nil {
+		err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
+		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user unlock level")
 			return
 		}
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}

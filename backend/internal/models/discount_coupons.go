@@ -3,6 +3,8 @@ package models
 import "time"
 
 // DiscountCoupon mirrors the discount_coupons table.
+//
+//nolint:golines // keep struct tags aligned; lines already short
 type DiscountCoupon struct {
 	ID         string    `db:"id" json:"id"`
 	DiscountID string    `db:"discount_id" json:"discount_id"`

@@ -56,7 +56,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		visitedSet[id] = struct{}{}
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}

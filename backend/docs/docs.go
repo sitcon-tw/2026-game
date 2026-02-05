@@ -330,7 +330,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/friend.CountResponse"
+                            "$ref": "#/definitions/friend.countResponse"
                         }
                     },
                     "401": {
@@ -587,7 +587,7 @@ const docTemplate = `{
                 }
             }
         },
-        "friend.CountResponse": {
+        "friend.countResponse": {
             "type": "object",
             "properties": {
                 "count": {

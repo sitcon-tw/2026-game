@@ -15,6 +15,8 @@ const (
 )
 
 // Activities mirrors the activities table.
+//
+//nolint:golines // keep struct tags aligned; lines already under max length
 type Activities struct {
 	ID          string          `db:"id" json:"id"`
 	Token       string          `db:"token" json:"-"`

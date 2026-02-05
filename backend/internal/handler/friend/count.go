@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
-	"github.com/sitcon-tw/2026-game/pkg/utils"
 )
 
 type countResponse struct {
@@ -48,9 +48,10 @@ func (h *Handler) Count(w http.ResponseWriter, r *http.Request) {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to count visited activities")
 		return
 	}
-	max := utils.FriendCapacity(visited)
+	friendCap := helpers.FriendCapacity(visited)
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
@@ -59,6 +60,6 @@ func (h *Handler) Count(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(countResponse{
 		Count: total,
-		Max:   max,
+		Max:   friendCap,
 	})
 }

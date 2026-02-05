@@ -2,12 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
 )
 
-// GetUserByID fetches a user by id. Returns (nil, nil) if not found.
+// GetUserByID fetches a user by id. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
 	const query = `
 SELECT id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
@@ -26,8 +27,8 @@ WHERE id = $1`
 		&u.CreatedAt,
 		&u.UpdatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}
@@ -55,8 +56,8 @@ FOR UPDATE`
 		&u.CreatedAt,
 		&u.UpdatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}
@@ -64,7 +65,7 @@ FOR UPDATE`
 	return &u, nil
 }
 
-// GetUserByToken fetches a user by auth token. Returns (nil, nil) if not found.
+// GetUserByToken fetches a user by auth token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByToken(ctx context.Context, tx pgx.Tx, token string) (*models.User, error) {
 	const query = `
 SELECT id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
@@ -83,8 +84,8 @@ WHERE auth_token = $1`
 		&u.CreatedAt,
 		&u.UpdatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}
@@ -92,7 +93,7 @@ WHERE auth_token = $1`
 	return &u, nil
 }
 
-// GetUserByQRCode fetches a user by their QR code token. Returns (nil, nil) if not found.
+// GetUserByQRCode fetches a user by their QR code token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error) {
 	const query = `
 SELECT id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
@@ -111,8 +112,8 @@ WHERE qrcode_token = $1`
 		&u.CreatedAt,
 		&u.UpdatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}

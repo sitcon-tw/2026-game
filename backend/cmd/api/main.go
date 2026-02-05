@@ -7,9 +7,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httprate"
-	swaggerDocs "github.com/sitcon-tw/2026-game/docs"
-
-	scalar "github.com/MarceloPetrucio/go-scalar-api-reference"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/internal/router"
 	"github.com/sitcon-tw/2026-game/pkg/config"
@@ -17,6 +14,13 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/logger"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"go.uber.org/zap"
+)
+
+const (
+	readTimeout       = 15 * time.Second
+	readHeaderTimeout = 5 * time.Second
+	writeTimeout      = 15 * time.Second
+	idleTimeout       = 60 * time.Second
 )
 
 // @title SITGAME API
@@ -53,13 +57,30 @@ func main() {
 		zap.String("env", string(cfg.AppEnv)),
 	)
 
-	http.ListenAndServe(fmt.Sprintf(":%s", cfg.AppPort), handler)
+	server := &http.Server{
+		Addr:              fmt.Sprintf(":%s", cfg.AppPort),
+		Handler:           handler,
+		ReadTimeout:       readTimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
+	}
+
+	err = server.ListenAndServe()
+	if err != nil {
+		logger.Fatal("server stopped unexpectedly", zap.Error(err))
+	}
 }
 
 func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger(logger))
-	r.Use(httprate.LimitByIP(10, 5*time.Second))
+
+	// Rate limit
+	r.Use(httprate.LimitByIP(
+		config.Env().RateLimitRequestsPerWindow,
+		config.Env().RateLimitWindow,
+	))
 
 	r.Route("/api", func(r chi.Router) {
 		r.Mount("/users", router.UserRoutes(repo, logger))
@@ -71,29 +92,16 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	})
 
 	if config.Env().AppEnv == config.AppEnvDev {
-		r.Get("/docs", scalarDocsHandler())
+		// Serve raw swagger spec at /docs for quick downloads
+		r.Get("/docs", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "docs/swagger.yaml")
+		})
+
+		// Serve static API docs (index.html + swagger assets) under /docs/
+		r.Get("/docs/*", http.StripPrefix("/docs", http.FileServer(http.Dir("docs"))).ServeHTTP)
+
+		logger.Info("API documentation available at http://localhost:" + config.Env().AppPort + "/docs/")
 	}
 
 	return r
-}
-
-func scalarDocsHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		html, err := scalar.ApiReferenceHTML(&scalar.Options{
-			SpecContent: swaggerDocs.SwaggerInfo.ReadDoc(),
-			CustomOptions: scalar.CustomOptions{
-				PageTitle: "SITGAME API Reference",
-			},
-			DarkMode: true,
-		})
-		if err != nil {
-			zap.L().Error("failed to generate Scalar docs", zap.Error(err))
-			http.Error(w, "could not render API reference", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(html))
-	}
 }

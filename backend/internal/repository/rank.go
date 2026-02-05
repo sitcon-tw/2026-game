@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
@@ -24,12 +25,14 @@ LIMIT $1 OFFSET $2`
 	var out []models.User
 	for rows.Next() {
 		var u models.User
-		if scanErr := rows.Scan(&u.Nickname, &u.CurrentLevel, &u.LastPassTime); scanErr != nil {
-			return nil, scanErr
+		err = rows.Scan(&u.Nickname, &u.CurrentLevel, &u.LastPassTime)
+		if err != nil {
+			return nil, err
 		}
 		out = append(out, u)
 	}
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -48,13 +51,14 @@ WHERE id = $1`
 
 	var u models.User
 	var rank int
-	if err := tx.QueryRow(ctx, query, userID).Scan(
+	err := tx.QueryRow(ctx, query, userID).Scan(
 		&u.Nickname,
 		&u.CurrentLevel,
 		&u.LastPassTime,
 		&rank,
-	); err != nil {
-		if err == pgx.ErrNoRows {
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, 0, nil
 		}
 		return nil, 0, err
@@ -86,12 +90,14 @@ ORDER BY ranked.rank`
 	var out []models.User
 	for rows.Next() {
 		var u models.User
-		if scanErr := rows.Scan(&u.Nickname, &u.CurrentLevel, &u.LastPassTime); scanErr != nil {
-			return nil, scanErr
+		err = rows.Scan(&u.Nickname, &u.CurrentLevel, &u.LastPassTime)
+		if err != nil {
+			return nil, err
 		}
 		out = append(out, u)
 	}
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, err
 	}
 	return out, nil

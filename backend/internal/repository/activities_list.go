@@ -23,12 +23,14 @@ ORDER BY created_at ASC, id ASC`
 	var list []models.Activities
 	for rows.Next() {
 		var a models.Activities
-		if err := rows.Scan(&a.ID, &a.Token, &a.Type, &a.QRCodeToken, &a.Name, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		err = rows.Scan(&a.ID, &a.Token, &a.Type, &a.QRCodeToken, &a.Name, &a.CreatedAt, &a.UpdatedAt)
+		if err != nil {
 			return nil, err
 		}
 		list = append(list, a)
 	}
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, err
 	}
 	return list, nil
@@ -47,12 +49,14 @@ func (r *PGRepository) ListVisitedActivityIDs(ctx context.Context, tx pgx.Tx, us
 	var ids []string
 	for rows.Next() {
 		var id string
-		if err := rows.Scan(&id); err != nil {
+		err = rows.Scan(&id)
+		if err != nil {
 			return nil, err
 		}
 		ids = append(ids, id)
 	}
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, err
 	}
 	return ids, nil

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
@@ -34,8 +35,8 @@ WHERE qrcode_token = $1`
 		&a.CreatedAt,
 		&a.UpdatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}
@@ -59,8 +60,8 @@ WHERE id = $1`
 		&a.CreatedAt,
 		&a.UpdatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}
@@ -84,8 +85,8 @@ WHERE token = $1`
 		&a.CreatedAt,
 		&a.UpdatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}

@@ -2,12 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
-// StartTransaction return a tx
+// StartTransaction returns a transaction.
 func (r *PGRepository) StartTransaction(ctx context.Context) (pgx.Tx, error) {
 	tx, err := r.DB.Begin(ctx)
 	if err != nil {
@@ -19,7 +20,7 @@ func (r *PGRepository) StartTransaction(ctx context.Context) (pgx.Tx, error) {
 
 // DeferRollback rollback the transaction if it's not already closed.
 func (r *PGRepository) DeferRollback(ctx context.Context, tx pgx.Tx) {
-	if err := tx.Rollback(ctx); err != nil && err != pgx.ErrTxClosed {
+	if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 		r.Logger.Error("Failed to rollback transaction", zap.Error(err))
 	}
 }

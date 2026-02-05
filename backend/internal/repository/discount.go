@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 
@@ -10,7 +11,11 @@ import (
 )
 
 // GetDiscountByToken fetches a discount coupon by its token.
-func (r *PGRepository) GetDiscountByToken(ctx context.Context, tx pgx.Tx, token string) (*models.DiscountCoupon, error) {
+func (r *PGRepository) GetDiscountByToken(
+	ctx context.Context,
+	tx pgx.Tx,
+	token string,
+) (*models.DiscountCoupon, error) {
 	const query = `
 SELECT id, discount_id, token, user_id, price, used_at, created_at
 FROM discount_coupons
@@ -27,8 +32,8 @@ FOR UPDATE`
 		&c.UsedAt,
 		&c.CreatedAt,
 	); err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, err
 	}
@@ -36,7 +41,11 @@ FOR UPDATE`
 }
 
 // ListDiscountsByUser returns all coupons owned by a user ordered by created_at.
-func (r *PGRepository) ListDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error) {
+func (r *PGRepository) ListDiscountsByUser(
+	ctx context.Context,
+	tx pgx.Tx,
+	userID string,
+) ([]models.DiscountCoupon, error) {
 	const query = `
 SELECT id, discount_id, token, user_id, price, used_at, created_at
 FROM discount_coupons
@@ -52,12 +61,21 @@ ORDER BY created_at ASC`
 	var coupons []models.DiscountCoupon
 	for rows.Next() {
 		var c models.DiscountCoupon
-		if scanErr := rows.Scan(&c.ID, &c.DiscountID, &c.Token, &c.UserID, &c.Price, &c.UsedAt, &c.CreatedAt); scanErr != nil {
+		if scanErr := rows.Scan(
+			&c.ID,
+			&c.DiscountID,
+			&c.Token,
+			&c.UserID,
+			&c.Price,
+			&c.UsedAt,
+			&c.CreatedAt,
+		); scanErr != nil {
 			return nil, scanErr
 		}
 		coupons = append(coupons, c)
 	}
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return nil, err
 	}
 	return coupons, nil
@@ -88,7 +106,14 @@ RETURNING id, discount_id, token, user_id, price, used_at, created_at`
 
 // CreateDiscountCoupon inserts a new discount coupon row for a user if global MaxQty not exceeded.
 // Returns (coupon, true, nil) when created; (nil, false, nil) when quota reached.
-func (r *PGRepository) CreateDiscountCoupon(ctx context.Context, tx pgx.Tx, userID string, price int, discountID string, maxQty int) (*models.DiscountCoupon, bool, error) {
+func (r *PGRepository) CreateDiscountCoupon(
+	ctx context.Context,
+	tx pgx.Tx,
+	userID string,
+	price int,
+	discountID string,
+	maxQty int,
+) (*models.DiscountCoupon, bool, error) {
 	// Advisory lock to serialize issuance per discountID and avoid race on MaxQty.
 	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, discountID); err != nil {
 		return nil, false, err

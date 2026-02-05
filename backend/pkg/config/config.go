@@ -2,9 +2,10 @@ package config
 
 import (
 	"sync"
+	"time"
 
 	"github.com/caarlos0/env/v10"
-	// Load environment variables from .env file on init
+	// Load environment variables from .env file on init.
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -17,7 +18,9 @@ const (
 	AppEnvProd AppEnv = "prod"
 )
 
-// EnvConfig holds all environment variables for the application
+// EnvConfig holds all environment variables for the application.
+//
+//nolint:golines // struct tags aligned for readability
 type EnvConfig struct {
 	AppEnv         AppEnv `env:"APP_ENV" envDefault:"dev"`
 	AppName        string `env:"APP_NAME" envDefault:"2026-game"`
@@ -37,14 +40,21 @@ type EnvConfig struct {
 	OPassURL string `env:"OPASS_URL" envDefault:"https://ccip.opass.app/"`
 	// Staff API key for discount verification
 	StaffAPIKey string `env:"STAFF_API_KEY"`
+
+	// Gameplay tuning
+	FriendCapacityMultiplier int `env:"FRIEND_CAPACITY_MULTIPLIER" envDefault:"10"`
+
+	// Rate limiting
+	RateLimitRequestsPerWindow int           `env:"RATE_LIMIT_REQUESTS_PER_WINDOW" envDefault:"10"`
+	RateLimitWindow            time.Duration `env:"RATE_LIMIT_WINDOW" envDefault:"5s"`
 }
 
 var (
-	appConfig *EnvConfig
-	once      sync.Once
+	appConfig *EnvConfig //nolint:gochecknoglobals // cached configuration singleton
+	once      sync.Once  //nolint:gochecknoglobals // guards one-time config loading
 )
 
-// load loads and validates all environment variables
+// load loads and validates all environment variables.
 func load() (*EnvConfig, error) {
 	cfg := &EnvConfig{}
 	if err := env.Parse(cfg); err != nil {
@@ -53,7 +63,7 @@ func load() (*EnvConfig, error) {
 	return cfg, nil
 }
 
-// Init initializes the config only once
+// Init initializes the config only once.
 func Init() (*EnvConfig, error) {
 	var err error
 	once.Do(func() {

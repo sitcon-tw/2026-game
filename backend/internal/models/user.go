@@ -3,6 +3,8 @@ package models
 import "time"
 
 // User mirrors the users table.
+//
+//nolint:golines // keep struct tags aligned; lines already short
 type User struct {
 	ID           string    `db:"id" json:"id"`
 	AuthToken    string    `db:"auth_token" json:"-"`

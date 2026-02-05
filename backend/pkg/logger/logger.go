@@ -9,8 +9,10 @@ import (
 // New creates a new zap.Logger based on the application environment.
 func New() *zap.Logger {
 	cfg := config.Env()
-	logger := &zap.Logger{}
-	var err error
+	var (
+		logger *zap.Logger
+		err    error
+	)
 
 	if cfg.AppEnv == config.AppEnvDev {
 		devConfig := zap.NewDevelopmentConfig()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -15,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// InitDatabase initialize the database connection pool and return the pool and also migrate the database
+// InitDatabase initialize the database connection pool and runs migrations when enabled.
 func InitDatabase(logger *zap.Logger) (*pgxpool.Pool, error) {
 	ctx := context.Background()
 
@@ -33,7 +34,8 @@ func InitDatabase(logger *zap.Logger) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := pool.Ping(ctx); err != nil {
+	err = pool.Ping(ctx)
+	if err != nil {
 		pool.Close()
 		return nil, err
 	}
@@ -45,7 +47,7 @@ func InitDatabase(logger *zap.Logger) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-// getDatabaseURL return a pgsql connection uri by the environment variables
+// getDatabaseURL return a pgsql connection uri by the environment variables.
 func getDatabaseURL() string {
 	dbHost := config.Env().DBHost
 	dbPort := config.Env().DBPort
@@ -57,13 +59,15 @@ func getDatabaseURL() string {
 		dbSSLMode = "disable"
 	}
 
+	hostPort := net.JoinHostPort(dbHost, dbPort)
+
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode,
+		"postgres://%s:%s@%s/%s?sslmode=%s",
+		dbUser, dbPassword, hostPort, dbName, dbSSLMode,
 	)
 }
 
-// migrator the database
+// migrator runs database migrations when enabled.
 func migrator(logger *zap.Logger) {
 	if !config.Env().AppAutoMigrate {
 		logger.Info("Skipping database migration (APP_AUTO_MIGRATE is false)")
@@ -82,7 +86,8 @@ func migrator(logger *zap.Logger) {
 		logger.Fatal("failed to create migrator", zap.Error(err))
 	}
 
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	err = m.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		logger.Fatal("failed to migrate database", zap.Error(err))
 	}
 

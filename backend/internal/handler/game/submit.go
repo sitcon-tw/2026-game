@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
@@ -48,19 +49,37 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	// Increment current level by 1 but do not exceed unlock_level
 	newLevel := fresh.CurrentLevel + 1
 	if newLevel > fresh.UnlockLevel {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("level exceeds unlock"), "current level cannot exceed unlock level")
+		res.Fail(
+			w,
+			h.Logger,
+			http.StatusBadRequest,
+			errors.New("level exceeds unlock"),
+			"current level cannot exceed unlock level",
+		)
 		return
 	}
 
-	if err := h.Repo.UpdateCurrentLevel(r.Context(), tx, fresh.ID, newLevel); err != nil {
+	err = h.Repo.UpdateCurrentLevel(r.Context(), tx, fresh.ID, newLevel)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update level")
 		return
 	}
 
 	// Issue discount coupons for newly reached levels based on rules.
 	issued := []CouponResponse{}
+	var (
+		coupon  *models.DiscountCoupon
+		created bool
+	)
 	for _, rule := range config.GetCouponRulesByLevel(newLevel) {
-		coupon, created, err := h.Repo.CreateDiscountCoupon(r.Context(), tx, fresh.ID, rule.Amount, rule.ID, rule.MaxQty)
+		coupon, created, err = h.Repo.CreateDiscountCoupon(
+			r.Context(),
+			tx,
+			fresh.ID,
+			rule.Amount,
+			rule.ID,
+			rule.MaxQty,
+		)
 		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to issue coupon")
 			return
@@ -69,10 +88,15 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		issued = append(issued, CouponResponse{Token: coupon.Token, Price: coupon.Price, DiscountID: coupon.DiscountID})
+		issued = append(issued, CouponResponse{
+			Token:      coupon.Token,
+			Price:      coupon.Price,
+			DiscountID: coupon.DiscountID,
+		})
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}

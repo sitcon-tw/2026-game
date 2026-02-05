@@ -34,7 +34,12 @@ type Repository interface {
 	GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]models.User, error)
 	UpdateCurrentLevel(ctx context.Context, tx pgx.Tx, userID string, newLevel int) error
 	GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error)
-	GetAroundUsers(ctx context.Context, tx pgx.Tx, userID string, span int) ([]models.User, error)
+	GetAroundUsers(
+		ctx context.Context,
+		tx pgx.Tx,
+		userID string,
+		span int,
+	) ([]models.User, error)
 
 	// Activity operations
 	CountVisitedActivities(ctx context.Context, tx pgx.Tx, userID string) (int, error)
@@ -47,7 +52,14 @@ type Repository interface {
 	ListVisitedActivityIDs(ctx context.Context, tx pgx.Tx, userID string) ([]string, error)
 
 	// Discount operations
-	CreateDiscountCoupon(ctx context.Context, tx pgx.Tx, userID string, price int, discountID string, maxQty int) (*models.DiscountCoupon, bool, error)
+	CreateDiscountCoupon(
+		ctx context.Context,
+		tx pgx.Tx,
+		userID string,
+		price int,
+		discountID string,
+		maxQty int,
+	) (*models.DiscountCoupon, bool, error)
 	GetDiscountByToken(ctx context.Context, tx pgx.Tx, token string) (*models.DiscountCoupon, error)
 	MarkDiscountUsed(ctx context.Context, tx pgx.Tx, id string) (*models.DiscountCoupon, error)
 	ListDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)

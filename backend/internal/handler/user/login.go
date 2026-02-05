@@ -11,12 +11,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sitcon-tw/2026-game/internal/models"
+	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/config"
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/res"
-	"github.com/sitcon-tw/2026-game/pkg/utils"
 )
 
 var errUnauthorized = errors.New("unauthorized")
+
+const defaultUnlockLevel = 5
 
 // Login godoc
 // @Summary      使用者登入
@@ -30,7 +33,7 @@ var errUnauthorized = errors.New("unauthorized")
 // @Param        Authorization  header  string  true  "Bearer {token}"
 // @Router       /users/login [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	token := utils.BearerToken(r.Header.Get("Authorization"))
+	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
 		err := errors.New("missing token")
 		res.Fail(w, h.Logger, http.StatusBadRequest, err, "Missing token")
@@ -56,8 +59,12 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.Repo.GetUserByToken(r.Context(), tx, token)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to query user")
-		return
+		if errors.Is(err, repository.ErrNotFound) {
+			user = nil
+		} else {
+			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to query user")
+			return
+		}
 	}
 
 	if user == nil {
@@ -68,20 +75,22 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 			AuthToken:    token,
 			Nickname:     userID,
 			QRCodeToken:  uuid.NewString(),
-			UnlockLevel:  5,
+			UnlockLevel:  defaultUnlockLevel,
 			CurrentLevel: 0,
 			LastPassTime: now,
 			CreatedAt:    now,
 			UpdatedAt:    now,
 		}
 
-		if err := h.Repo.InsertUser(r.Context(), tx, user); err != nil {
+		err = h.Repo.InsertUser(r.Context(), tx, user)
+		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to create user")
 			return
 		}
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(r.Context(), tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
@@ -123,7 +132,8 @@ func (h *Handler) fetchOpassUserID(ctx context.Context, authToken string) (strin
 	var payload struct {
 		UserID string `json:"user_id"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+	err = json.NewDecoder(resp.Body).Decode(&payload)
+	if err != nil {
 		return "", err
 	}
 
