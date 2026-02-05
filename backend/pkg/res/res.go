@@ -22,6 +22,13 @@ func Fail(w http.ResponseWriter, logger *zap.Logger, status int, err error, mess
 		)
 	}
 
+	if logger != nil && err != nil && status >= 400 && status < 500  {
+		logger.Warn("client error",
+			zap.Int("status", status),
+			zap.Error(err),
+		)
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 
