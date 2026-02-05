@@ -549,9 +549,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "qrcode_token": {
-                    "type": "string"
-                },
                 "type": {
                     "type": "string"
                 },
