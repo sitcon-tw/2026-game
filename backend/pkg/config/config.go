@@ -28,6 +28,9 @@ type EnvConfig struct {
 	AppPort        string `env:"APP_PORT" envDefault:"8000"`
 	AppAutoMigrate bool   `env:"APP_AUTO_MIGRATE" envDefault:"false"`
 
+	// CORS
+	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:"," envDefault:"http://localhost:3000"`
+
 	// PostgreSQL Settings
 	DBHost     string `env:"DB_HOST" envDefault:"localhost"`
 	DBPort     string `env:"DB_PORT" envDefault:"5432"`

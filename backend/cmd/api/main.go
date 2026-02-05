@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/internal/router"
@@ -75,6 +76,16 @@ func main() {
 func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger(logger))
+
+	corsMiddleware := cors.Handler(cors.Options{
+		AllowedOrigins:   config.Env().CORSAllowedOrigins,
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	})
+	r.Use(corsMiddleware)
 
 	// Rate limit
 	r.Use(httprate.LimitByIP(
