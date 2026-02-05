@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	swaggerDocs "github.com/sitcon-tw/2026-game/docs"
 
 	scalar "github.com/MarceloPetrucio/go-scalar-api-reference"
@@ -57,7 +59,8 @@ func main() {
 func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger(logger))
-
+	r.Use(httprate.LimitByIP(10, 5 * time.Second))
+	
 	r.Route("/api", func(r chi.Router) {
 		r.Mount("/users", router.UserRoutes(repo, logger))
 		r.Mount("/activities", router.ActivityRoutes(repo, logger))
