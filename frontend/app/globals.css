@@ -3,8 +3,8 @@
 :root {
   --bg-primary: #efebe9;
   --bg-secondary: #d7ccc8;
-  --bg-header: #5d4037;
-  --bg-header-accent: #8d6e63;
+  --bg-header: #5e3808;
+  --bg-header-accent: #5e3808;
   --text-primary: #5d4037;
   --text-secondary: #8d6e63;
   --text-light: #efebe9;
@@ -22,7 +22,7 @@
   --status-success: #4caf50;
   --status-error: #f44336;
   --status-locked: #9e9e9e;
-  --header-height: 80px;
+  --header-height: 100px;
   --navbar-height: 64px;
   --content-max-width: 430px;
   --border-radius: 12px;
