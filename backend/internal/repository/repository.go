@@ -18,6 +18,7 @@ type Repository interface {
 	CommitTransaction(ctx context.Context, tx pgx.Tx) error
 
 	// User operations
+	GetUserByToken(ctx context.Context, tx pgx.Tx, token string) (*models.User, error)
 	GetUserByIDForUpdate(ctx context.Context, tx pgx.Tx, id string) (*models.User, error)
 	GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error)
 	InsertUser(ctx context.Context, tx pgx.Tx, user *models.User) error
@@ -39,6 +40,7 @@ type Repository interface {
 	CountVisitedActivities(ctx context.Context, tx pgx.Tx, userID string) (int, error)
 	GetActivityByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.Activities, error)
 	GetActivityByID(ctx context.Context, tx pgx.Tx, id string) (*models.Activities, error)
+	GetActivityByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Activities, error)
 	AddVisited(ctx context.Context, tx pgx.Tx, userID, activityID string) (bool, error)
 	CountVisitedByActivity(ctx context.Context, tx pgx.Tx, activityID string) (int, error)
 	ListActivities(ctx context.Context, tx pgx.Tx) ([]models.Activities, error)

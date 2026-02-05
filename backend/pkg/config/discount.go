@@ -1,5 +1,6 @@
 package config
 
+// DiscountRule defines a discount rule for coupons.
 type DiscountRule struct {
 	ID        string
 	PassLevel int
@@ -14,6 +15,7 @@ var couponRules = []DiscountRule{
 	{ID: "level-40", PassLevel: 40, Amount: 300, MaxQty: 1},
 }
 
+// GetCouponRulesByLevel returns all discount rules applicable for the given level.
 func GetCouponRulesByLevel(level int) []DiscountRule {
 	res := []DiscountRule{}
 
@@ -24,13 +26,4 @@ func GetCouponRulesByLevel(level int) []DiscountRule {
 	}
 
 	return res
-}
-
-func GetCouponRuleByAmount(amount int) (DiscountRule, bool) {
-	for _, rule := range couponRules {
-		if rule.Amount == amount {
-			return rule, true
-		}
-	}
-	return DiscountRule{}, false
 }

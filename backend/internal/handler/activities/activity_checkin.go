@@ -16,7 +16,7 @@ import (
 // @Tags         activities
 // @Produce      json
 // @Param        activityQRCode  path      string  true  "Activity QR code token"
-// @Success      200  {object}  map[string]string
+// @Success      200  {object}  checkinResponse
 // @Failure      400  {object}  res.ErrorResponse "bad request"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
@@ -76,5 +76,5 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]string{"status": status})
+	_ = json.NewEncoder(w).Encode(checkinResponse{Status: status})
 }

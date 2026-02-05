@@ -10,12 +10,17 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/utils"
 )
 
+type countResponse struct {
+	Count int `json:"count"`
+	Max   int `json:"max"`
+}
+
 // Count handles GET /friends/count.
 // @Summary      取得好友數量及上限
 // @Description  取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。
 // @Tags         friends
 // @Produce      json
-// @Success      200  {object}  CountResponse
+// @Success      200  {object}  countResponse
 // @Failure      401  {object}  res.ErrorResponse
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /friends/count [get]
@@ -52,7 +57,7 @@ func (h *Handler) Count(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(CountResponse{
+	_ = json.NewEncoder(w).Encode(countResponse{
 		Count: total,
 		Max:   max,
 	})

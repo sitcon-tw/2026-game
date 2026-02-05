@@ -26,7 +26,7 @@ func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 			}
 			defer repo.DeferRollback(r.Context(), tx)
 
-			booth, err := repo.GetActivityByID(r.Context(), tx, cookie.Value)
+			booth, err := repo.GetActivityByToken(r.Context(), tx, cookie.Value)
 			if err != nil {
 				logger.Error("booth auth: fetch activity failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)

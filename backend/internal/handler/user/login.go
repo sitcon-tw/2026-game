@@ -54,7 +54,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	user, err := h.Repo.GetUserByID(r.Context(), tx, token)
+	user, err := h.Repo.GetUserByToken(r.Context(), tx, token)
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to query user")
 		return
@@ -64,7 +64,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		now := time.Now().UTC()
 
 		user = &models.User{
-			ID:           token,
+			ID:           uuid.NewString(),
+			AuthToken:    token,
 			Nickname:     userID,
 			QRCodeToken:  uuid.NewString(),
 			UnlockLevel:  5,

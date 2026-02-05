@@ -10,13 +10,14 @@ import (
 // GetUserByID fetches a user by id. Returns (nil, nil) if not found.
 func (r *PGRepository) GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
 	const query = `
-SELECT id, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE id = $1`
 
 	var u models.User
 	if err := tx.QueryRow(ctx, query, id).Scan(
 		&u.ID,
+		&u.AuthToken,
 		&u.Nickname,
 		&u.QRCodeToken,
 		&u.UnlockLevel,
@@ -37,7 +38,7 @@ WHERE id = $1`
 // GetUserByIDForUpdate fetches a user row with FOR UPDATE lock to avoid concurrent updates.
 func (r *PGRepository) GetUserByIDForUpdate(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
 	const query = `
-SELECT id, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE id = $1
 FOR UPDATE`
@@ -45,6 +46,35 @@ FOR UPDATE`
 	var u models.User
 	if err := tx.QueryRow(ctx, query, id).Scan(
 		&u.ID,
+		&u.AuthToken,
+		&u.Nickname,
+		&u.QRCodeToken,
+		&u.UnlockLevel,
+		&u.CurrentLevel,
+		&u.LastPassTime,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+// GetUserByToken fetches a user by auth token. Returns (nil, nil) if not found.
+func (r *PGRepository) GetUserByToken(ctx context.Context, tx pgx.Tx, token string) (*models.User, error) {
+	const query = `
+SELECT id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+FROM users
+WHERE auth_token = $1`
+
+	var u models.User
+	if err := tx.QueryRow(ctx, query, token).Scan(
+		&u.ID,
+		&u.AuthToken,
 		&u.Nickname,
 		&u.QRCodeToken,
 		&u.UnlockLevel,
@@ -65,13 +95,14 @@ FOR UPDATE`
 // GetUserByQRCode fetches a user by their QR code token. Returns (nil, nil) if not found.
 func (r *PGRepository) GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error) {
 	const query = `
-SELECT id, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE qrcode_token = $1`
 
 	var u models.User
 	if err := tx.QueryRow(ctx, query, qr).Scan(
 		&u.ID,
+		&u.AuthToken,
 		&u.Nickname,
 		&u.QRCodeToken,
 		&u.UnlockLevel,
@@ -98,11 +129,12 @@ func (r *PGRepository) IncrementUnlockLevel(ctx context.Context, tx pgx.Tx, user
 // InsertUser inserts a new user record.
 func (r *PGRepository) InsertUser(ctx context.Context, tx pgx.Tx, user *models.User) error {
 	const stmt = `
-INSERT INTO users (id, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+INSERT INTO users (id, auth_token, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
 	_, err := tx.Exec(ctx, stmt,
 		user.ID,
+		user.AuthToken,
 		user.Nickname,
 		user.QRCodeToken,
 		user.UnlockLevel,

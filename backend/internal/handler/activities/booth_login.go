@@ -38,7 +38,7 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	booth, err := h.requireBoothByID(r.Context(), tx, token)
+	booth, err := h.requireBoothByToken(r.Context(), tx, token)
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusUnauthorized, err, "unauthorized booth")
 		return
@@ -51,7 +51,7 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "booth_token",
-		Value:    booth.ID,
+		Value:    booth.Token,
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -62,9 +62,9 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// requireBooth loads the activity by qr token and ensures type=booth.
-func (h *Handler) requireBoothByID(ctx context.Context, tx pgx.Tx, id string) (*models.Activities, error) {
-	booth, err := h.Repo.GetActivityByID(ctx, tx, id)
+// requireBooth loads the activity by login token and ensures type=booth.
+func (h *Handler) requireBoothByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Activities, error) {
+	booth, err := h.Repo.GetActivityByToken(ctx, tx, token)
 	if err != nil {
 		return nil, err
 	}

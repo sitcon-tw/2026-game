@@ -68,10 +68,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
+                            "$ref": "#/definitions/activities.countResponse"
                         }
                     },
                     "401": {
@@ -159,10 +156,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/activities.checkinResponse"
                         }
                     },
                     "400": {
@@ -209,10 +203,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/activities.checkinResponse"
                         }
                     },
                     "400": {
@@ -546,6 +537,9 @@ const docTemplate = `{
         "activities.activityWithStatus": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -554,6 +548,22 @@ const docTemplate = `{
                 },
                 "visited": {
                     "type": "boolean"
+                }
+            }
+        },
+        "activities.checkinResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "activities.countResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
                 }
             }
         },

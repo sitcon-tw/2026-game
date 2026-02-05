@@ -33,7 +33,7 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 			}
 			defer repo.DeferRollback(r.Context(), tx)
 
-			user, err := repo.GetUserByID(r.Context(), tx, cookie.Value)
+			user, err := repo.GetUserByToken(r.Context(), tx, cookie.Value)
 			if err != nil {
 				logger.Error("auth: fetch user failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)

@@ -66,10 +66,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
+                            "$ref": "#/definitions/activities.countResponse"
                         }
                     },
                     "401": {
@@ -157,10 +154,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/activities.checkinResponse"
                         }
                     },
                     "400": {
@@ -207,10 +201,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/activities.checkinResponse"
                         }
                     },
                     "400": {
@@ -544,6 +535,9 @@
         "activities.activityWithStatus": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -552,6 +546,22 @@
                 },
                 "visited": {
                     "type": "boolean"
+                }
+            }
+        },
+        "activities.checkinResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "activities.countResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
                 }
             }
         },

@@ -17,6 +17,7 @@ const (
 // Activities mirrors the activities table.
 type Activities struct {
 	ID          string          `db:"id" json:"id"`
+	Token       string          `db:"token" json:"-"`
 	Type        ActivitiesTypes `db:"type" json:"type"`
 	QRCodeToken string          `db:"qrcode_token" json:"qrcode_token"`
 	Name        string          `db:"name" json:"name"`

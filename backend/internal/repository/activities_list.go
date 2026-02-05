@@ -10,7 +10,7 @@ import (
 // ListActivities returns all activities ordered by created_at then id.
 func (r *PGRepository) ListActivities(ctx context.Context, tx pgx.Tx) ([]models.Activities, error) {
 	const query = `
-SELECT id, type, qrcode_token, name, created_at, updated_at
+SELECT id, token, type, qrcode_token, name, created_at, updated_at
 FROM activities
 ORDER BY created_at ASC, id ASC`
 
@@ -23,7 +23,7 @@ ORDER BY created_at ASC, id ASC`
 	var list []models.Activities
 	for rows.Next() {
 		var a models.Activities
-		if err := rows.Scan(&a.ID, &a.Type, &a.QRCodeToken, &a.Name, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		if err := rows.Scan(&a.ID, &a.Token, &a.Type, &a.QRCodeToken, &a.Name, &a.CreatedAt, &a.UpdatedAt); err != nil {
 			return nil, err
 		}
 		list = append(list, a)
