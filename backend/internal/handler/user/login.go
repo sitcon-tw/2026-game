@@ -68,7 +68,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 			Nickname:     userID,
 			QRCodeToken:  uuid.NewString(),
 			UnlockLevel:  5,
-			CurrentLevel: 1,
+			CurrentLevel: 0,
 			LastPassTime: now,
 			CreatedAt:    now,
 			UpdatedAt:    now,

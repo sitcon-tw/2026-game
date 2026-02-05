@@ -16,10 +16,10 @@ const (
 
 // Activities mirrors the activities table.
 type Activities struct {
-	ID          string          `db:"id"`
-	Type        ActivitiesTypes `db:"type"`
-	QRCodeToken string          `db:"qrcode_token"`
-	Name        string          `db:"name"`
-	CreatedAt   time.Time       `db:"created_at"`
-	UpdatedAt   time.Time       `db:"updated_at"`
+	ID          string          `db:"id" json:"id"`
+	Type        ActivitiesTypes `db:"type" json:"type"`
+	QRCodeToken string          `db:"qrcode_token" json:"qrcode_token"`
+	Name        string          `db:"name" json:"name"`
+	CreatedAt   time.Time       `db:"created_at" json:"created_at"`
+	UpdatedAt   time.Time       `db:"updated_at" json:"updated_at"`
 }

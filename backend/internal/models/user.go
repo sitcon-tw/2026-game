@@ -4,12 +4,12 @@ import "time"
 
 // User mirrors the users table.
 type User struct {
-	ID           string    `db:"id"`
-	Nickname     string    `db:"nickname"`
-	QRCodeToken  string    `db:"qrcode_token"`
-	UnlockLevel  int       `db:"unlock_level"`
-	CurrentLevel int       `db:"current_level"`
-	LastPassTime time.Time `db:"last_pass_time"`
-	CreatedAt    time.Time `db:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at"`
+	ID           string    `db:"id" json:"id"`
+	Nickname     string    `db:"nickname" json:"nickname"`
+	QRCodeToken  string    `db:"qrcode_token" json:"qrcode_token"`
+	UnlockLevel  int       `db:"unlock_level" json:"unlock_level"`
+	CurrentLevel int       `db:"current_level" json:"current_level"`
+	LastPassTime time.Time `db:"last_pass_time" json:"last_pass_time"`
+	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
 }

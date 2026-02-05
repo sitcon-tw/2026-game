@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -26,7 +27,7 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userQR := r.PathValue("userQRCode")
+	userQR := chi.URLParam(r, "userQRCode")
 	if userQR == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, nil, "missing user qr code")
 		return

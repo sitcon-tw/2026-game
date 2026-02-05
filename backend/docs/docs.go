@@ -604,28 +604,28 @@ const docTemplate = `{
         "models.User": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "created_at": {
                     "type": "string"
                 },
-                "currentLevel": {
+                "current_level": {
                     "type": "integer"
                 },
                 "id": {
                     "type": "string"
                 },
-                "lastPassTime": {
+                "last_pass_time": {
                     "type": "string"
                 },
                 "nickname": {
                     "type": "string"
                 },
-                "qrcodeToken": {
+                "qrcode_token": {
                     "type": "string"
                 },
-                "unlockLevel": {
+                "unlock_level": {
                     "type": "integer"
                 },
-                "updatedAt": {
+                "updated_at": {
                     "type": "string"
                 }
             }

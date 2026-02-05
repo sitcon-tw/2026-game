@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 	"github.com/sitcon-tw/2026-game/pkg/utils"
@@ -34,7 +35,7 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	couponToken := r.PathValue("couponToken")
+	couponToken := chi.URLParam(r, "couponToken")
 	if couponToken == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing coupon token"), "missing coupon token")
 		return

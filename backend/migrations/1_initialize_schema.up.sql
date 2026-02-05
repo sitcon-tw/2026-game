@@ -11,16 +11,16 @@ CREATE TABLE "public"."users" (
     "last_pass_time" timestamp NOT NULL,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL,
-    CONSTRAINT "pk_table_1_id" PRIMARY KEY ("id")
+    CONSTRAINT "pk_users_id" PRIMARY KEY ("id")
 );
 -- Indexes
-CREATE UNIQUE INDEX "users_index_2" ON "public"."users" ("qrcode_token");
+CREATE UNIQUE INDEX "idx_users_qrcode_token" ON "public"."users" ("qrcode_token");
 
 CREATE TABLE "public"."friends" (
     "user_id" text NOT NULL,
     "friend_id" text NOT NULL,
     "created_at" timestamp NOT NULL,
-    CONSTRAINT "pk_table_3_id" PRIMARY KEY ("user_id", "friend_id")
+    CONSTRAINT "pk_friends_user_friend" PRIMARY KEY ("user_id", "friend_id")
 );
 
 CREATE TABLE "public"."activities" (
@@ -30,16 +30,16 @@ CREATE TABLE "public"."activities" (
     "name" text NOT NULL,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL,
-    CONSTRAINT "pk_table_4_id" PRIMARY KEY ("id")
+    CONSTRAINT "pk_activities_id" PRIMARY KEY ("id")
 );
 -- Indexes
-CREATE UNIQUE INDEX "activities_index_2" ON "public"."activities" ("qrcode_token");
+CREATE UNIQUE INDEX "idx_activities_qrcode_token" ON "public"."activities" ("qrcode_token");
 
 CREATE TABLE "public"."visted" (
     "user_id" text NOT NULL,
     "activity_id" text NOT NULL,
     "created_at" timestamp NOT NULL,
-    CONSTRAINT "pk_table_5_id" PRIMARY KEY ("user_id", "activity_id")
+    CONSTRAINT "pk_visited_user_activity" PRIMARY KEY ("user_id", "activity_id")
 );
 
 CREATE TABLE "public"."discount_coupons" (
@@ -49,10 +49,10 @@ CREATE TABLE "public"."discount_coupons" (
     "price" integer NOT NULL,
     "used_at" timestamp NOT NULL,
     "created_at" timestamp NOT NULL,
-    CONSTRAINT "pk_table_5_id" PRIMARY KEY ("id", "user_id")
+    CONSTRAINT "pk_discount_coupons_id_user" PRIMARY KEY ("id", "user_id")
 );
 -- Indexes
-CREATE UNIQUE INDEX "discount_coupons_index_2" ON "public"."discount_coupons" ("token");
+CREATE UNIQUE INDEX "idx_discount_coupons_token" ON "public"."discount_coupons" ("token");
 
 -- Foreign key constraints
 -- Schema: public

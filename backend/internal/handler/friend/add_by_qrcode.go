@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
@@ -27,7 +28,7 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qr := r.PathValue("userQRCode")
+	qr := chi.URLParam(r, "userQRCode")
 	if qr == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
 		return

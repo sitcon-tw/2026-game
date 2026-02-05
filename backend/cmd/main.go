@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	swaggerDocs "github.com/sitcon-tw/2026-game/docs"
 
 	scalar "github.com/MarceloPetrucio/go-scalar-api-reference"
@@ -43,9 +44,7 @@ func main() {
 
 	repo := repository.New(db, logger)
 
-	mux := initRoutes(repo, logger)
-
-	handler := middleware.Logger(logger)(mux)
+	handler := initRoutes(repo, logger)
 
 	logger.Info("Starting server",
 		zap.String("port", cfg.AppPort),
@@ -55,33 +54,24 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%s", cfg.AppPort), handler)
 }
 
-func initRoutes(repo repository.Repository, logger *zap.Logger) *http.ServeMux {
-	root := http.NewServeMux()
-	apiMux := http.NewServeMux()
+func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger(logger))
 
-	// Public routes
-	apiMux.Handle("/users/", http.StripPrefix("/users", router.UserRoutes(repo, logger)))
-	apiMux.Handle("/activities/", http.StripPrefix("/activities", router.ActivityRoutes(repo, logger)))
-	apiMux.Handle("/discount/", http.StripPrefix("/discount", router.DiscountRoutes(repo, logger)))
+	r.Route("/api", func(r chi.Router) {
+		r.Mount("/users", router.UserRoutes(repo, logger))
+		r.Mount("/activities", router.ActivityRoutes(repo, logger))
+		r.Mount("/discount", router.DiscountRoutes(repo, logger))
 
-	// Authenticated route group
-	protected := http.NewServeMux()
-	protected.Handle("/friends/", http.StripPrefix("/friends", router.FriendRoutes(repo, logger)))
-	protected.Handle("/game/", http.StripPrefix("/game", router.GameRoutes(repo, logger)))
-
-	protectedHandler := middleware.Auth(repo, logger)(protected)
-
-	// Protect only the above group
-	apiMux.Handle("/friends/", protectedHandler)
-	apiMux.Handle("/game/", protectedHandler)
-
-	root.Handle("/api/", http.StripPrefix("/api", apiMux))
+		r.Mount("/friends", router.FriendRoutes(repo, logger))
+		r.Mount("/game", router.GameRoutes(repo, logger))
+	})
 
 	if config.Env().AppEnv == config.AppEnvDev {
-		root.Handle("/docs", scalarDocsHandler())
+		r.Get("/docs", scalarDocsHandler())
 	}
 
-	return root
+	return r
 }
 
 func scalarDocsHandler() http.HandlerFunc {
