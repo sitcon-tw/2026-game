@@ -14,7 +14,6 @@ type activityWithStatus struct {
 	Type        string `json:"type"`
 	Name        string `json:"name"`
 	Visited     bool   `json:"visited"`
-	QRCodeToken string `json:"qrcode_token,omitempty"`
 }
 
 // List handles GET /activities.
@@ -68,7 +67,6 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 			Type:        string(a.Type),
 			Name:        a.Name,
 			Visited:     visited,
-			QRCodeToken: a.QRCodeToken,
 		})
 	}
 
