@@ -34,8 +34,8 @@ jobs:
         run: golint ./...
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           working-directory: backend
-          version: v2.8.0
+          version: latest
           args: --timeout 5m
