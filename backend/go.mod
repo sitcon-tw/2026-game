@@ -1,6 +1,6 @@
 module github.com/sitcon-tw/2026-game
 
-go 1.24.3
+go 1.25.5
 
 require (
 	github.com/go-chi/chi/v5 v5.2.4

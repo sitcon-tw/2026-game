@@ -59,8 +59,8 @@ func main() {
 func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger(logger))
-	r.Use(httprate.LimitByIP(10, 5 * time.Second))
-	
+	r.Use(httprate.LimitByIP(10, 5*time.Second))
+
 	r.Route("/api", func(r chi.Router) {
 		r.Mount("/users", router.UserRoutes(repo, logger))
 		r.Mount("/activities", router.ActivityRoutes(repo, logger))

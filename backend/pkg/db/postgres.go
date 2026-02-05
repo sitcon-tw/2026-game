@@ -65,6 +65,11 @@ func getDatabaseURL() string {
 
 // migrator the database
 func migrator(logger *zap.Logger) {
+	if !config.Env().AppAutoMigrate {
+		logger.Info("Skipping database migration (APP_AUTO_MIGRATE is false)")
+		return
+	}
+
 	logger.Info("Migrating database")
 
 	wd, _ := os.Getwd()
