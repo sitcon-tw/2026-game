@@ -130,7 +130,7 @@ func (r *PGRepository) CreateDiscountCoupon(
 
 	const stmt = `
 INSERT INTO discount_coupons (id, discount_id, token, user_id, price, used_at, created_at)
-VALUES ($1, $2, $3, $4, $5, '0001-01-01', NOW())
+VALUES ($1, $2, $3, $4, $5, NULL, NOW())
 RETURNING id, discount_id, token, user_id, price, used_at, created_at`
 
 	newID := uuid.NewString()

@@ -39,7 +39,7 @@ CREATE TABLE "public"."activities" (
 CREATE UNIQUE INDEX "idx_activities_token" ON "public"."activities" ("token");
 CREATE UNIQUE INDEX "idx_activities_qrcode_token" ON "public"."activities" ("qrcode_token");
 
-CREATE TABLE "public"."visted" (
+CREATE TABLE "public"."visited" (
     "user_id" uuid NOT NULL,
     "activity_id" uuid NOT NULL,
     "created_at" timestamp NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE "public"."discount_coupons" (
     "token" text NOT NULL,
     "user_id" uuid NOT NULL,
     "price" integer NOT NULL,
-    "used_at" timestamp NOT NULL,
+    "used_at" timestamp,
     "created_at" timestamp NOT NULL,
     CONSTRAINT "pk_discount_coupons_id_user" PRIMARY KEY ("id", "user_id")
 );
@@ -63,6 +63,6 @@ CREATE UNIQUE INDEX "idx_discount_coupons_token" ON "public"."discount_coupons" 
 -- Schema: public
 ALTER TABLE "public"."friends" ADD CONSTRAINT "fk_friends_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
 ALTER TABLE "public"."friends" ADD CONSTRAINT "fk_friends_friend_id_users_id" FOREIGN KEY("friend_id") REFERENCES "public"."users"("id");
-ALTER TABLE "public"."visted" ADD CONSTRAINT "fk_visted_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
-ALTER TABLE "public"."visted" ADD CONSTRAINT "fk_visted_activity_id_activities_id" FOREIGN KEY("activity_id") REFERENCES "public"."activities"("id");
+ALTER TABLE "public"."visited" ADD CONSTRAINT "fk_visited_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
+ALTER TABLE "public"."visited" ADD CONSTRAINT "fk_visited_activity_id_activities_id" FOREIGN KEY("activity_id") REFERENCES "public"."activities"("id");
 ALTER TABLE "public"."discount_coupons" ADD CONSTRAINT "fk_discount_coupons_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");

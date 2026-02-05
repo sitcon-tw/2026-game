@@ -58,7 +58,7 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch coupon")
 		return
 	}
-	if !coupon.UsedAt.IsZero() {
+	if coupon.UsedAt != nil {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("coupon already used"), "coupon already used")
 		return
 	}
@@ -90,9 +90,9 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 
 // discountUsedResponse is returned after marking a coupon as used.
 type discountUsedResponse struct {
-	ID         string    `json:"id"`
-	DiscountID string    `json:"discount_id"`
-	UserID     string    `json:"user_id"`
-	Price      int       `json:"price"`
-	UsedAt     time.Time `json:"used_at"`
+	ID         string     `json:"id"`
+	DiscountID string     `json:"discount_id"`
+	UserID     string     `json:"user_id"`
+	Price      int        `json:"price"`
+	UsedAt     *time.Time `json:"used_at"`
 }

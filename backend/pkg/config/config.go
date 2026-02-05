@@ -78,7 +78,7 @@ func Init() (*EnvConfig, error) {
 // Env returns the config. Panics if not initialized.
 func Env() *EnvConfig {
 	if appConfig == nil {
-		panic("config not initialized — call InitConfig() first")
+		panic("config not initialized — call Init() first")
 	}
 	return appConfig
 }

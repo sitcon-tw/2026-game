@@ -38,7 +38,7 @@ ORDER BY created_at ASC, id ASC`
 
 // ListVisitedActivityIDs returns activity IDs the user has visited.
 func (r *PGRepository) ListVisitedActivityIDs(ctx context.Context, tx pgx.Tx, userID string) ([]string, error) {
-	const query = `SELECT activity_id FROM visted WHERE user_id = $1`
+	const query = `SELECT activity_id FROM visited WHERE user_id = $1`
 
 	rows, err := tx.Query(ctx, query, userID)
 	if err != nil {

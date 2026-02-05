@@ -28,7 +28,7 @@ const defaultUnlockLevel = 5
 // @Produce      json
 // @Success      200  {object}  models.User
 // @Failure      400  {object}  res.ErrorResponse "Missing token"
-// @Failure      401  {object}  res.ErrorResponse "Inauthorized"
+// @Failure      401  {object}  res.ErrorResponse "Unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
 // @Param        Authorization  header  string  true  "Bearer {token}"
 // @Router       /users/login [post]
