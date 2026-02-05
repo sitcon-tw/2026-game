@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/sitcon-tw/2026-game/internal/handler/user"
 	"github.com/sitcon-tw/2026-game/internal/repository"
