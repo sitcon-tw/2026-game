@@ -486,7 +486,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Inauthorized",
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
                         }
