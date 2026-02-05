@@ -44,6 +44,7 @@ CREATE TABLE "public"."visted" (
 
 CREATE TABLE "public"."discount_coupons" (
     "id" text NOT NULL,
+    "discount_id" text NOT NULL,
     "token" text NOT NULL,
     "user_id" text NOT NULL,
     "price" integer NOT NULL,

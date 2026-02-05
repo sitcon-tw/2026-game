@@ -74,10 +74,11 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := discountUsedResponse{
-		ID:     updated.ID,
-		UserID: updated.UserID,
-		Price:  updated.Price,
-		UsedAt: updated.UsedAt,
+		ID:         updated.ID,
+		DiscountID: updated.DiscountID,
+		UserID:     updated.UserID,
+		Price:      updated.Price,
+		UsedAt:     updated.UsedAt,
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -87,8 +88,9 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 
 // discountUsedResponse is returned after marking a coupon as used.
 type discountUsedResponse struct {
-	ID     string    `json:"id"`
-	UserID string    `json:"user_id"`
-	Price  int       `json:"price"`
-	UsedAt time.Time `json:"used_at"`
+	ID         string    `json:"id"`
+	DiscountID string    `json:"discount_id"`
+	UserID     string    `json:"user_id"`
+	Price      int       `json:"price"`
+	UsedAt     time.Time `json:"used_at"`
 }

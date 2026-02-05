@@ -17,7 +17,8 @@ type Repository interface {
 	DeferRollback(ctx context.Context, tx pgx.Tx)
 	CommitTransaction(ctx context.Context, tx pgx.Tx) error
 
-	// User-related operations
+	// User operations
+	GetUserByIDForUpdate(ctx context.Context, tx pgx.Tx, id string) (*models.User, error)
 	GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error)
 	InsertUser(ctx context.Context, tx pgx.Tx, user *models.User) error
 	GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error)
@@ -44,8 +45,10 @@ type Repository interface {
 	ListVisitedActivityIDs(ctx context.Context, tx pgx.Tx, userID string) ([]string, error)
 
 	// Discount operations
+	CreateDiscountCoupon(ctx context.Context, tx pgx.Tx, userID string, price int, discountID string, maxQty int) (*models.DiscountCoupon, bool, error)
 	GetDiscountByToken(ctx context.Context, tx pgx.Tx, token string) (*models.DiscountCoupon, error)
 	MarkDiscountUsed(ctx context.Context, tx pgx.Tx, id string) (*models.DiscountCoupon, error)
+	ListDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)
 }
 
 // PGRepository is the production repository backed by pgx.

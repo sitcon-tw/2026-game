@@ -34,6 +34,34 @@ WHERE id = $1`
 	return &u, nil
 }
 
+// GetUserByIDForUpdate fetches a user row with FOR UPDATE lock to avoid concurrent updates.
+func (r *PGRepository) GetUserByIDForUpdate(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
+	const query = `
+SELECT id, nickname, qrcode_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+FROM users
+WHERE id = $1
+FOR UPDATE`
+
+	var u models.User
+	if err := tx.QueryRow(ctx, query, id).Scan(
+		&u.ID,
+		&u.Nickname,
+		&u.QRCodeToken,
+		&u.UnlockLevel,
+		&u.CurrentLevel,
+		&u.LastPassTime,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
 // GetUserByQRCode fetches a user by their QR code token. Returns (nil, nil) if not found.
 func (r *PGRepository) GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error) {
 	const query = `

@@ -234,6 +234,41 @@
                 }
             }
         },
+        "/discount": {
+            "get": {
+                "description": "需要登入 cookie，回傳自己名下的折扣券清單與使用狀態",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discount"
+                ],
+                "summary": "取得自己的折扣券",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.DiscountCoupon"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/discount/{couponToken}": {
             "post": {
                 "description": "用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。",
@@ -526,6 +561,9 @@
         "discount.discountUsedResponse": {
             "type": "object",
             "properties": {
+                "discount_id": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -548,6 +586,20 @@
                 },
                 "max": {
                     "type": "integer"
+                }
+            }
+        },
+        "game.CouponResponse": {
+            "type": "object",
+            "properties": {
+                "discount_id": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -591,11 +643,43 @@
         "game.SubmitResponse": {
             "type": "object",
             "properties": {
+                "coupons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.CouponResponse"
+                    }
+                },
                 "current_level": {
                     "type": "integer"
                 },
                 "unlock_level": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.DiscountCoupon": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "discount_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "used_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -34,7 +35,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
 	// Re-fetch latest user row to avoid stale data
-	fresh, err := h.Repo.GetUserByID(r.Context(), tx, user.ID)
+	fresh, err := h.Repo.GetUserByIDForUpdate(r.Context(), tx, user.ID)
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to load user")
 		return
@@ -56,6 +57,21 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Issue discount coupons for newly reached levels based on rules.
+	issued := []CouponResponse{}
+	for _, rule := range config.GetCouponRulesByLevel(newLevel) {
+		coupon, created, err := h.Repo.CreateDiscountCoupon(r.Context(), tx, fresh.ID, rule.Amount, rule.ID, rule.MaxQty)
+		if err != nil {
+			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to issue coupon")
+			return
+		}
+		if !created {
+			continue
+		}
+
+		issued = append(issued, CouponResponse{Token: coupon.Token, Price: coupon.Price, DiscountID: coupon.DiscountID})
+	}
+
 	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
@@ -64,6 +80,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	resp := SubmitResponse{
 		CurrentLevel: newLevel,
 		UnlockLevel:  fresh.UnlockLevel,
+		Coupons:      issued,
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

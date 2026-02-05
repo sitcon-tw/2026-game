@@ -19,6 +19,14 @@ type RankResponse struct {
 
 // SubmitResponse is returned by POST /game.
 type SubmitResponse struct {
-	CurrentLevel int `json:"current_level"`
-	UnlockLevel  int `json:"unlock_level"`
+	CurrentLevel int              `json:"current_level"`
+	UnlockLevel  int              `json:"unlock_level"`
+	Coupons      []CouponResponse `json:"coupons"`
+}
+
+// CouponResponse represents a discount coupon earned by passing levels.
+type CouponResponse struct {
+	Token      string `json:"token"`
+	Price      int    `json:"price"`
+	DiscountID string `json:"discount_id"`
 }
