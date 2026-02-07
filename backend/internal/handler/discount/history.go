@@ -51,11 +51,12 @@ func (h *Handler) ListStaffHistory(w http.ResponseWriter, r *http.Request) {
 	resp := make([]historyItem, 0, len(histories))
 	for _, hst := range histories {
 		resp = append(resp, historyItem{
-			ID:      hst.ID,
-			UserID:  hst.UserID,
-			StaffID: hst.StaffID,
-			Total:   hst.Total,
-			UsedAt:  hst.UsedAt,
+			ID:       hst.ID,
+			UserID:   hst.UserID,
+			Nickname: hst.Nickname,
+			StaffID:  hst.StaffID,
+			Total:    hst.Total,
+			UsedAt:   hst.UsedAt,
 		})
 	}
 
@@ -65,9 +66,10 @@ func (h *Handler) ListStaffHistory(w http.ResponseWriter, r *http.Request) {
 }
 
 type historyItem struct {
-	ID      string    `json:"id"`
-	UserID  string    `json:"user_id"`
-	StaffID string    `json:"staff_id"`
-	Total   int       `json:"total"`
-	UsedAt  time.Time `json:"used_at"`
+	ID       string    `json:"id"`
+	UserID   string    `json:"user_id"`
+	Nickname string    `json:"nickname"`
+	StaffID  string    `json:"staff_id"`
+	Total    int       `json:"total"`
+	UsedAt   time.Time `json:"used_at"`
 }

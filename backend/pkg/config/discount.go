@@ -11,7 +11,7 @@ type DiscountRule struct {
 //nolint:mnd // config-style rule table
 func couponRules() []DiscountRule {
 	return []DiscountRule{
-		{ID: "level-5", PassLevel: 5, Amount: 50, MaxQty: 1},
+		{ID: "level-5", PassLevel: 5, Amount: 50, MaxQty: 2},
 		{ID: "level-10", PassLevel: 10, Amount: 100, MaxQty: 1},
 		{ID: "level-20", PassLevel: 20, Amount: 200, MaxQty: 1},
 		{ID: "level-40", PassLevel: 40, Amount: 300, MaxQty: 1},

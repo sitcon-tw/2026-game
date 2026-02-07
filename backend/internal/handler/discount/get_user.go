@@ -22,7 +22,7 @@ import (
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon token"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /discount/user/{userCouponToken} [get]
+// @Router       /discount/staff/user/{userCouponToken} [get]
 // @Param        Authorization  header  string  true  "Bearer {token}"
 func (h *Handler) GetUserCoupons(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())

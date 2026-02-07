@@ -310,61 +310,7 @@
                 }
             }
         },
-        "/discount/staff/{userCouponToken}": {
-            "post": {
-                "description": "用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "discount"
-                ],
-                "summary": "工作人員掃 QR Code 來使用折扣券",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Discount coupon token",
-                        "name": "userCouponToken",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer {token}",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/discount.discountUsedResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "missing token | invalid coupon",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized staff",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/discount/user/{userCouponToken}": {
+        "/discount/staff/user/{userCouponToken}": {
             "get": {
                 "description": "需要 staff token，帶 userCouponToken 查詢該使用者尚未使用的折扣券與總額",
                 "produces": [
@@ -399,6 +345,58 @@
                     },
                     "400": {
                         "description": "missing token | invalid coupon token",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized staff",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discount"
+                ],
+                "summary": "工作人員掃 QR Code 來使用折扣券",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Discount coupon token",
+                        "name": "userCouponToken",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/discount.discountUsedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "missing token | invalid coupon",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
                         }
@@ -733,6 +731,9 @@
             "type": "object",
             "properties": {
                 "id": {
+                    "type": "string"
+                },
+                "nickname": {
                     "type": "string"
                 },
                 "staff_id": {

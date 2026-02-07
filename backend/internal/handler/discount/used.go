@@ -24,7 +24,7 @@ import (
 // @Failure      500  {object}  res.ErrorResponse
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
-// @Router       /discount/staff/{userCouponToken} [post]
+// @Router       /discount/staff/user/{userCouponToken} [post]
 // @Param        Authorization  header  string  true  "Bearer {token}"
 //
 //nolint:funlen // handler orchestration, keep logic linear

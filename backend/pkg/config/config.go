@@ -46,7 +46,7 @@ type EnvConfig struct {
 	FriendCapacityMultiplier int `env:"FRIEND_CAPACITY_MULTIPLIER" envDefault:"10"`
 
 	// Rate limiting
-	RateLimitRequestsPerWindow int           `env:"RATE_LIMIT_REQUESTS_PER_WINDOW" envDefault:"10"`
+	RateLimitRequestsPerWindow int           `env:"RATE_LIMIT_REQUESTS_PER_WINDOW" envDefault:"20"`
 	RateLimitWindow            time.Duration `env:"RATE_LIMIT_WINDOW" envDefault:"5s"`
 }
 

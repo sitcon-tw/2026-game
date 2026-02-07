@@ -8,6 +8,7 @@ import "time"
 type CouponHistory struct {
 	ID        string    `db:"id" json:"id"`
 	UserID    string    `db:"user_id" json:"user_id"`
+	Nickname  string    `db:"nickname" json:"nickname"`
 	StaffID   string    `db:"staff_id" json:"staff_id"`
 	Total     int       `db:"total" json:"total"`
 	UsedAt    time.Time `db:"used_at" json:"used_at"`

@@ -196,10 +196,17 @@ func (r *PGRepository) ListCouponHistoryByStaff(
 	staffID string,
 ) ([]models.CouponHistory, error) {
 	const query = `
-SELECT id, user_id, staff_id, total, used_at, created_at
-FROM coupon_history
-WHERE staff_id = $1
-ORDER BY used_at DESC`
+SELECT ch.id,
+       ch.user_id,
+       u.nickname,
+       ch.staff_id,
+       ch.total,
+       ch.used_at,
+       ch.created_at
+FROM coupon_history ch
+LEFT JOIN users u ON u.id = ch.user_id
+WHERE ch.staff_id = $1
+ORDER BY ch.used_at DESC`
 
 	rows, err := tx.Query(ctx, query, staffID)
 	if err != nil {
@@ -213,6 +220,7 @@ ORDER BY used_at DESC`
 		if scanErr := rows.Scan(
 			&h.ID,
 			&h.UserID,
+			&h.Nickname,
 			&h.StaffID,
 			&h.Total,
 			&h.UsedAt,
