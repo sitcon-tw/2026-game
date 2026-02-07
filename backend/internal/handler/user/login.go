@@ -40,16 +40,6 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := h.fetchOpassUserID(r.Context(), token)
-	if errors.Is(err, errUnauthorized) {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, err, "Unauthorized")
-		return
-	}
-	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to verify token")
-		return
-	}
-
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
@@ -68,6 +58,18 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user == nil {
+		var userID string
+		userID, err = h.fetchOpassUserID(r.Context(), token)
+
+		if errors.Is(err, errUnauthorized) {
+			res.Fail(w, h.Logger, http.StatusUnauthorized, err, "Unauthorized")
+			return
+		}
+		if err != nil {
+			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to verify token")
+			return
+		}
+
 		now := time.Now().UTC()
 
 		user = &models.User{

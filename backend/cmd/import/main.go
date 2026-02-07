@@ -74,7 +74,19 @@ func main() {
 }
 
 func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
-	var items []models.Activities
+	// activities.json needs token, but models.Activities omits it from JSON to avoid
+	// leaking login tokens via API responses. Use a dedicated struct for import.
+	type activityImport struct {
+		ID          string                 `json:"id"`
+		Token       string                 `json:"token"`
+		Type        models.ActivitiesTypes `json:"type"`
+		QRCodeToken string                 `json:"qrcode_token"`
+		Name        string                 `json:"name"`
+		CreatedAt   time.Time              `json:"created_at"`
+		UpdatedAt   time.Time              `json:"updated_at"`
+	}
+
+	var items []activityImport
 	if err := loadJSON(filepath.Join(dataDir, "activities.json"), &items); err != nil {
 		return fmt.Errorf("load activities: %w", err)
 	}
@@ -182,7 +194,22 @@ SET name = EXCLUDED.name,
 }
 
 func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
-	var items []models.User
+	// user.json contains auth_token, which is omitted from models.User JSON tags.
+	// Use a dedicated struct so tokens are loaded during import.
+	type userImport struct {
+		ID           string    `json:"id"`
+		AuthToken    string    `json:"auth_token"`
+		Nickname     string    `json:"nickname"`
+		QRCodeToken  string    `json:"qrcode_token"`
+		CouponToken  string    `json:"coupon_token"`
+		UnlockLevel  int       `json:"unlock_level"`
+		CurrentLevel int       `json:"current_level"`
+		LastPassTime time.Time `json:"last_pass_time"`
+		CreatedAt    time.Time `json:"created_at"`
+		UpdatedAt    time.Time `json:"updated_at"`
+	}
+
+	var items []userImport
 	if err := loadJSON(filepath.Join(dataDir, "user.json"), &items); err != nil {
 		return fmt.Errorf("load users: %w", err)
 	}
