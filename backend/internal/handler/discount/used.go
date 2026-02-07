@@ -26,6 +26,8 @@ import (
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Router       /discount/staff/{userCouponToken} [post]
 // @Param        Authorization  header  string  true  "Bearer {token}"
+//
+//nolint:funlen // handler orchestration, keep logic linear
 func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())
 	if !ok || staff == nil {
