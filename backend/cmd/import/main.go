@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/pkg/config"
@@ -28,14 +29,15 @@ const (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("usage: import [activities|staff|user]")
+	const requiredArgs = 2
+	if len(os.Args) < requiredArgs {
+		fmt.Fprintln(os.Stderr, "usage: import [activities|staff|user]")
 		os.Exit(1)
 	}
 
 	target := importTarget(os.Args[1])
 	if target != targetActivities && target != targetStaff && target != targetUser {
-		fmt.Printf("unknown target %q. valid: activities, staff, user\n", target)
+		fmt.Fprintf(os.Stderr, "unknown target %q. valid: activities, staff, user\n", target)
 		os.Exit(1)
 	}
 
@@ -64,7 +66,8 @@ func main() {
 	}
 
 	if importErr != nil {
-		log.Fatal("import failed", zap.Error(importErr), zap.String("target", string(target)))
+		log.Error("import failed", zap.Error(importErr), zap.String("target", string(target)))
+		return
 	}
 
 	log.Info("import completed", zap.String("target", string(target)))
@@ -85,7 +88,11 @@ func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Warn("rollback failed", zap.Error(rollbackErr))
+		}
+	}()
 
 	const stmt = `
 INSERT INTO activities (id, token, type, qrcode_token, name, created_at, updated_at)
@@ -137,7 +144,11 @@ func importStaff(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Warn("rollback failed", zap.Error(rollbackErr))
+		}
+	}()
 
 	const stmt = `
 INSERT INTO staff (id, name, token, created_at, updated_at)
@@ -185,7 +196,11 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Warn("rollback failed", zap.Error(rollbackErr))
+		}
+	}()
 
 	const stmt = `
 INSERT INTO users (id, auth_token, nickname, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)

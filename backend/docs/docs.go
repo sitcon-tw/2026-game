@@ -262,7 +262,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/discount/history": {
+        "/discount/staff/history": {
             "get": {
                 "description": "需要 staff token，回傳該 staff 操作的折扣券使用紀錄",
                 "produces": [
@@ -271,7 +271,7 @@ const docTemplate = `{
                 "tags": [
                     "discount"
                 ],
-                "summary": "取得工作人員自己的折扣使用紀錄",
+                "summary": "取得工作人員使用的折扣紀錄",
                 "parameters": [
                     {
                         "type": "string",
@@ -312,61 +312,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/discount/user/{couponToken}": {
-            "get": {
-                "description": "需要 staff token，帶 couponToken 查詢該使用者尚未使用的折扣券與總額",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "discount"
-                ],
-                "summary": "工作人員查詢某使用者可用折扣券",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User coupon token",
-                        "name": "couponToken",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Bearer {token}",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/discount.getUserCouponsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "missing token | invalid coupon token",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized staff",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/discount/{couponToken}": {
+        "/discount/staff/{userCouponToken}": {
             "post": {
                 "description": "用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。",
                 "produces": [
@@ -380,7 +326,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Discount coupon token",
-                        "name": "couponToken",
+                        "name": "userCouponToken",
                         "in": "path",
                         "required": true
                     },
@@ -401,6 +347,60 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "missing token | invalid coupon",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized staff",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/discount/user/{userCouponToken}": {
+            "get": {
+                "description": "需要 staff token，帶 userCouponToken 查詢該使用者尚未使用的折扣券與總額",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discount"
+                ],
+                "summary": "工作人員查詢某使用者可用折扣券",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User coupon token",
+                        "name": "userCouponToken",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/discount.getUserCouponsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "missing token | invalid coupon token",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
                         }
@@ -682,9 +682,6 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "integer"
-                },
-                "token": {
-                    "type": "string"
                 }
             }
         },
@@ -771,11 +768,11 @@ const docTemplate = `{
                 "discount_id": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "string"
+                },
                 "price": {
                     "type": "integer"
-                },
-                "token": {
-                    "type": "string"
                 }
             }
         },
