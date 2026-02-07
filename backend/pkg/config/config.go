@@ -41,8 +41,6 @@ type EnvConfig struct {
 
 	// Other
 	OPassURL string `env:"OPASS_URL" envDefault:"https://ccip.opass.app/"`
-	// Staff API key for discount verification
-	StaffAPIKey string `env:"STAFF_API_KEY"`
 
 	// Gameplay tuning
 	FriendCapacityMultiplier int `env:"FRIEND_CAPACITY_MULTIPLIER" envDefault:"10"`

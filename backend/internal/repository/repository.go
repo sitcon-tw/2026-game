@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,6 +22,7 @@ type Repository interface {
 	GetUserByToken(ctx context.Context, tx pgx.Tx, token string) (*models.User, error)
 	GetUserByIDForUpdate(ctx context.Context, tx pgx.Tx, id string) (*models.User, error)
 	GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error)
+	GetUserByCouponToken(ctx context.Context, tx pgx.Tx, couponToken string) (*models.User, error)
 	InsertUser(ctx context.Context, tx pgx.Tx, user *models.User) error
 	GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error)
 
@@ -60,9 +62,22 @@ type Repository interface {
 		discountID string,
 		maxQty int,
 	) (*models.DiscountCoupon, bool, error)
-	GetDiscountByToken(ctx context.Context, tx pgx.Tx, token string) (*models.DiscountCoupon, error)
-	MarkDiscountUsed(ctx context.Context, tx pgx.Tx, id string) (*models.DiscountCoupon, error)
+	MarkDiscountUsed(ctx context.Context, tx pgx.Tx, id string, staffID string) (*models.DiscountCoupon, error)
+	MarkDiscountsUsedByUser(
+		ctx context.Context,
+		tx pgx.Tx,
+		userID string,
+		staffID string,
+		historyID string,
+		usedAt time.Time,
+	) ([]models.DiscountCoupon, error)
 	ListDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)
+	InsertCouponHistory(ctx context.Context, tx pgx.Tx, history *models.CouponHistory) error
+	ListUnusedDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)
+	ListCouponHistoryByStaff(ctx context.Context, tx pgx.Tx, staffID string) ([]models.CouponHistory, error)
+
+	// Staff operations
+	GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error)
 }
 
 // PGRepository is the production repository backed by pgx.

@@ -7,37 +7,34 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
-	"github.com/sitcon-tw/2026-game/pkg/config"
-	"github.com/sitcon-tw/2026-game/pkg/helpers"
+	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// DiscountUsed handles POST /discount/{couponToken}.
+// DiscountUsed handles POST /discount/{userCouponToken}.
 // @Summary      工作人員掃 QR Code 來使用折扣券
 // @Description  用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。
 // @Tags         discount
 // @Produce      json
-// @Param        couponToken  path      string  true  "Discount coupon token"
+// @Param        userCouponToken  path      string  true  "Discount coupon token"
 // @Success      200  {object}  discountUsedResponse  ""
 // @Failure      500  {object}  res.ErrorResponse
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
-// @Router       /discount/{couponToken} [post]
+// @Router       /discount/staff/{userCouponToken} [post]
 // @Param        Authorization  header  string  true  "Bearer {token}"
 func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
-	token := helpers.BearerToken(r.Header.Get("Authorization"))
-	if token == "" {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing token"), "missing token")
-		return
-	}
-	if token != config.Env().StaffAPIKey {
+	staff, ok := middleware.StaffFromContext(r.Context())
+	if !ok || staff == nil {
 		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
 		return
 	}
 
-	couponToken := chi.URLParam(r, "couponToken")
-	if couponToken == "" {
+	userCouponToken := chi.URLParam(r, "userCouponToken")
+	if userCouponToken == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing coupon token"), "missing coupon token")
 		return
 	}
@@ -49,23 +46,55 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	coupon, err := h.Repo.GetDiscountByToken(r.Context(), tx, couponToken)
+	user, err := h.Repo.GetUserByCouponToken(r.Context(), tx, userCouponToken)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("coupon not found"), "coupon not found")
+			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("invalid coupon token"), "invalid coupon token")
 			return
 		}
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch coupon")
-		return
-	}
-	if coupon.UsedAt != nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("coupon already used"), "coupon already used")
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch user")
 		return
 	}
 
-	updated, err := h.Repo.MarkDiscountUsed(r.Context(), tx, coupon.ID)
+	// Lock and gather all unused coupons for this user; they must be redeemed as a batch.
+	coupons, err := h.Repo.ListUnusedDiscountsByUser(r.Context(), tx, user.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to mark coupon used")
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to list coupons")
+		return
+	}
+	if len(coupons) == 0 {
+		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("no available coupons"), "no available coupons")
+		return
+	}
+
+	total := 0
+	for _, c := range coupons {
+		total += c.Price
+	}
+
+	usedAt := time.Now().UTC()
+	history := &models.CouponHistory{
+		ID:        uuid.NewString(),
+		UserID:    user.ID,
+		StaffID:   staff.ID,
+		Total:     total,
+		UsedAt:    usedAt,
+		CreatedAt: usedAt,
+	}
+
+	err = h.Repo.InsertCouponHistory(r.Context(), tx, history)
+	if err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to insert coupon history")
+		return
+	}
+
+	updatedCoupons, err := h.Repo.MarkDiscountsUsedByUser(r.Context(), tx, user.ID, staff.ID, history.ID, usedAt)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("no available coupons"), "no available coupons")
+			return
+		}
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to mark coupons used")
 		return
 	}
 
@@ -76,11 +105,22 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := discountUsedResponse{
-		ID:         updated.ID,
-		DiscountID: updated.DiscountID,
-		UserID:     updated.UserID,
-		Price:      updated.Price,
-		UsedAt:     updated.UsedAt,
+		UserID:      user.ID,
+		UserName:    user.Nickname,
+		CouponToken: user.CouponToken,
+		Total:       total,
+		Count:       len(updatedCoupons),
+		UsedBy:      staff.Name,
+		UsedAt:      usedAt,
+		Coupons:     make([]couponItem, 0, len(updatedCoupons)),
+	}
+
+	for _, c := range updatedCoupons {
+		resp.Coupons = append(resp.Coupons, couponItem{
+			ID:         c.ID,
+			DiscountID: c.DiscountID,
+			Price:      c.Price,
+		})
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -88,11 +128,20 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
-// discountUsedResponse is returned after marking a coupon as used.
+// discountUsedResponse is returned after marking all of a user's coupons as used.
 type discountUsedResponse struct {
-	ID         string     `json:"id"`
-	DiscountID string     `json:"discount_id"`
-	UserID     string     `json:"user_id"`
-	Price      int        `json:"price"`
-	UsedAt     *time.Time `json:"used_at"`
+	UserID      string       `json:"user_id"`
+	UserName    string       `json:"user_name"`
+	CouponToken string       `json:"coupon_token"`
+	Total       int          `json:"total"`
+	Count       int          `json:"count"`
+	UsedBy      string       `json:"used_by"`
+	UsedAt      time.Time    `json:"used_at"`
+	Coupons     []couponItem `json:"coupons"`
+}
+
+type couponItem struct {
+	ID         string `json:"id"`
+	DiscountID string `json:"discount_id"`
+	Price      int    `json:"price"`
 }

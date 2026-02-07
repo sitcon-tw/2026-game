@@ -10,6 +10,7 @@ type User struct {
 	AuthToken    string    `db:"auth_token" json:"-"`
 	Nickname     string    `db:"nickname" json:"nickname"`
 	QRCodeToken  string    `db:"qrcode_token" json:"qrcode_token"`
+	CouponToken  string    `db:"coupon_token" json:"coupon_token"`
 	UnlockLevel  int       `db:"unlock_level" json:"unlock_level"`
 	CurrentLevel int       `db:"current_level" json:"current_level"`
 	LastPassTime time.Time `db:"last_pass_time" json:"last_pass_time"`

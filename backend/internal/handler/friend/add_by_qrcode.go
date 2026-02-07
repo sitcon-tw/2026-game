@@ -149,7 +149,8 @@ func (h *Handler) ensureFriendCapacity(ctx context.Context, tx pgx.Tx, userID st
 
 func (h *Handler) ensureFriendCapacityForUsers(ctx context.Context, tx pgx.Tx, userIDs ...string) error {
 	for _, id := range userIDs {
-		if err := h.ensureFriendCapacity(ctx, tx, id); err != nil {
+		err := h.ensureFriendCapacity(ctx, tx, id)
+		if err != nil {
 			return err
 		}
 	}

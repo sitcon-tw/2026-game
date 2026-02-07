@@ -26,7 +26,7 @@ type SubmitResponse struct {
 
 // CouponResponse represents a discount coupon earned by passing levels.
 type CouponResponse struct {
-	Token      string `json:"token"`
+	ID         string `json:"id"`
 	Price      int    `json:"price"`
 	DiscountID string `json:"discount_id"`
 }

@@ -89,7 +89,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 		}
 
 		issued = append(issued, CouponResponse{
-			Token:      coupon.Token,
+			ID:         coupon.ID,
 			Price:      coupon.Price,
 			DiscountID: coupon.DiscountID,
 		})

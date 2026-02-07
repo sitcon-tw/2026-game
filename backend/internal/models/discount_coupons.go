@@ -8,9 +8,10 @@ import "time"
 type DiscountCoupon struct {
 	ID         string     `db:"id" json:"id"`
 	DiscountID string     `db:"discount_id" json:"discount_id"`
-	Token      string     `db:"token" json:"token"`
 	UserID     string     `db:"user_id" json:"user_id"`
 	Price      int        `db:"price" json:"price"`
+	UsedBy     *string    `db:"used_by" json:"used_by"`
 	UsedAt     *time.Time `db:"used_at" json:"used_at"`
+	HistoryID  *string    `db:"history_id" json:"history_id"`
 	CreatedAt  time.Time  `db:"created_at" json:"created_at"`
 }

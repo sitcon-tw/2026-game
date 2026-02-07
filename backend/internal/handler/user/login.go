@@ -75,6 +75,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 			AuthToken:    token,
 			Nickname:     userID,
 			QRCodeToken:  uuid.NewString(),
+			CouponToken:  uuid.NewString(),
 			UnlockLevel:  defaultUnlockLevel,
 			CurrentLevel: 0,
 			LastPassTime: now,

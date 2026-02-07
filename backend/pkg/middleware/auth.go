@@ -7,6 +7,7 @@ import (
 
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"go.uber.org/zap"
 )
 
@@ -14,6 +15,7 @@ type contextKey string
 
 const userContextKey contextKey = "authUser"
 const boothContextKey contextKey = "boothActivity"
+const staffContextKey contextKey = "staffUser"
 
 // Auth verifies the token cookie against the users table.
 // On success, it injects the *models.User into request context under userContextKey.
@@ -57,6 +59,52 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 
 			ctx := r.Context()
 			ctx = contextWithUser(ctx, user)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// StaffAuth verifies the Authorization bearer token against the staff table.
+// On success, it injects the *models.Staff into request context under staffContextKey.
+func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := helpers.BearerToken(r.Header.Get("Authorization"))
+			if token == "" {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			tx, err := repo.StartTransaction(r.Context())
+			if err != nil {
+				logger.Error("staff auth: start tx failed", zap.Error(err))
+				http.Error(w, "Internal error", http.StatusInternalServerError)
+				return
+			}
+			defer repo.DeferRollback(r.Context(), tx)
+
+			staff, err := repo.GetStaffByToken(r.Context(), tx, token)
+			if err != nil {
+				if errors.Is(err, repository.ErrNotFound) {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
+				logger.Error("staff auth: fetch staff failed", zap.Error(err))
+				http.Error(w, "Internal error", http.StatusInternalServerError)
+				return
+			}
+			if staff == nil {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			err = repo.CommitTransaction(r.Context(), tx)
+			if err != nil {
+				http.Error(w, "Internal error", http.StatusInternalServerError)
+				return
+			}
+
+			ctx := contextWithStaff(r.Context(), staff)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -127,4 +175,14 @@ func BoothFromContext(ctx context.Context) (*models.Activities, bool) {
 
 func contextWithBooth(ctx context.Context, booth *models.Activities) context.Context {
 	return context.WithValue(ctx, boothContextKey, booth)
+}
+
+// StaffFromContext retrieves authenticated staff set by StaffAuth middleware.
+func StaffFromContext(ctx context.Context) (*models.Staff, bool) {
+	staff, ok := ctx.Value(staffContextKey).(*models.Staff)
+	return staff, ok
+}
+
+func contextWithStaff(ctx context.Context, staff *models.Staff) context.Context {
+	return context.WithValue(ctx, staffContextKey, staff)
 }
