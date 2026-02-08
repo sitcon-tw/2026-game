@@ -16,7 +16,7 @@ import (
 
 // DiscountUsed handles POST /discount/{userCouponToken}.
 // @Summary      工作人員掃 QR Code 來使用折扣券
-// @Description  用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。
+// @Description  用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。需已登入並持有 staff_token cookie。
 // @Tags         discount
 // @Produce      json
 // @Param        userCouponToken  path      string  true  "Discount coupon token"
@@ -25,7 +25,7 @@ import (
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Router       /discount/staff/user/{userCouponToken} [post]
-// @Param        Authorization  header  string  true  "Bearer {token}"
+// @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 //
 //nolint:funlen // handler orchestration, keep logic linear
 func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {

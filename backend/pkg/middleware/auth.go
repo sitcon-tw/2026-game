@@ -7,7 +7,6 @@ import (
 
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
-	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"go.uber.org/zap"
 )
 
@@ -64,16 +63,17 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 	}
 }
 
-// StaffAuth verifies the Authorization bearer token against the staff table.
+// StaffAuth verifies the staff_token cookie against the staff table.
 // On success, it injects the *models.Staff into request context under staffContextKey.
 func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token := helpers.BearerToken(r.Header.Get("Authorization"))
-			if token == "" {
+			cookie, err := r.Cookie("staff_token")
+			if err != nil || cookie.Value == "" {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
+			token := cookie.Value
 
 			tx, err := repo.StartTransaction(r.Context())
 			if err != nil {

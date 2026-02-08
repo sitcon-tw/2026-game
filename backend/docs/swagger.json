@@ -416,6 +416,58 @@
                 }
             }
         },
+        "/friends": {
+            "post": {
+                "description": "透過對方的 QR code 建立好友關係，雙方好友數量與 unlock_level 會在首次建立時各自增加。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "friends"
+                ],
+                "summary": "建立好友關係",
+                "parameters": [
+                    {
+                        "description": "Friend request payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/friend.addFriendRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "missing or invalid qr code",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/friends/count": {
             "get": {
                 "description": "取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。",
@@ -437,41 +489,6 @@
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/friends/{userQRCode}": {
-            "post": {
-                "description": "用 QR code 掃別人，別人就會變成你的好友，你也會變成他的好友。雙方好友數量都會增加 1，並且雙方的 unlock_level 都會增加 1。若已經是好友則不會重複加入。每個人最多只能有一定數量的好友，這個數量會隨著你參加過的活動數量（攤位、打卡...）而增加。",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "friends"
-                ],
-                "summary": "用 QR code 加好友",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User QR code token",
-                        "name": "userQRCode",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
                         }
                     },
                     "500": {
@@ -746,6 +763,14 @@
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "friend.addFriendRequest": {
+            "type": "object",
+            "properties": {
+                "user_qr_code": {
                     "type": "string"
                 }
             }

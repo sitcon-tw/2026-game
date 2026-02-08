@@ -13,7 +13,7 @@ import (
 // ListStaffHistory handles GET /discount/history.
 // Returns redemption history for the authenticated staff.
 // @Summary      取得工作人員使用的折扣紀錄
-// @Description  需要 staff token，回傳該 staff 操作的折扣券使用紀錄
+// @Description  需要 staff_token cookie，回傳該 staff 操作的折扣券使用紀錄
 // @Tags         discount
 // @Produce      json
 // @Success      200  {object}  []historyItem
@@ -21,7 +21,7 @@ import (
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /discount/staff/history [get]
-// @Param        Authorization  header  string  true  "Bearer {token}"
+// @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 func (h *Handler) ListStaffHistory(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())
 	if !ok || staff == nil {

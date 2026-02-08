@@ -17,6 +17,8 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 	h := discount.New(repo, logger)
 
 	r.Route("/staff", func(r chi.Router) {
+		r.Post("/login", h.StaffLogin)
+
 		r.Use(middleware.StaffAuth(repo, logger))
 		// Staff scans attendee's coupon QR code
 		r.Post("/user/{userCouponToken}", h.DiscountUsed)
