@@ -1,0 +1,16 @@
+[
+  {
+    "id": "44444444-4444-4444-4444-444444444444",
+    "name": "Alex Booth",
+    "token": "staff-token-alex",
+    "created_at": "2026-01-10T08:30:00Z",
+    "updated_at": "2026-01-10T08:30:00Z"
+  },
+  {
+    "id": "55555555-5555-5555-5555-555555555555",
+    "name": "Casey Checkin",
+    "token": "staff-token-casey",
+    "created_at": "2026-01-10T08:35:00Z",
+    "updated_at": "2026-01-10T08:35:00Z"
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "66666666-6666-6666-6666-666666666666",
+    "auth_token": "auth-token-ada",
+    "nickname": "Ada",
+    "qrcode_token": "qr-user-ada",
+    "coupon_token": "coupon-ada",
+    "unlock_level": 0,
+    "current_level": 0,
+    "last_pass_time": "2026-01-10T08:00:00Z",
+    "created_at": "2026-01-10T08:00:00Z",
+    "updated_at": "2026-01-10T08:00:00Z"
+  },
+  {
+    "id": "77777777-7777-7777-7777-777777777777",
+    "auth_token": "auth-token-bob",
+    "nickname": "Bob",
+    "qrcode_token": "qr-user-bob",
+    "coupon_token": "coupon-bob",
+    "unlock_level": 1,
+    "current_level": 1,
+    "last_pass_time": "2026-01-10T08:10:00Z",
+    "created_at": "2026-01-10T08:10:00Z",
+    "updated_at": "2026-01-10T08:10:00Z"
+  },
+  {
+    "id": "88888888-8888-8888-8888-888888888888",
+    "auth_token": "auth-token-cam",
+    "nickname": "Cam",
+    "qrcode_token": "qr-user-cam",
+    "coupon_token": "coupon-cam",
+    "unlock_level": 2,
+    "current_level": 1,
+    "last_pass_time": "2026-01-10T08:20:00Z",
+    "created_at": "2026-01-10T08:20:00Z",
+    "updated_at": "2026-01-10T08:20:00Z"
+  },
+  {
+    "id": "582c8689-d224-468c-8c79-e4a82d56249e",
+    "auth_token": "auth-token-drew",
+    "nickname": "Drew",
+    "qrcode_token": "qr-user-drew",
+    "coupon_token": "coupon-drew",
+    "unlock_level": 0,
+    "current_level": 0,
+    "last_pass_time": "2026-01-10T08:30:00Z",
+    "created_at": "2026-01-10T08:30:00Z",
+    "updated_at": "2026-01-10T08:30:00Z"
+  },
+  {
+    "id": "666fc4f9-f201-4391-bb6d-977411f17fce",
+    "auth_token": "auth-token-eli",
+    "nickname": "Eli",
+    "qrcode_token": "qr-user-eli",
+    "coupon_token": "coupon-eli",
+    "unlock_level": 1,
+    "current_level": 1,
+    "last_pass_time": "2026-01-10T08:40:00Z",
+    "created_at": "2026-01-10T08:40:00Z",
+    "updated_at": "2026-01-10T08:40:00Z"
+  },
+  {
+    "id": "6ec6ee21-ce39-4858-8d1a-28044493c8cd",
+    "auth_token": "auth-token-fin",
+    "nickname": "Fin",
+    "qrcode_token": "qr-user-fin",
+    "coupon_token": "coupon-fin",
+    "unlock_level": 2,
+    "current_level": 2,
+    "last_pass_time": "2026-01-10T08:50:00Z",
+    "created_at": "2026-01-10T08:50:00Z",
+    "updated_at": "2026-01-10T08:50:00Z"
+  },
+  {
+    "id": "8c235995-8f02-4fe3-806e-20f85005c4bb",
+    "auth_token": "auth-token-gia",
+    "nickname": "Gia",
+    "qrcode_token": "qr-user-gia",
+    "coupon_token": "coupon-gia",
+    "unlock_level": 3,
+    "current_level": 2,
+    "last_pass_time": "2026-01-10T09:00:00Z",
+    "created_at": "2026-01-10T09:00:00Z",
+    "updated_at": "2026-01-10T09:00:00Z"
+  },
+  {
+    "id": "e35d8977-d9ea-4431-87c0-25626fe4a5df",
+    "auth_token": "auth-token-hal",
+    "nickname": "Hal",
+    "qrcode_token": "qr-user-hal",
+    "coupon_token": "coupon-hal",
+    "unlock_level": 3,
+    "current_level": 3,
+    "last_pass_time": "2026-01-10T09:10:00Z",
+    "created_at": "2026-01-10T09:10:00Z",
+    "updated_at": "2026-01-10T09:10:00Z"
+  },
+  {
+    "id": "8dba394a-bbac-4832-bfd1-314a6e2f52b2",
+    "auth_token": "auth-token-ivy",
+    "nickname": "Ivy",
+    "qrcode_token": "qr-user-ivy",
+    "coupon_token": "coupon-ivy",
+    "unlock_level": 4,
+    "current_level": 3,
+    "last_pass_time": "2026-01-10T09:20:00Z",
+    "created_at": "2026-01-10T09:20:00Z",
+    "updated_at": "2026-01-10T09:20:00Z"
+  },
+  {
+    "id": "5a7467e6-a23b-44b1-a528-6050e72e4a88",
+    "auth_token": "auth-token-jae",
+    "nickname": "Jae",
+    "qrcode_token": "qr-user-jae",
+    "coupon_token": "coupon-jae",
+    "unlock_level": 4,
+    "current_level": 4,
+    "last_pass_time": "2026-01-10T09:30:00Z",
+    "created_at": "2026-01-10T09:30:00Z",
+    "updated_at": "2026-01-10T09:30:00Z"
+  }
+]
