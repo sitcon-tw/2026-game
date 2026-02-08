@@ -2,16 +2,16 @@ CREATE SCHEMA IF NOT EXISTS "public";
 
 CREATE TYPE "activities_types" AS ENUM ('booth', 'check', 'challenge');
 
-CREATE TABLE "public"."staff" (
+CREATE TABLE "public"."staffs" (
     "id" uuid NOT NULL,
     "name" text NOT NULL,
     "token" text NOT NULL,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL,
-    CONSTRAINT "pk_staff_id" PRIMARY KEY ("id")
+    CONSTRAINT "pk_staffs_id" PRIMARY KEY ("id")
 );
 -- Indexes
-CREATE UNIQUE INDEX "idx_staff_token" ON "public"."staff" ("token");
+CREATE UNIQUE INDEX "idx_staffs_token" ON "public"."staffs" ("token");
 
 CREATE TABLE "public"."users" (
     "id" uuid NOT NULL,
@@ -52,11 +52,11 @@ CREATE TABLE "public"."activities" (
 CREATE UNIQUE INDEX "idx_activities_token" ON "public"."activities" ("token");
 CREATE UNIQUE INDEX "idx_activities_qrcode_token" ON "public"."activities" ("qrcode_token");
 
-CREATE TABLE "public"."visited" (
+CREATE TABLE "public"."visits" (
     "user_id" uuid NOT NULL,
     "activity_id" uuid NOT NULL,
     "created_at" timestamp NOT NULL,
-    CONSTRAINT "pk_visited_user_activity" PRIMARY KEY ("user_id", "activity_id")
+    CONSTRAINT "pk_visits_user_activity" PRIMARY KEY ("user_id", "activity_id")
 );
 
 CREATE TABLE "public"."discount_coupons" (
@@ -73,28 +73,28 @@ CREATE TABLE "public"."discount_coupons" (
 -- Indexes
 CREATE INDEX "idx_discount_coupons_history_id" ON "public"."discount_coupons" ("history_id");
 
-CREATE TABLE "public"."coupon_history" (
+CREATE TABLE "public"."coupon_histories" (
     "id" uuid NOT NULL,
     "user_id" uuid NOT NULL,
     "staff_id" uuid NOT NULL,
     "total" integer NOT NULL,
     "used_at" timestamp NOT NULL,
     "created_at" timestamp NOT NULL,
-    CONSTRAINT "pk_coupon_history_id" PRIMARY KEY ("id")
+    CONSTRAINT "pk_coupon_histories_id" PRIMARY KEY ("id")
 );
 -- Indexes
-CREATE INDEX "idx_coupon_history_user_id" ON "public"."coupon_history" ("user_id");
-CREATE INDEX "idx_coupon_history_staff_id" ON "public"."coupon_history" ("staff_id");
-CREATE INDEX "idx_coupon_history_used_at" ON "public"."coupon_history" ("used_at");
+CREATE INDEX "idx_coupon_histories_user_id" ON "public"."coupon_histories" ("user_id");
+CREATE INDEX "idx_coupon_histories_staff_id" ON "public"."coupon_histories" ("staff_id");
+CREATE INDEX "idx_coupon_histories_used_at" ON "public"."coupon_histories" ("used_at");
 
 -- Foreign key constraints
 -- Schema: public
 ALTER TABLE "public"."friends" ADD CONSTRAINT "fk_friends_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
 ALTER TABLE "public"."friends" ADD CONSTRAINT "fk_friends_friend_id_users_id" FOREIGN KEY("friend_id") REFERENCES "public"."users"("id");
-ALTER TABLE "public"."visited" ADD CONSTRAINT "fk_visited_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
-ALTER TABLE "public"."visited" ADD CONSTRAINT "fk_visited_activity_id_activities_id" FOREIGN KEY("activity_id") REFERENCES "public"."activities"("id");
+ALTER TABLE "public"."visits" ADD CONSTRAINT "fk_visits_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
+ALTER TABLE "public"."visits" ADD CONSTRAINT "fk_visits_activity_id_activities_id" FOREIGN KEY("activity_id") REFERENCES "public"."activities"("id");
 ALTER TABLE "public"."discount_coupons" ADD CONSTRAINT "fk_discount_coupons_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
-ALTER TABLE "public"."discount_coupons" ADD CONSTRAINT "fk_discount_coupons_used_by_staff_id" FOREIGN KEY("used_by") REFERENCES "public"."staff"("id");
-ALTER TABLE "public"."coupon_history" ADD CONSTRAINT "fk_coupon_history_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
-ALTER TABLE "public"."coupon_history" ADD CONSTRAINT "fk_coupon_history_staff_id_staff_id" FOREIGN KEY("staff_id") REFERENCES "public"."staff"("id");
-ALTER TABLE "public"."discount_coupons" ADD CONSTRAINT "fk_discount_coupons_history_id_coupon_history_id" FOREIGN KEY("history_id") REFERENCES "public"."coupon_history"("id");
+ALTER TABLE "public"."discount_coupons" ADD CONSTRAINT "fk_discount_coupons_used_by_staffs_id" FOREIGN KEY("used_by") REFERENCES "public"."staffs"("id");
+ALTER TABLE "public"."coupon_histories" ADD CONSTRAINT "fk_coupon_histories_user_id_users_id" FOREIGN KEY("user_id") REFERENCES "public"."users"("id");
+ALTER TABLE "public"."coupon_histories" ADD CONSTRAINT "fk_coupon_histories_staff_id_staffs_id" FOREIGN KEY("staff_id") REFERENCES "public"."staffs"("id");
+ALTER TABLE "public"."discount_coupons" ADD CONSTRAINT "fk_discount_coupons_history_id_coupon_histories_id" FOREIGN KEY("history_id") REFERENCES "public"."coupon_histories"("id");

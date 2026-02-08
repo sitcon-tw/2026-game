@@ -23,9 +23,7 @@ const (
 //nolint:golines // struct tags aligned for readability
 type EnvConfig struct {
 	AppEnv         AppEnv `env:"APP_ENV" envDefault:"dev"`
-	AppName        string `env:"APP_NAME" envDefault:"2026-game"`
-	AppMachineID   int16  `env:"APP_MACHINE_ID" envDefault:"1"`
-	AppPort        string `env:"APP_PORT" envDefault:"8000"`
+	AppPort        string `env:"PORT" envDefault:"8000"`
 	AppAutoMigrate bool   `env:"APP_AUTO_MIGRATE" envDefault:"false"`
 
 	// CORS
