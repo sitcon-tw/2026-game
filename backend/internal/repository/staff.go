@@ -10,7 +10,7 @@ import (
 
 // GetStaffByToken finds a staff by token for authentication.
 func (r *PGRepository) GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error) {
-const query = `
+	const query = `
 SELECT id, name, token, created_at, updated_at
 FROM staffs
 WHERE token = $1

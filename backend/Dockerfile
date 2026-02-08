@@ -12,4 +12,5 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=build /src/sitgame /app/sitgame
 COPY migrations /app/migrations
+COPY docs /app/docs
 CMD ["/app/sitgame"]
