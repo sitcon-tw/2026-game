@@ -43,7 +43,7 @@ type EnvConfig struct {
 	OPassURL string `env:"OPASS_URL" envDefault:"https://ccip.opass.app/"`
 
 	// Gameplay tuning
-	FriendCapacityMultiplier int `env:"FRIEND_CAPACITY_MULTIPLIER" envDefault:"10"`
+	FriendCapacityMultiplier int `env:"FRIEND_CAPACITY_MULTIPLIER" envDefault:"3"`
 
 	// Rate limiting
 	RateLimitRequestsPerWindow int           `env:"RATE_LIMIT_REQUESTS_PER_WINDOW" envDefault:"20"`

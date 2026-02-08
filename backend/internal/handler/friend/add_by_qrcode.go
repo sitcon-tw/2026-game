@@ -108,14 +108,14 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if currentUserCanUnlock {
+	if insertedA && currentUserCanUnlock {
 		err = h.Repo.IncrementUnlockLevel(ctx, tx, currentUser.ID)
 		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user")
 			return
 		}
 	}
-	if targetUserCanUnlock {
+	if insertedB && targetUserCanUnlock {
 		err = h.Repo.IncrementUnlockLevel(ctx, tx, targetUser.ID)
 		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update target user")
