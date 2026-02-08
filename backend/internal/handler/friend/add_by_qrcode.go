@@ -11,18 +11,12 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// addFriendRequest represents the payload body for AddByQRCode.
-type addFriendRequest struct {
-	UserQRCode string `json:"user_qr_code"`
-}
-
 // AddByQRCode handles POST /friendships/{userQRCode}.
 // @Summary      建立好友關係
 // @Description  透過對方的 QR code 建立好友關係，雙方好友數量與 unlock_level 會在首次建立時各自增加。
 // @Tags         friends
-// @Accept       json
 // @Produce      json
-// @Param        body  body  addFriendRequest  true  "Friend request payload"
+// @Param        userQRCode  path      string  true  "User QR code token"
 // @Success      200  {string}  string  ""
 // @Failure      400  {object}  res.ErrorResponse "missing or invalid qr code"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
