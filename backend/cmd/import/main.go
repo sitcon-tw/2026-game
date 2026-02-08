@@ -163,7 +163,7 @@ func importStaff(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 	}()
 
 	const stmt = `
-INSERT INTO staff (id, name, token, created_at, updated_at)
+INSERT INTO staffs (id, name, token, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (id) DO UPDATE
 SET name = EXCLUDED.name,
