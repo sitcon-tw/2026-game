@@ -14,7 +14,7 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// BoothLogin handles POST /activities/booth/login.
+// BoothLogin handles POST /activities/booth/session.
 // @Summary      攤位登入
 // @Description  攤位使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後攤位就可以使用此 cookie 來辨識自己身份。來使用 /activities/booth/ 底下的功能。
 // @Tags         activities
@@ -24,7 +24,7 @@ import (
 // @Failure      401  {object}  res.ErrorResponse "unauthorized booth"
 // @Failure      500  {object}  res.ErrorResponse
 // @Param        Authorization  header  string  true  "Bearer {token}"
-// @Router       /activities/booth/login [post]
+// @Router       /activities/booth/session [post]
 func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {

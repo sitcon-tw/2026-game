@@ -17,7 +17,7 @@ type activityWithStatus struct {
 	Visited bool   `json:"visited"`
 }
 
-// List handles GET /activities.
+// List handles GET /activities/stats.
 // @Summary      取得活動列表與使用者打卡狀態
 // @Description  取得活動列表跟使用者在每個攤位、打卡、挑戰的狀態。需要登入才會回傳使用者的打卡狀態。
 // @Tags         activities
@@ -25,7 +25,7 @@ type activityWithStatus struct {
 // @Success      200  {array}   activityWithStatus
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /activities/ [get]
+// @Router       /activities/stats [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {

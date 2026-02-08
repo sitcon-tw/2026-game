@@ -9,7 +9,7 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// GetDiscount handles GET /discount.
+// GetDiscount handles GET /discount-coupons.
 // Returns all coupons owned by the authenticated user with usage summary.
 // @Summary      取得自己的折扣券
 // @Description  需要登入 cookie，回傳自己名下的折扣券清單與使用狀態
@@ -18,7 +18,7 @@ import (
 // @Success      200  {object}  []models.DiscountCoupon
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /discount [get]
+// @Router       /discount-coupons [get]
 func (h *Handler) GetDiscount(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {

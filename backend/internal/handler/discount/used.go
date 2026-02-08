@@ -14,7 +14,7 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// DiscountUsed handles POST /discount/{userCouponToken}.
+// DiscountUsed handles POST /discount-coupons/staff/{userCouponToken}/redemptions.
 // @Summary      工作人員掃 QR Code 來使用折扣券
 // @Description  用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。需已登入並持有 staff_token cookie。
 // @Tags         discount
@@ -24,7 +24,7 @@ import (
 // @Failure      500  {object}  res.ErrorResponse
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
-// @Router       /discount/staff/user/{userCouponToken} [post]
+// @Router       /discount-coupons/staff/{userCouponToken}/redemptions [post]
 // @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 //
 //nolint:funlen // handler orchestration, keep logic linear

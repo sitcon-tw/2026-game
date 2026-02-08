@@ -19,74 +19,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/activities/": {
-            "get": {
-                "description": "取得活動列表跟使用者在每個攤位、打卡、挑戰的狀態。需要登入才會回傳使用者的打卡狀態。",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "activities"
-                ],
-                "summary": "取得活動列表與使用者打卡狀態",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/activities.activityWithStatus"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/activities/booth/count": {
-            "get": {
-                "description": "取得目前攤位的打卡人數，需要攤位的 token cookie。",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "activities"
-                ],
-                "summary": "取得攤位打卡人數",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/activities.countResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized booth",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/activities/booth/login": {
+        "/activities/booth/session": {
             "post": {
                 "description": "攤位使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後攤位就可以使用此 cookie 來辨識自己身份。來使用 /activities/booth/ 底下的功能。",
                 "produces": [
@@ -133,7 +66,39 @@ const docTemplate = `{
                 }
             }
         },
-        "/activities/booth/{userQRCode}": {
+        "/activities/booth/stats": {
+            "get": {
+                "description": "取得目前攤位的打卡人數，需要攤位的 token cookie。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "取得攤位打卡人數",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/activities.countResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized booth",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/booth/user/{userQRCode}": {
             "post": {
                 "description": "攤位工作人員使用攤位專用的 QR code 掃描器掃描使用者的 QR code，幫使用者在該攤位打卡。需要攤位的 token cookie。使用者每到一個攤位打卡，自己的 unlock_level 就會增加 1。",
                 "produces": [
@@ -167,6 +132,41 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "unauthorized booth",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/activities/stats": {
+            "get": {
+                "description": "取得活動列表跟使用者在每個攤位、打卡、挑戰的狀態。需要登入才會回傳使用者的打卡狀態。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activities"
+                ],
+                "summary": "取得活動列表與使用者打卡狀態",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/activities.activityWithStatus"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
                         }
@@ -227,7 +227,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/discount": {
+        "/discount-coupons": {
             "get": {
                 "description": "需要登入 cookie，回傳自己名下的折扣券清單與使用狀態",
                 "produces": [
@@ -262,9 +262,62 @@ const docTemplate = `{
                 }
             }
         },
-        "/discount/staff/history": {
+        "/discount-coupons/staff/coupon-tokens/{userCouponToken}": {
             "get": {
-                "description": "需要 staff token，回傳該 staff 操作的折扣券使用紀錄",
+                "description": "需要 staff_token cookie，帶 userCouponToken 查詢該使用者尚未使用的折扣券與總額",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discount"
+                ],
+                "summary": "工作人員查詢某使用者可用折扣券",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User coupon token",
+                        "name": "userCouponToken",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer {token} (deprecated; use staff_token cookie)",
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/discount.getUserCouponsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "missing token | invalid coupon token",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized staff",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/discount-coupons/staff/current/redemptions": {
+            "get": {
+                "description": "需要 staff_token cookie，回傳該 staff 操作的折扣券使用紀錄",
                 "produces": [
                     "application/json"
                 ],
@@ -275,10 +328,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Bearer {token}",
+                        "description": "Bearer {token} (deprecated; use staff_token cookie)",
                         "name": "Authorization",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -312,24 +364,17 @@ const docTemplate = `{
                 }
             }
         },
-        "/discount/staff/user/{userCouponToken}": {
-            "get": {
-                "description": "需要 staff token，帶 userCouponToken 查詢該使用者尚未使用的折扣券與總額",
+        "/discount-coupons/staff/session": {
+            "post": {
+                "description": "工作人員使用此 API 登入系統，成功後會在 cookie 設定 staff_token，之後就可以使用 cookie 來呼叫需要 staff 身分的 endpoint。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "discount"
                 ],
-                "summary": "工作人員查詢某使用者可用折扣券",
+                "summary": "工作人員登入",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User coupon token",
-                        "name": "userCouponToken",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Bearer {token}",
@@ -342,11 +387,11 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/discount.getUserCouponsResponse"
+                            "$ref": "#/definitions/models.Staff"
                         }
                     },
                     "400": {
-                        "description": "missing token | invalid coupon token",
+                        "description": "missing token",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
                         }
@@ -364,9 +409,11 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/discount-coupons/staff/{userCouponToken}/redemptions": {
             "post": {
-                "description": "用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。你要傳送 staff 的 api key 在 header 裡面才能使用這個 endpoint。",
+                "description": "用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。需已登入並持有 staff_token cookie。",
                 "produces": [
                     "application/json"
                 ],
@@ -384,10 +431,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Bearer {token}",
+                        "description": "Bearer {token} (deprecated; use staff_token cookie)",
                         "name": "Authorization",
-                        "in": "header",
-                        "required": true
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -418,7 +464,39 @@ const docTemplate = `{
                 }
             }
         },
-        "/friends": {
+        "/friendships/stats": {
+            "get": {
+                "description": "取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "friends"
+                ],
+                "summary": "取得好友數量及上限",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/friend.countResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/res.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/friendships/{userQRCode}": {
             "post": {
                 "description": "透過對方的 QR code 建立好友關係，雙方好友數量與 unlock_level 會在首次建立時各自增加。",
                 "consumes": [
@@ -470,25 +548,25 @@ const docTemplate = `{
                 }
             }
         },
-        "/friends/count": {
+        "/games/leaderboards": {
             "get": {
-                "description": "取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。",
+                "description": "排行資料會包含三個部分：1. 全站的分頁排行 (每頁30名) 2. 以目前使用者為中心，前後各5名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "friends"
+                    "game"
                 ],
-                "summary": "取得好友數量及上限",
+                "summary": "取得遊戲的排行資料",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/friend.countResponse"
+                            "$ref": "#/definitions/game.RankResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "unauthorized",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
                         }
@@ -502,7 +580,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/game": {
+        "/games/submissions": {
             "post": {
                 "description": "提交你的遊戲紀錄，會幫你把你目前的 level 提升 1 級。一樣需要 cookie 登入，需要注意的點是，當前等級不能超過解鎖等級。以及這整個是沒有任何驗證的，代表別人可以狂 call API，未來需要修個。",
                 "produces": [
@@ -540,25 +618,25 @@ const docTemplate = `{
                 }
             }
         },
-        "/game/rank": {
+        "/users/me": {
             "get": {
-                "description": "排行資料會包含三個部分：1. 全站的分頁排行 (每頁30名) 2. 以目前使用者為中心，前後各5名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。",
+                "description": "取得目前登入使用者的資料，需要登入後才能取得。會取得包括目前的 level、解鎖多少 level、QR code token 等等資訊。備註：要取得 QR code token 就是用這邊。",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "game"
+                    "users"
                 ],
-                "summary": "取得遊戲的排行資料",
+                "summary": "取得使用者資料",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/game.RankResponse"
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "401": {
-                        "description": "unauthorized",
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
                         }
@@ -572,7 +650,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/login": {
+        "/users/session": {
             "post": {
                 "description": "這邊在做的事情基本上就是幫你把 token 驗證，然後把使用者丟進資料庫，接著在把這個 token 丟到 cookie 讓你不用每次都要手動帶。",
                 "produces": [
@@ -602,38 +680,6 @@ const docTemplate = `{
                         "description": "Missing token",
                         "schema": {
                             "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/res.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/me": {
-            "get": {
-                "description": "取得目前登入使用者的資料，需要登入後才能取得。會取得包括目前的 level、解鎖多少 level、QR code token 等等資訊。備註：要取得 QR code token 就是用這邊。",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "取得使用者資料",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "401": {
@@ -881,6 +927,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Staff": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

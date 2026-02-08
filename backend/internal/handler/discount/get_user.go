@@ -11,7 +11,7 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// GetUserCoupons handles GET /discount/user/{userCouponToken}.
+// GetUserCoupons handles GET /discount-coupons/staff/coupon-tokens/{userCouponToken}.
 // Staff uses user's coupon token to inspect available coupons and total value.
 // @Summary      工作人員查詢某使用者可用折扣券
 // @Description  需要 staff_token cookie，帶 userCouponToken 查詢該使用者尚未使用的折扣券與總額
@@ -22,7 +22,7 @@ import (
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon token"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /discount/staff/user/{userCouponToken} [get]
+// @Router       /discount-coupons/staff/coupon-tokens/{userCouponToken} [get]
 // @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 func (h *Handler) GetUserCoupons(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())

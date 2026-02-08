@@ -15,7 +15,7 @@ type countResponse struct {
 	Max   int `json:"max"`
 }
 
-// Count handles GET /friends/count.
+// Count handles GET /friendships/stats.
 // @Summary      取得好友數量及上限
 // @Description  取得目前使用者的好友數量以及好友上限，好友上限會根據使用者參加過的活動數量而增加。
 // @Tags         friends
@@ -23,7 +23,7 @@ type countResponse struct {
 // @Success      200  {object}  countResponse
 // @Failure      401  {object}  res.ErrorResponse
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /friends/count [get]
+// @Router       /friendships/stats [get]
 func (h *Handler) Count(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {

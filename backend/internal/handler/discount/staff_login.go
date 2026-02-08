@@ -12,7 +12,7 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// StaffLogin handles POST /discount/staff/login.
+// StaffLogin handles POST /discount-coupons/staff/session.
 // @Summary      工作人員登入
 // @Description  工作人員使用此 API 登入系統，成功後會在 cookie 設定 staff_token，之後就可以使用 cookie 來呼叫需要 staff 身分的 endpoint。
 // @Tags         discount
@@ -22,8 +22,10 @@ import (
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Failure      500  {object}  res.ErrorResponse
 // @Param        Authorization  header  string  true  "Bearer {token}"
-// @Router       /discount/staff/login [post]
+// @Router       /discount-coupons/staff/session [post]
 func (h *Handler) StaffLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	// Accept token from Authorization for backward compatibility; issue cookie for future requests.
 	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
@@ -31,14 +33,14 @@ func (h *Handler) StaffLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx, err := h.Repo.StartTransaction(r.Context())
+	tx, err := h.Repo.StartTransaction(ctx)
 	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
-	defer h.Repo.DeferRollback(r.Context(), tx)
+	defer h.Repo.DeferRollback(ctx, tx)
 
-	staff, err := h.Repo.GetStaffByToken(r.Context(), tx, token)
+	staff, err := h.Repo.GetStaffByToken(ctx, tx, token)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			res.Fail(w, h.Logger, http.StatusUnauthorized, err, "unauthorized staff")
@@ -52,7 +54,8 @@ func (h *Handler) StaffLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+	err = h.Repo.CommitTransaction(ctx, tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}

@@ -31,7 +31,7 @@ const defaultUnlockLevel = 5
 // @Failure      401  {object}  res.ErrorResponse "Unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
 // @Param        Authorization  header  string  true  "Bearer {token}"
-// @Router       /users/login [post]
+// @Router       /users/session [post]
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {

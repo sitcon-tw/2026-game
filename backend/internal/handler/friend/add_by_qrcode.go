@@ -1,21 +1,22 @@
 package friend
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
+// addFriendRequest represents the payload body for AddByQRCode.
 type addFriendRequest struct {
 	UserQRCode string `json:"user_qr_code"`
 }
 
-// AddByQRCode handles POST /friends.
+// AddByQRCode handles POST /friendships/{userQRCode}.
 // @Summary      建立好友關係
 // @Description  透過對方的 QR code 建立好友關係，雙方好友數量與 unlock_level 會在首次建立時各自增加。
 // @Tags         friends
@@ -26,7 +27,9 @@ type addFriendRequest struct {
 // @Failure      400  {object}  res.ErrorResponse "missing or invalid qr code"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /friends [post]
+// @Router       /friendships/{userQRCode} [post]
+//
+//nolint:gocognit,funlen // handler flow is linear; length/complexity acceptable here
 func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -36,12 +39,7 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload addFriendRequest
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid json")
-		return
-	}
-	qr := payload.UserQRCode
+	qr := chi.URLParam(r, "userQRCode")
 	if qr == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
 		return
@@ -117,19 +115,22 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if currentUserCanUnlock {
-		if err := h.Repo.IncrementUnlockLevel(ctx, tx, currentUser.ID); err != nil {
+		err = h.Repo.IncrementUnlockLevel(ctx, tx, currentUser.ID)
+		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user")
 			return
 		}
 	}
 	if targetUserCanUnlock {
-		if err := h.Repo.IncrementUnlockLevel(ctx, tx, targetUser.ID); err != nil {
+		err = h.Repo.IncrementUnlockLevel(ctx, tx, targetUser.ID)
+		if err != nil {
 			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update target user")
 			return
 		}
 	}
 
-	if err := h.Repo.CommitTransaction(ctx, tx); err != nil {
+	err = h.Repo.CommitTransaction(ctx, tx)
+	if err != nil {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}

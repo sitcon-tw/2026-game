@@ -17,12 +17,12 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 	h := activities.New(repo, logger)
 
 	r.Route("/booth", func(r chi.Router) {
-		r.Post("/login", h.BoothLogin)
+		r.Post("/session", h.BoothLogin)
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.BoothAuth(repo, logger))
-			r.Post("/{userQRCode}", h.BoothCheckIn)
-			r.Get("/count", h.BoothCount)
+			r.Post("/user/{userQRCode}", h.BoothCheckIn)
+			r.Get("/stats", h.BoothCount)
 		})
 	})
 
@@ -30,7 +30,7 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 		r.Use(middleware.Auth(repo, logger))
 
 		// List activities with user's check-in status
-		r.Get("/", h.List)
+		r.Get("/stats", h.List)
 
 		// user scans an activity QR code to check in
 		r.Post("/{activityQRCode}", h.ActivityCheckIn)

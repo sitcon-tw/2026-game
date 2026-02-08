@@ -98,10 +98,10 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r.Route("/api", func(r chi.Router) {
 		r.Mount("/users", router.UserRoutes(repo, logger))
 		r.Mount("/activities", router.ActivityRoutes(repo, logger))
-		r.Mount("/discount", router.DiscountRoutes(repo, logger))
+		r.Mount("/discount-coupons", router.DiscountRoutes(repo, logger))
 
-		r.Mount("/friends", router.FriendRoutes(repo, logger))
-		r.Mount("/game", router.GameRoutes(repo, logger))
+		r.Mount("/friendships", router.FriendRoutes(repo, logger))
+		r.Mount("/games", router.GameRoutes(repo, logger))
 	})
 
 	if config.Env().AppEnv == config.AppEnvDev {

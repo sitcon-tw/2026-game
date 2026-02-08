@@ -12,7 +12,7 @@ type countResponse struct {
 	Count int `json:"count"`
 }
 
-// BoothCount handles GET /activities/booth/count.
+// BoothCount handles GET /activities/booth/stats.
 // @Summary      取得攤位打卡人數
 // @Description  取得目前攤位的打卡人數，需要攤位的 token cookie。
 // @Tags         activities
@@ -20,7 +20,7 @@ type countResponse struct {
 // @Success      200  {object}  countResponse
 // @Failure      401  {object}  res.ErrorResponse "unauthorized booth"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /activities/booth/count [get]
+// @Router       /activities/booth/stats [get]
 func (h *Handler) BoothCount(w http.ResponseWriter, r *http.Request) {
 	booth, ok := middleware.BoothFromContext(r.Context())
 	if !ok || booth == nil {

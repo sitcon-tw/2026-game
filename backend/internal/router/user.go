@@ -17,7 +17,7 @@ func UserRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	h := user.New(repo, logger)
 
 	// The reason we need login is for store user session in cookies.
-	r.Post("/login", h.Login)
+	r.Post("/session", h.Login)
 	// Get user profile/data
 	r.With(middleware.Auth(repo, logger)).Get("/me", h.Me)
 

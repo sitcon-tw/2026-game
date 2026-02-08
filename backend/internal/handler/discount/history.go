@@ -10,7 +10,7 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// ListStaffHistory handles GET /discount/history.
+// ListStaffHistory handles GET /discount-coupons/staff/current/redemptions.
 // Returns redemption history for the authenticated staff.
 // @Summary      取得工作人員使用的折扣紀錄
 // @Description  需要 staff_token cookie，回傳該 staff 操作的折扣券使用紀錄
@@ -20,7 +20,7 @@ import (
 // @Failure      400  {object}  res.ErrorResponse "missing token"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /discount/staff/history [get]
+// @Router       /discount-coupons/staff/current/redemptions [get]
 // @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 func (h *Handler) ListStaffHistory(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())

@@ -17,15 +17,18 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 	h := discount.New(repo, logger)
 
 	r.Route("/staff", func(r chi.Router) {
-		r.Post("/login", h.StaffLogin)
+		r.Post("/session", h.StaffLogin)
 
-		r.Use(middleware.StaffAuth(repo, logger))
-		// Staff scans attendee's coupon QR code
-		r.Post("/user/{userCouponToken}", h.DiscountUsed)
-		// Staff previews user's available coupons
-		r.Get("/user/{userCouponToken}", h.GetUserCoupons)
-		// Staff sees their own redemption history
-		r.Get("/history", h.ListStaffHistory)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.StaffAuth(repo, logger))
+
+			// Staff scans attendee's coupon QR code
+			r.Post("/{userCouponToken}/redemptions", h.DiscountUsed)
+			// Staff previews user's available coupons
+			r.Get("/coupon-tokens/{userCouponToken}", h.GetUserCoupons)
+			// Staff sees their own redemption history
+			r.Get("/current/redemptions", h.ListStaffHistory)
+		})
 	})
 
 	// Get the count of discounts used by the user
