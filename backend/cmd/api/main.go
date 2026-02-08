@@ -33,7 +33,6 @@ const (
 // @contact.url https://sitcon.org
 // @contact.email contact@sitcon.org
 
-// @host localhost:8000
 // @BasePath /api
 // @schemes http https
 func main() {

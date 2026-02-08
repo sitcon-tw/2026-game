@@ -14,7 +14,6 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8000",
     "basePath": "/api",
     "paths": {
         "/activities/booth/session": {
