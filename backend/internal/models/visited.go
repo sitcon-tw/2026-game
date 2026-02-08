@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// Visited tracks activities a user has visited (table: visited).
+// Visited tracks activities a user has visited (table: visits).
 //
 //nolint:golines // keep struct tags aligned; lines already short
 type Visited struct {

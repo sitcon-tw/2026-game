@@ -175,7 +175,7 @@ RETURNING id, discount_id, user_id, price, used_by, used_at, history_id, created
 // InsertCouponHistory records a redemption history row.
 func (r *PGRepository) InsertCouponHistory(ctx context.Context, tx pgx.Tx, history *models.CouponHistory) error {
 	const stmt = `
-INSERT INTO coupon_history (id, user_id, staff_id, total, used_at, created_at)
+INSERT INTO coupon_histories (id, user_id, staff_id, total, used_at, created_at)
 VALUES ($1, $2, $3, $4, $5, $6)`
 
 	_, err := tx.Exec(ctx, stmt,
@@ -203,7 +203,7 @@ SELECT ch.id,
        ch.total,
        ch.used_at,
        ch.created_at
-FROM coupon_history ch
+FROM coupon_histories ch
 LEFT JOIN users u ON u.id = ch.user_id
 WHERE ch.staff_id = $1
 ORDER BY ch.used_at DESC`

@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// CouponHistory records a redemption event for one or more coupons.
+// CouponHistory records a redemption event for one or more coupons (table: coupon_histories).
 //
 //nolint:golines // keep tags aligned
 type CouponHistory struct {

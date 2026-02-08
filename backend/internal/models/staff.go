@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// Staff mirrors the staff table.
+// Staff mirrors the staffs table.
 //
 //nolint:golines // keep struct tags aligned; lines already short
 type Staff struct {

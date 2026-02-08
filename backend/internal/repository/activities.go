@@ -10,7 +10,7 @@ import (
 
 // CountVisitedActivities returns how many activities a user has visited.
 func (r *PGRepository) CountVisitedActivities(ctx context.Context, tx pgx.Tx, userID string) (int, error) {
-	const query = `SELECT COUNT(*) FROM visited WHERE user_id = $1`
+	const query = `SELECT COUNT(*) FROM visits WHERE user_id = $1`
 	var count int
 	if err := tx.QueryRow(ctx, query, userID).Scan(&count); err != nil {
 		return 0, err
@@ -95,7 +95,7 @@ WHERE token = $1`
 
 // CountVisitedByActivity counts visits for a specific activity.
 func (r *PGRepository) CountVisitedByActivity(ctx context.Context, tx pgx.Tx, activityID string) (int, error) {
-	const query = `SELECT COUNT(*) FROM visited WHERE activity_id = $1`
+	const query = `SELECT COUNT(*) FROM visits WHERE activity_id = $1`
 	var count int
 	if err := tx.QueryRow(ctx, query, activityID).Scan(&count); err != nil {
 		return 0, err
@@ -106,7 +106,7 @@ func (r *PGRepository) CountVisitedByActivity(ctx context.Context, tx pgx.Tx, ac
 // AddVisited records that a user visited an activity; returns true if inserted.
 func (r *PGRepository) AddVisited(ctx context.Context, tx pgx.Tx, userID, activityID string) (bool, error) {
 	const stmt = `
-INSERT INTO visited (user_id, activity_id, created_at)
+INSERT INTO visits (user_id, activity_id, created_at)
 VALUES ($1, $2, NOW())
 ON CONFLICT (user_id, activity_id) DO NOTHING`
 
