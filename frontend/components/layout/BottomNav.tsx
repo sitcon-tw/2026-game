@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-    { href: "/levels", label: "關卡", icon: "🎵" },
-    { href: "/unlock", label: "解鎖", icon: "🔄" },
-    { href: "/leaderboard", label: "排行榜", icon: "👥" },
-    { href: "/scanner", label: "掃描", icon: "📱" },
-    { href: "/profile", label: "個人", icon: "👤" },
+    { href: "/levels", label: "關卡", icon: "/assets/navigation/1-puzzle.svg" },
+    { href: "/profile", label: "個人", icon: "/assets/navigation/2-book.svg" },
+    { href: "/scanner", label: "掃描", icon: "/assets/navigation/3-scanner.svg" },
+    { href: "/unlock", label: "解鎖", icon: "/assets/navigation/4-challenge.svg" },
+    { href: "/leaderboard", label: "排行榜", icon: "/assets/navigation/5-ticket.svg" },
 ];
 
 export default function BottomNav() {
@@ -23,13 +24,28 @@ export default function BottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center gap-1 text-xs ${isActive
-                                    ? "text-[var(--accent-gold)]"
-                                    : "text-[var(--text-light)]/70"
-                                }`}
+                            className="flex items-center justify-center"
                         >
-                            <span className="text-lg">{item.icon}</span>
-                            <span>{item.label}</span>
+                            <div
+                                className={`flex items-center justify-center rounded-full w-10 h-10 transition-all ${isActive
+                                    ? "bg-[#D9BD8B]"
+                                    : "bg-transparent"
+                                    }`}
+                            >
+                                <Image
+                                    src={item.icon}
+                                    alt={item.label}
+                                    width={24}
+                                    height={24}
+                                    className="p-[0.5px]"
+                                    style={{
+                                        filter: isActive
+                                            ? "brightness(0.35) saturate(0.85) hue-rotate(-5deg)"
+                                            : "none",
+                                        // opacity: isActive ? 1 : 0.6,
+                                    }}
+                                />
+                            </div>
                         </Link>
                     );
                 })}
