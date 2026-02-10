@@ -23,7 +23,7 @@ export default function PlayPage() {
             title: '打卡',
             current: 20,
             total: 30,
-            route: '/play/venues',
+            route: '/scan',
         },
         {
             title: '認識新朋友',

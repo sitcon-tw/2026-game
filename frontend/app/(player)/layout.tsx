@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
-import AppShell from "@/components/layout/AppShell";
+import AppShell from "@/components/layout/(player)/AppShell";
 import "@/app/globals.css";
 
 const notoSans = Noto_Sans_TC({

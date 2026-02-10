@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
+import Header from "@/components/layout/(player)/Header";
+import BottomNav from "@/components/layout/(player)/BottomNav";
 
 const HIDE_SHELL_PATHS = new Set(["/"]);
 
