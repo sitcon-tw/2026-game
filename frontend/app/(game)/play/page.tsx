@@ -34,9 +34,9 @@ export default function PlayPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#EFEBE9] px-6 py-8">
+        <div className="bg-[var(--bg-primary)] px-6 py-8">
             {/* Title */}
-            <h1 className="text-[#5D4037] text-3xl font-serif font-bold text-center mb-8">
+            <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center mb-8">
                 解鎖關卡的方式
             </h1>
 

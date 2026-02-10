@@ -73,7 +73,6 @@ export default function Header() {
                     </div>
                 </div>
             </div>
-            <div className="h-3 w-full bg-[rgba(239,235,233,0.75)]" />
         </header>
     );
 }
