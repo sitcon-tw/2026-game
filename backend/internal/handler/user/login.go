@@ -99,15 +99,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set session token cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		Secure:   config.Env().AppEnv == config.AppEnvProd,
-		Expires:  time.Now().Add(30 * 24 * time.Hour),
-	})
+	http.SetCookie(w, helpers.NewCookie("token", token, 30*24*time.Hour))
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
