@@ -11,25 +11,25 @@ export default function PlayPage() {
             title: '攤位',
             current: 20,
             total: 30,
-            route: '/unlock/booths',
+            route: '/play/booths',
         },
         {
-            title: '鬪關',
+            title: '闖關',
             current: 0,
             total: 1,
-            route: '/unlock/challenges',
+            route: '/play/challenges',
         },
         {
             title: '打卡',
             current: 20,
             total: 30,
-            route: '/unlock/venues',
+            route: '/play/venues',
         },
         {
             title: '認識新朋友',
             current: 20,
             total: 1400,
-            route: '/scanner',
+            route: '/scan',
         },
     ];
 
