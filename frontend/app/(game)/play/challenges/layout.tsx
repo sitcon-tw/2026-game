@@ -22,7 +22,7 @@ export default function ChallengesLayout({
                     aria-label="返回"
                 >
                     <Image
-                        src="/assets/challenge/back.svg"
+                        src="/assets/challenge/arrow-left.svg"
                         alt="返回"
                         fill
                         className="object-contain"
