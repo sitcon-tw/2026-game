@@ -19,7 +19,7 @@ export default function BottomNav() {
         <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 bg-[var(--bg-header)] pb-[env(safe-area-inset-bottom)]">
             <div className="flex h-[var(--navbar-height)] items-center justify-around">
                 {NAV_ITEMS.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
                         <button
                             key={item.href}
