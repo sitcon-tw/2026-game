@@ -25,7 +25,7 @@ export default function BottomNav() {
                             key={item.href}
                             type="button"
                             onClick={() => router.push(item.href)}
-                            className="flex items-center justify-center"
+                            className="flex items-center justify-center cursor-pointer"
                         >
                             <div
                                 className={`flex items-center justify-center rounded-full w-10 h-10 transition-all ${isActive
