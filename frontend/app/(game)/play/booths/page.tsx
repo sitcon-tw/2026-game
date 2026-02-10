@@ -34,35 +34,25 @@ export default function BoothsPage() {
     const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] px-6 py-6">
-            {/* Back Button */}
-            <button
-                type="button"
-                onClick={() => router.back()}
-                className="mb-4 flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-primary)] text-2xl"
-                aria-label="返回"
-            >
-                ←
-            </button>
-
+        <div className="bg-[var(--bg-primary)] px-6 py-6">
             {/* Title */}
             <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center mb-6">
                 可解鎖攤位
             </h1>
 
             {/* Booth Grid — 2 columns × N rows */}
-            <div className="max-w-[430px] mx-auto grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
                 {BOOTHS.map((booth) => (
                     <button
                         key={booth.id}
                         type="button"
                         onClick={() => setSelectedBooth(booth)}
                         className={`
-              flex items-center justify-center rounded-[var(--border-radius)] px-4 py-5
+              flex items-center justify-center px-4 py-5
               font-serif text-xl font-semibold tracking-wide transition-all cursor-pointer
               ${booth.visited
-                                ? 'bg-[var(--accent-gold)] text-white shadow-md'
-                                : 'bg-[var(--bg-secondary)] text-[var(--text-light)] opacity-70'
+                                ? 'bg-[var(--accent-bronze)] text-white'
+                                : 'bg-[#C6A97B] text-[var(--text-light)] opacity-70'
                             }
             `}
                     >
