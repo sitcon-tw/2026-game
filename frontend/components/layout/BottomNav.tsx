@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
     { href: "/levels", label: "關卡", icon: "/assets/navigation/1-puzzle.svg" },
@@ -14,6 +13,7 @@ const NAV_ITEMS = [
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const router = useRouter();
 
     return (
         <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 bg-[var(--bg-header)] pb-[env(safe-area-inset-bottom)]">
@@ -21,9 +21,10 @@ export default function BottomNav() {
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href;
                     return (
-                        <Link
+                        <button
                             key={item.href}
-                            href={item.href}
+                            type="button"
+                            onClick={() => router.push(item.href)}
                             className="flex items-center justify-center"
                         >
                             <div
@@ -46,7 +47,7 @@ export default function BottomNav() {
                                     }}
                                 />
                             </div>
-                        </Link>
+                        </button>
                     );
                 })}
             </div>
