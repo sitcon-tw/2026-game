@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import { useRouter } from 'next/navigation';
+
+
 
 export default function BoothScanPage() {
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
+    const router = useRouter();
 
     useEffect(() => {
         navigator.mediaDevices
@@ -21,6 +25,14 @@ export default function BoothScanPage() {
             })
             .catch(console.error);
     }, []);
+
+    const stopCamera = () => {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                stream.getTracks().forEach(track => track.stop());
+            })
+            .catch(() => {/* Camera may not be active */ });
+    };
 
     const flipCamera = () => {
         if (cameras.length < 2) return;
@@ -106,8 +118,10 @@ export default function BoothScanPage() {
             <button
                 type="button"
                 onClick={() => {
+                    stopCamera();
                     // TODO: handle identity switch
                     console.log("Switch identity");
+                    router.push("/play"); // For now just navigate to player booths page
                 }}
                 className="fixed bottom-20 right-6 z-50 flex flex-col items-center gap-1 transition-transform active:scale-95"
                 aria-label="切換身份"
