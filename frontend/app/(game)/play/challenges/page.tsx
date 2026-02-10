@@ -4,14 +4,14 @@ import Image from 'next/image';
 import { useState } from 'react';
 
 const BUTTON_COLORS = [
-    '#B17457',
-    '#BC9C32',
-    '#7E951E',
-    '#45889B',
-    '#3F5373',
-    '#613F73',
-    '#9D5093',
-    '#595854',
+    'var(--btn-red)',
+    'var(--btn-yellow)',
+    'var(--btn-green)',
+    'var(--btn-blue)',
+    'var(--btn-orange)',
+    'var(--btn-purple)',
+    'var(--btn-pink)',
+    'var(--btn-cyan)',
 ];
 
 /**
