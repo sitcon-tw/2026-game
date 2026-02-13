@@ -75,18 +75,21 @@ func main() {
 
 func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
+	// logger
 	r.Use(middleware.Logger(logger))
 
-	//nolint:golines // keep struct aligned
-	corsMiddleware := cors.Handler(cors.Options{
-		AllowedOrigins:   config.Env().CORSAllowedOrigins,
-		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Requested-With"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           maxAge,
-	})
-	r.Use(corsMiddleware)
+	// CORS
+	if config.Env().AppEnv == config.AppEnvDev {
+		//nolint:golines // keep struct aligned
+		corsMiddleware := cors.Handler(cors.Options{
+			AllowedOrigins:   config.Env().CORSAllowedOrigins,
+			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
+			AllowedHeaders:   []string{"Authorization", "Content-Type"},
+			AllowCredentials: true,
+			MaxAge:           maxAge,
+		})
+		r.Use(corsMiddleware)
+	}
 
 	// Rate limit
 	r.Use(httprate.LimitByIP(
@@ -94,6 +97,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 		config.Env().RateLimitWindow,
 	))
 
+	// Routes
 	r.Route("/api", func(r chi.Router) {
 		r.Mount("/users", router.UserRoutes(repo, logger))
 		r.Mount("/activities", router.ActivityRoutes(repo, logger))
@@ -103,6 +107,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 		r.Mount("/games", router.GameRoutes(repo, logger))
 	})
 
+	// Swagger API docs
 	if config.Env().AppEnv == config.AppEnvDev {
 		// Serve raw swagger spec at /docs for quick downloads
 		r.Get("/docs", func(w http.ResponseWriter, r *http.Request) {

@@ -5,23 +5,27 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// ActivityCheckIn handles POST /activities/{activityQRCode}.
+type activityCheckInRequest struct {
+	ActivityQRCode string `json:"activity_qr_code"`
+}
+
+// ActivityCheckIn handles POST /activities/check-ins.
 // @Summary      使用者掃描活動 QR code 打卡
 // @Description  使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在活動打卡。需要已登入的使用者 cookie。
 // @Tags         activities
+// @Accept       json
 // @Produce      json
-// @Param        activityQRCode  path      string  true  "Activity QR code token"
+// @Param        request  body      activityCheckInRequest  true  "Activity QR code token"
 // @Success      200  {object}  checkinResponse
 // @Failure      400  {object}  res.ErrorResponse "bad request"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /activities/{activityQRCode} [post]
+// @Router       /activities/check-ins [post]
 func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {
@@ -29,8 +33,14 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qr := chi.URLParam(r, "activityQRCode")
-	if qr == "" {
+	var req activityCheckInRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
+		res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid request body")
+		return
+	}
+	if req.ActivityQRCode == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
 		return
 	}
@@ -42,7 +52,7 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	activity, err := h.Repo.GetActivityByQRCode(r.Context(), tx, qr)
+	activity, err := h.Repo.GetActivityByQRCode(r.Context(), tx, req.ActivityQRCode)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("activity not found"), "activity not found")

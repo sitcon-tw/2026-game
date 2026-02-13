@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sitcon-tw/2026-game/internal/handler/user"
+	users "github.com/sitcon-tw/2026-game/internal/handler/user"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"go.uber.org/zap"
@@ -14,7 +14,7 @@ import (
 func UserRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 
-	h := user.New(repo, logger)
+	h := users.New(repo, logger)
 
 	// The reason we need login is for store user session in cookies.
 	r.Post("/session", h.Login)

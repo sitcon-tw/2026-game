@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/sitcon-tw/2026-game/internal/repository"
-	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -60,15 +59,7 @@ func (h *Handler) StaffLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "staff_token",
-		Value:    staff.Token,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		Secure:   config.Env().AppEnv == config.AppEnvProd,
-		Expires:  time.Now().Add(30 * 24 * time.Hour),
-	})
+	http.SetCookie(w, helpers.NewCookie("staff_token", staff.Token, 30*24*time.Hour))
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

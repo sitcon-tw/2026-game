@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
@@ -14,17 +13,22 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// DiscountUsed handles POST /discount-coupons/staff/{userCouponToken}/redemptions.
+type discountUsedRequest struct {
+	UserCouponToken string `json:"user_coupon_token"`
+}
+
+// DiscountUsed handles POST /discount-coupons/staff/redemptions.
 // @Summary      工作人員掃 QR Code 來使用折扣券
 // @Description  用 QR Code 掃描器掃會眾的折價券，然後折價券就會被標記為已使用，同時返回這個折價券的詳細資訊。需已登入並持有 staff_token cookie。
 // @Tags         discount
+// @Accept       json
 // @Produce      json
-// @Param        userCouponToken  path      string  true  "Discount coupon token"
+// @Param        request  body      discountUsedRequest  true  "Discount coupon token"
 // @Success      200  {object}  discountUsedResponse  ""
 // @Failure      500  {object}  res.ErrorResponse
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
-// @Router       /discount-coupons/staff/{userCouponToken}/redemptions [post]
+// @Router       /discount-coupons/staff/redemptions [post]
 // @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 //
 //nolint:funlen // handler orchestration, keep logic linear
@@ -35,8 +39,14 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userCouponToken := chi.URLParam(r, "userCouponToken")
-	if userCouponToken == "" {
+	var req discountUsedRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
+		res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid request body")
+		return
+	}
+	if req.UserCouponToken == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing coupon token"), "missing coupon token")
 		return
 	}
@@ -48,7 +58,7 @@ func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	user, err := h.Repo.GetUserByCouponToken(r.Context(), tx, userCouponToken)
+	user, err := h.Repo.GetUserByCouponToken(r.Context(), tx, req.UserCouponToken)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("invalid coupon token"), "invalid coupon token")

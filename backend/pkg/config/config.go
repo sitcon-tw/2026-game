@@ -26,6 +26,10 @@ type EnvConfig struct {
 	AppPort        string `env:"PORT" envDefault:"8000"`
 	AppAutoMigrate bool   `env:"APP_AUTO_MIGRATE" envDefault:"false"`
 
+	// Gameplay data locations
+	LevelCSVPath      string `env:"LEVEL_CSV_PATH" envDefault:"data/level.csv"`
+	SheetMusicCSVPath string `env:"SHEET_MUSIC_CSV_PATH" envDefault:"data/sheet_music.csv"`
+
 	// CORS
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:"," envDefault:"http://localhost:3000"`
 

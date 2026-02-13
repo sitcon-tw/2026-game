@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
-	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -51,15 +50,7 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "booth_token",
-		Value:    booth.Token,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		Secure:   config.Env().AppEnv == config.AppEnvProd,
-		Expires:  time.Now().Add(30 * 24 * time.Hour),
-	})
+	http.SetCookie(w, helpers.NewCookie("booth_token", booth.Token, 30*24*time.Hour))
 
 	w.WriteHeader(http.StatusOK)
 }
