@@ -21,7 +21,7 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.BoothAuth(repo, logger))
-			r.Post("/user/{userQRCode}", h.BoothCheckIn)
+			r.Post("/user/check-ins", h.BoothCheckIn)
 			r.Get("/stats", h.BoothCount)
 		})
 	})
@@ -33,7 +33,7 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 		r.Get("/stats", h.List)
 
 		// user scans an activity QR code to check in
-		r.Post("/{activityQRCode}", h.ActivityCheckIn)
+		r.Post("/check-ins", h.ActivityCheckIn)
 	})
 
 	return r

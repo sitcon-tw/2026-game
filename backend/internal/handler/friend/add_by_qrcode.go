@@ -1,27 +1,32 @@
 package friend
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-// AddByQRCode handles POST /friendships/{userQRCode}.
+type addByQRCodeRequest struct {
+	UserQRCode string `json:"user_qr_code"`
+}
+
+// AddByQRCode handles POST /friendships.
 // @Summary      建立好友關係
 // @Description  透過對方的 QR code 建立好友關係，雙方好友數量與 unlock_level 會在首次建立時各自增加。
 // @Tags         friends
+// @Accept       json
 // @Produce      json
-// @Param        userQRCode  path      string  true  "User QR code token"
+// @Param        request  body      addByQRCodeRequest  true  "User QR code token"
 // @Success      200  {string}  string  ""
 // @Failure      400  {object}  res.ErrorResponse "missing or invalid qr code"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /friendships/{userQRCode} [post]
+// @Router       /friendships [post]
 //
 //nolint:gocognit,funlen // handler flow is linear; length/complexity acceptable here
 func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
@@ -33,8 +38,14 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qr := chi.URLParam(r, "userQRCode")
-	if qr == "" {
+	var req addByQRCodeRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
+		res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid request body")
+		return
+	}
+	if req.UserQRCode == "" {
 		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
 		return
 	}
@@ -46,7 +57,7 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(ctx, tx)
 
-	targetUser, err := h.Repo.GetUserByQRCode(ctx, tx, qr)
+	targetUser, err := h.Repo.GetUserByQRCode(ctx, tx, req.UserQRCode)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("user not found"), "user not found")

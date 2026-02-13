@@ -21,7 +21,7 @@ func FriendRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	// Friend count for the current user
 	r.Get("/stats", h.Count)
 	// Add a friend by scanning their QR code
-	r.Post("/{userQRCode}", h.AddByQRCode)
+	r.Post("/", h.AddByQRCode)
 
 	return r
 }

@@ -23,9 +23,9 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 			r.Use(middleware.StaffAuth(repo, logger))
 
 			// Staff scans attendee's coupon QR code
-			r.Post("/{userCouponToken}/redemptions", h.DiscountUsed)
+			r.Post("/redemptions", h.DiscountUsed)
 			// Staff previews user's available coupons
-			r.Get("/coupon-tokens/{userCouponToken}", h.GetUserCoupons)
+			r.Post("/coupon-tokens/query", h.GetUserCoupons)
 			// Staff sees their own redemption history
 			r.Get("/current/redemptions", h.ListStaffHistory)
 		})
