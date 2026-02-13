@@ -17,7 +17,7 @@ export default function ChallengesLayout({
                 {/* Back */}
                 <button
                     type="button"
-                    onClick={() => router.push('/play')}
+                    onClick={() => router.push('/game')}
                     className="relative h-10 w-10 rounded-full cursor-pointer"
                     aria-label="返回"
                 >
@@ -36,7 +36,7 @@ export default function ChallengesLayout({
                         type="button"
                         className="relative h-10 w-10 rounded-full cursor-pointer"
                         aria-label="播放序列"
-                        onClick={() => { router.push("/play/challenges") }}
+                        onClick={() => { router.push("/game/challenges") }}
                     >
                         <Image
                             src="/assets/challenge/play.svg"
@@ -65,7 +65,7 @@ export default function ChallengesLayout({
                         type="button"
                         className="relative h-10 w-10 rounded-full cursor-pointer"
                         aria-label="說明"
-                        onClick={() => router.push('/play/challenges/rule')}
+                        onClick={() => router.push('/game/rule')}
                     >
                         <Image
                             src="/assets/challenge/help.svg"
