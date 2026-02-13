@@ -22,6 +22,7 @@ func GameRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r.Post("/submissions", h.Submit)
 	// Get the users rank in the game
 	r.Get("/leaderboards", h.Rank)
+	r.Get("/levels/{level}", h.GetLevelInfo)
 
 	return r
 }
