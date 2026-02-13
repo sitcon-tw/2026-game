@@ -7,7 +7,7 @@ const HEADER_CONFIG: Record<
     string,
     { showPlay: boolean; showHelp: boolean }
 > = {
-    "/levels": { showPlay: false, showHelp: false },
+    "/game": { showPlay: false, showHelp: false },
     "/game/[id]": { showPlay: true, showHelp: true },
     "/unlock": { showPlay: false, showHelp: false },
     "/scanner": { showPlay: false, showHelp: false },

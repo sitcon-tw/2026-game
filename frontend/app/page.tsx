@@ -29,7 +29,7 @@ export default function LandingPage() {
     // Navigate after expand finishes (~3s)
     setTimeout(() => {
       setPhase("done");
-      router.push("/levels");
+      router.push("/game");
     }, 4600);
   }, [phase, router]);
 

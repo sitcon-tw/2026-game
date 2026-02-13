@@ -4,7 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
-    { href: "/levels", label: "關卡", icon: "/assets/navigation/1-puzzle.svg" },
+    { href: "/game", label: "關卡", icon: "/assets/navigation/1-puzzle.svg" },
     { href: "/play", label: "闖關", icon: "/assets/navigation/2-book.svg" },
     { href: "/scan", label: "會眾掃描", icon: "/assets/navigation/3-scanner.svg" },
     { href: "/leaderboard", label: "排行榜", icon: "/assets/navigation/4-challenge.svg" },
