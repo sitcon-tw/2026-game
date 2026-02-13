@@ -1,20 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useCurrentUser, useLeaderboard } from "@/hooks/api";
 
 const TOTAL_LEVELS = 40;
-const UNLOCKED_LEVELS = 12;
-const COMPLETED_LEVELS = 7;
-
-const completedSet = new Set(
-    Array.from({ length: COMPLETED_LEVELS }, (_, index) => index + 1)
-);
-
-const unlockedLevels = Array.from({ length: UNLOCKED_LEVELS }, (_, index) =>
-    index + 1
-);
-
-const progressPercent = Math.round(
-    (COMPLETED_LEVELS / UNLOCKED_LEVELS) * 100
-);
 
 function LevelNoteIcon({ className }: { className?: string }) {
     return (
@@ -34,6 +23,28 @@ function LevelNoteIcon({ className }: { className?: string }) {
 }
 
 export default function LevelsPage() {
+    const { data: user, isLoading } = useCurrentUser();
+    const { data: leaderboard } = useLeaderboard();
+
+    const currentLevel = user?.current_level ?? 0;
+    const unlockLevel = user?.unlock_level ?? 0;
+    const rank = leaderboard?.me?.rank;
+
+    const completedSet = new Set(
+        Array.from({ length: currentLevel }, (_, i) => i + 1)
+    );
+    const unlockedLevels = Array.from({ length: unlockLevel }, (_, i) => i + 1);
+    const progressPercent =
+        unlockLevel > 0 ? Math.round((currentLevel / unlockLevel) * 100) : 0;
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
+                載入中...
+            </div>
+        );
+    }
+
     return (
         <div className="px-5 pb-10 pt-6">
             <section className="rounded-[20px] bg-[var(--bg-secondary)]/70 p-4 shadow-sm">
@@ -42,7 +53,7 @@ export default function LevelsPage() {
                         目前排名
                     </div>
                     <div className="font-serif text-2xl text-[var(--text-gold)]">
-                        第 10 名
+                        {rank != null ? `第 ${rank} 名` : "—"}
                     </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
@@ -50,7 +61,7 @@ export default function LevelsPage() {
                         已完成關卡 / 已解鎖關卡
                     </div>
                     <div className="font-serif text-lg text-[var(--text-primary)]">
-                        {COMPLETED_LEVELS}/{UNLOCKED_LEVELS}
+                        {currentLevel}/{unlockLevel}
                     </div>
                 </div>
                 <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.7)]">
@@ -60,7 +71,7 @@ export default function LevelsPage() {
                     />
                 </div>
                 <div className="mt-2 text-xs text-[var(--text-secondary)]">
-                    目前解鎖 {UNLOCKED_LEVELS} 關 / 全部 {TOTAL_LEVELS} 關
+                    目前解鎖 {unlockLevel} 關 / 全部 {TOTAL_LEVELS} 關
                 </div>
             </section>
 

@@ -1,6 +1,15 @@
 "use client";
 
+import { useCurrentUser, useLeaderboard } from "@/hooks/api";
+
 export default function Header() {
+    const { data: user } = useCurrentUser();
+    const { data: leaderboard } = useLeaderboard();
+
+    const currentLevel = user?.current_level ?? 0;
+    const unlockLevel = user?.unlock_level ?? 0;
+    const progressPercent = unlockLevel > 0 ? (currentLevel / unlockLevel) * 100 : 0;
+    const rank = leaderboard?.me?.rank;
 
     return (
         <header className="sticky top-0 z-40 h-[var(--header-height)] bg-[var(--bg-header)]">
@@ -11,15 +20,18 @@ export default function Header() {
                             SITCON 大地遊戲
                         </div>
                         <div className="text-[var(--text-light)]/90 font-serif text-lg">
-                            第 10 名
+                            {rank != null ? `第 ${rank} 名` : "—"}
                         </div>
                     </div>
                     <div className="flex flex-[1] flex-col items-center gap-2">
                         <div className="text-[var(--text-light)]/90 font-serif text-lg">
-                            4/5 關
+                            {currentLevel}/{unlockLevel} 關
                         </div>
                         <div className="h-2.5 w-full overflow-hidden rounded-full bg-[rgba(239,235,233,0.35)]">
-                            <div className="h-full w-[80%] rounded-full bg-[var(--accent-gold)]" />
+                            <div
+                                className="h-full rounded-full bg-[var(--accent-gold)] transition-all"
+                                style={{ width: `${progressPercent}%` }}
+                            />
                         </div>
                     </div>
                 </div>

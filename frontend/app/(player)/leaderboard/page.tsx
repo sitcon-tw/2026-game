@@ -1,37 +1,8 @@
 "use client";
 
 import { useState } from "react";
-
-/* ──────────── Mock Data ──────────── */
-
-interface LeaderboardEntry {
-    rank: number;
-    name: string;
-    completedLevels: number;
-    isCurrentUser?: boolean;
-}
-
-const CURRENT_USER_RANK = 18;
-
-const TOP_ENTRIES: LeaderboardEntry[] = Array.from({ length: 10 }, (_, i) => ({
-    rank: i + 1,
-    name: "鴨子草",
-    completedLevels: 40 - i * 2,
-    isCurrentUser: i + 1 === CURRENT_USER_RANK,
-}));
-
-const NEARBY_ENTRIES: LeaderboardEntry[] = Array.from(
-    { length: 11 },
-    (_, i) => {
-        const rank = CURRENT_USER_RANK - 5 + i;
-        return {
-            rank,
-            name: rank === CURRENT_USER_RANK ? "鴨子草" : "鴨子草",
-            completedLevels: 25 - i,
-            isCurrentUser: rank === CURRENT_USER_RANK,
-        };
-    }
-);
+import { useLeaderboard } from "@/hooks/api";
+import type { RankEntry } from "@/types/api";
 
 /* ──────────── Components ──────────── */
 
@@ -72,10 +43,10 @@ function TriangleDownIcon({ className }: { className?: string }) {
     );
 }
 
-function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
+function LeaderboardRow({ entry, isCurrentUser }: { entry: RankEntry; isCurrentUser?: boolean }) {
     return (
         <div
-            className={`relative flex items-center justify-between rounded-xl px-5 py-3.5 transition-colors ${entry.isCurrentUser
+            className={`relative flex items-center justify-between rounded-xl px-5 py-3.5 transition-colors ${isCurrentUser
                 ? "bg-[var(--bg-header)] ring-2 ring-[var(--accent-gold)]"
                 : "bg-[var(--bg-header)]/85"
                 }`}
@@ -83,13 +54,13 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
             {/* Left: rank + name */}
             <div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
                 <span className="tabular-nums">{entry.rank}.</span>
-                <span>{entry.name}</span>
+                <span>{entry.nickname}</span>
             </div>
 
             {/* Right: avatar + badge */}
             <div className="relative">
                 <div className="h-10 w-10 rounded-full bg-[var(--bg-secondary)]" />
-                {entry.isCurrentUser && (
+                {isCurrentUser && (
                     <span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
                         Y
                     </span>
@@ -114,14 +85,27 @@ type ViewMode = "top" | "nearby";
 
 export default function LeaderboardPage() {
     const [mode, setMode] = useState<ViewMode>("top");
+    const { data: leaderboard, isLoading, refetch } = useLeaderboard();
 
-    const entries = mode === "top" ? TOP_ENTRIES : NEARBY_ENTRIES;
+    const topEntries = leaderboard?.rank ?? [];
+    const nearbyEntries = leaderboard?.around ?? [];
+    const me = leaderboard?.me;
+
+    const entries = mode === "top" ? topEntries : nearbyEntries;
 
     /* Split nearby into above/below the current user for the "You ▼" divider */
-    const currentIdx = entries.findIndex((e) => e.isCurrentUser);
+    const currentIdx = me ? entries.findIndex((e) => e.rank === me.rank) : -1;
     const showDivider = mode === "nearby" && currentIdx > 0;
     const aboveEntries = showDivider ? entries.slice(0, currentIdx) : [];
     const belowEntries = showDivider ? entries.slice(currentIdx) : entries;
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
+                載入中...
+            </div>
+        );
+    }
 
     return (
         <div className="px-5 pb-10 pt-6">
@@ -135,6 +119,7 @@ export default function LeaderboardPage() {
                     {/* Refresh */}
                     <button
                         type="button"
+                        onClick={() => refetch()}
                         className="grid h-9 w-9 place-items-center rounded-full text-[var(--text-secondary)] active:scale-90 transition-transform"
                         aria-label="重新整理"
                     >
@@ -150,13 +135,13 @@ export default function LeaderboardPage() {
                         {mode === "top" ? (
                             <>
                                 <span className="font-bold text-[var(--text-primary)]">
-                                    前 {TOP_ENTRIES.length}
+                                    前 {topEntries.length || 10}
                                 </span>{" "}
                                 / 周圍
                             </>
                         ) : (
                             <>
-                                前 {TOP_ENTRIES.length} /{" "}
+                                前 {topEntries.length || 10} /{" "}
                                 <span className="font-bold text-[var(--text-primary)]">
                                     周圍
                                 </span>
@@ -171,32 +156,23 @@ export default function LeaderboardPage() {
                 {showDivider ? (
                     <>
                         {aboveEntries.map((entry) => (
-                            <LeaderboardRow key={entry.rank} entry={entry} />
+                            <LeaderboardRow key={entry.rank} entry={entry} isCurrentUser={me?.rank === entry.rank} />
                         ))}
                         <YouDivider />
                         {belowEntries.map((entry) => (
-                            <LeaderboardRow key={entry.rank} entry={entry} />
+                            <LeaderboardRow key={entry.rank} entry={entry} isCurrentUser={me?.rank === entry.rank} />
                         ))}
                     </>
                 ) : (
                     <>
-                        {/* In "top" mode, show all entries then a You divider if user not in top */}
                         {entries.map((entry) => (
-                            <LeaderboardRow key={entry.rank} entry={entry} />
+                            <LeaderboardRow key={entry.rank} entry={entry} isCurrentUser={me?.rank === entry.rank} />
                         ))}
-                        {mode === "top" &&
-                            !entries.some((e) => e.isCurrentUser) && (
+                        {mode === "top" && me &&
+                            !entries.some((e) => e.rank === me.rank) && (
                                 <>
                                     <YouDivider />
-                                    {/* Show user's entry below */}
-                                    <LeaderboardRow
-                                        entry={{
-                                            rank: CURRENT_USER_RANK,
-                                            name: "鴨子草",
-                                            completedLevels: 20,
-                                            isCurrentUser: true,
-                                        }}
-                                    />
+                                    <LeaderboardRow entry={me} isCurrentUser />
                                 </>
                             )}
                     </>

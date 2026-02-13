@@ -1,116 +1,78 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
+import { useActivityStats } from '@/hooks/api';
+import type { ActivityWithStatus } from '@/types/api';
 
-interface Booth {
-    id: string;
-    name: string;
-    description: string;
-    location: string;
-    image: string;
-    visited: boolean;
-}
+export default function CheckinsPage() {
+    const { data: activities, isLoading } = useActivityStats();
+    const [selectedItem, setSelectedItem] = useState<ActivityWithStatus | null>(null);
 
-// Mock booth data — replace with real data source
-const BOOTHS: Booth[] = [
-    { id: '1', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 1 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '2', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 2 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '3', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 3 號攤位', image: '/assets/booths/example-map.png', visited: true },
-    { id: '4', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 4 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '5', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 5 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '6', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 6 號攤位', image: '/assets/booths/example-map.png', visited: true },
-    { id: '7', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 7 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '8', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 8 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '9', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 9 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '10', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 10 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '11', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 11 號攤位', image: '/assets/booths/example-map.png', visited: false },
-    { id: '12', name: 'SITCON', description: '學生計算機年會社群攤位', location: '2F 12 號攤位', image: '/assets/booths/example-map.png', visited: false },
-];
+    const checkins = useMemo(
+        () => (activities ?? []).filter((a) => a.type === 'checkin'),
+        [activities]
+    );
 
-export default function BoothsPage() {
-    const router = useRouter();
-    const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
+                載入中...
+            </div>
+        );
+    }
 
     return (
         <div className="bg-[var(--bg-primary)] px-6 py-6">
             {/* Title */}
             <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center mb-6">
-                可解鎖攤位
+                打卡地點
             </h1>
 
-            {/* Booth Grid — 2 columns × N rows */}
+            {/* Grid — 2 columns × N rows */}
             <div className="grid grid-cols-2 gap-3">
-                {BOOTHS.map((booth) => (
+                {checkins.map((item) => (
                     <button
-                        key={booth.id}
+                        key={item.id}
                         type="button"
-                        onClick={() => setSelectedBooth(booth)}
+                        onClick={() => setSelectedItem(item)}
                         className={`
               flex items-center justify-center px-4 py-5
               font-serif text-xl font-semibold tracking-wide transition-all cursor-pointer
-              ${booth.visited
+              ${item.visited
                                 ? 'bg-[var(--accent-bronze)] text-white'
                                 : 'bg-[#C6A97B] text-[var(--text-light)] opacity-70'
                             }
             `}
                     >
-                        {booth.name}
+                        {item.name}
                     </button>
                 ))}
             </div>
 
-            {/* Booth Detail Modal */}
-            {selectedBooth && (
+            {/* Detail Modal */}
+            {selectedItem && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
-                    onClick={() => setSelectedBooth(null)}
+                    onClick={() => setSelectedItem(null)}
                 >
                     <div
                         className="w-full max-w-[380px] rounded-2xl bg-white p-8 shadow-xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Booth Name */}
                         <h2 className="text-center font-serif text-3xl font-bold text-[var(--text-primary)] mb-2">
-                            {selectedBooth.name}
+                            {selectedItem.name}
                         </h2>
-
-                        {/* Location */}
                         <p className="text-center text-lg text-[var(--text-secondary)] mb-6">
-                            {selectedBooth.location}
+                            {selectedItem.visited ? '已打卡' : '未打卡'}
                         </p>
-
-                        {/* Map Image */}
-                        <div className="relative mx-auto mb-8 aspect-[4/3] w-full overflow-hidden rounded-lg">
-                            <Image
-                                src={selectedBooth.image}
-                                alt={`${selectedBooth.name} 地圖`}
-                                fill
-                                className="object-contain"
-                            />
-                        </div>
-
-                        {/* Action Buttons */}
                         <div className="flex gap-4">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    // TODO: navigate to booth detail / introduction
-                                }}
+                                onClick={() => setSelectedItem(null)}
                                 className="flex-1 rounded-full bg-[var(--bg-header)] py-3 text-center font-serif text-xl font-semibold text-[var(--text-light)] transition-opacity hover:opacity-90"
                             >
-                                介紹
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    // TODO: confirm / check-in logic
-                                    setSelectedBooth(null);
-                                }}
-                                className="flex-1 rounded-full bg-[var(--bg-header)] py-3 text-center font-serif text-xl font-semibold text-[var(--text-light)] transition-opacity hover:opacity-90"
-                            >
-                                確認
+                                關閉
                             </button>
                         </div>
                     </div>

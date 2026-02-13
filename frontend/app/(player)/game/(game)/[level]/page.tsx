@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
+import { useLevelInfo, useSubmitLevel } from '@/hooks/api';
 import { useState } from 'react';
 
 const BUTTON_COLORS = [
@@ -89,11 +91,33 @@ function BlockGrid({
 }
 
 export default function ChallengesPage() {
-    // TODO: fetch from API — for now default to level 1
-    const [currentLevel, setCurrentLevel] = useState(1);
+    const params = useParams();
+    const currentLevel = Number(params.level) || 1;
+    const { data: levelInfo, isLoading } = useLevelInfo(currentLevel);
+    const submitLevel = useSubmitLevel();
+    const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
     const stageIdx = getStageIndex(currentLevel);
     const stage = STAGE_CONFIG[stageIdx];
+
+    const handleComplete = () => {
+        submitLevel.mutate(undefined, {
+            onSuccess: (data) => {
+                setSubmitMessage(`通關成功！目前第 ${data.current_level} 關`);
+            },
+            onError: (err) => {
+                setSubmitMessage(`提交失敗：${(err as Error).message}`);
+            },
+        });
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
+                載入中...
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full px-4 py-4">
@@ -103,14 +127,11 @@ export default function ChallengesPage() {
                     <h2 className="text-[var(--text-primary)] font-serif text-lg font-bold">
                         第 {currentLevel} 關
                     </h2>
-                    <button
-                        type="button"
-                        onClick={() => setCurrentLevel((l) => Math.min(l + 1, 40))}
-                        className="grid h-7 w-7 place-items-center rounded-full bg-[var(--accent-gold)] text-[var(--bg-header)] text-sm font-bold leading-none shadow-sm active:scale-90 transition-transform"
-                        aria-label="下一關"
-                    >
-                        +
-                    </button>
+                    {levelInfo && (
+                        <span className="text-xs text-[var(--text-secondary)]">
+                            速度 {levelInfo.speed}x
+                        </span>
+                    )}
                 </div>
                 <span className="text-[var(--text-secondary)] text-sm font-sans">
                     {stage.buttons} 個按鈕 · {stage.cols}×{stage.rows}
