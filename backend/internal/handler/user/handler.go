@@ -1,4 +1,4 @@
-package user
+package users
 
 import (
 	"github.com/sitcon-tw/2026-game/internal/repository"
