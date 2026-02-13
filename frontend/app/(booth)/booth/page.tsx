@@ -1,17 +1,61 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { useRouter } from 'next/navigation';
-
+import { useRouter, useSearchParams } from "next/navigation";
+import { useBoothLogin, useBoothStats, useBoothCheckin } from "@/hooks/api";
+import { useBoothStore } from "@/stores";
+import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
+import type { ScanStatus } from "@/lib/scanMessages";
 
 
 export default function BoothScanPage() {
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
+    const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
     const router = useRouter();
 
+    const searchParams = useSearchParams();
+
+    // Booth store
+    const { boothToken, setBoothToken } = useBoothStore();
+
+    // API hooks
+    const boothLogin = useBoothLogin();
+    const { data: boothStats, isLoading: statsLoading } = useBoothStats();
+    const boothCheckin = useBoothCheckin();
+
+    // ── 1. Read token from URL and login ──
+    useEffect(() => {
+        const tokenFromUrl = searchParams.get("token");
+        if (tokenFromUrl) {
+            // Save token and login
+            setBoothToken(tokenFromUrl);
+            boothLogin.mutate(tokenFromUrl, {
+                onSuccess: () => {
+                    // Remove token from URL to keep it clean (cookie is now set)
+                    router.replace("/booth");
+                },
+                onError: (error) => {
+                    console.error("Booth login failed:", error);
+                    setScanStatus({
+                        type: "error",
+                        message: translateWithContext("booth-login", error instanceof Error ? error.message : undefined, "攤位登入失敗，請確認連結是否正確"),
+                    });
+                },
+            });
+        } else if (!boothToken) {
+            // No token in URL and no stored token — cannot operate
+            setScanStatus({
+                type: "error",
+                message: "缺少攤位 token，請使用正確連結進入",
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    // ── 2. Camera setup ──
     useEffect(() => {
         navigator.mediaDevices
             .enumerateDevices()
@@ -41,12 +85,40 @@ export default function BoothScanPage() {
         setSelectedDeviceId(cameras[nextIdx].deviceId);
     };
 
-    const handleScan = (result: { rawValue: string }[]) => {
-        if (!result.length) return;
-        const value = result[0].rawValue;
-        console.log("Scanned:", value);
-        // TODO: handle scanned QR code value (unlock level, add friend, etc.)
-    };
+    // ── 3. Handle QR scan → booth check-in ──
+    const handleScan = useCallback(
+        (result: { rawValue: string }[]) => {
+            if (!result.length) return;
+            // Prevent duplicate scans while processing
+            if (
+                scanStatus.type === "scanning" ||
+                boothCheckin.isPending
+            )
+                return;
+
+            const userQRCode = result[0].rawValue;
+            console.log("Scanned user QR:", userQRCode);
+            setScanStatus({ type: "scanning" });
+
+            boothCheckin.mutate(userQRCode, {
+                onSuccess: (data) => {
+                    const msg = translateWithContext("booth-checkin", data?.status, "打卡成功！");
+                    setScanStatus({ type: isSuccessStatus(data?.status) ? "success" : "error", message: msg });
+                    setTimeout(() => setScanStatus({ type: "idle" }), 2000);
+                },
+                onError: (error) => {
+                    const msg = translateWithContext("booth-checkin", error instanceof Error ? error.message : undefined, "打卡失敗，請重試");
+                    setScanStatus({ type: "error", message: msg });
+                    setTimeout(() => setScanStatus({ type: "idle" }), 3000);
+                },
+            });
+        },
+        [scanStatus, boothCheckin]
+    );
+
+    // ── Render ──
+    const visitorCount = boothStats?.count ?? 0;
+    const isLoggedIn = boothToken || boothLogin.isSuccess;
 
     return (
         <div className="flex flex-1 flex-col items-center px-6 py-8">

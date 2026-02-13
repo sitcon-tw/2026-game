@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
-
-const FRIEND_LIMIT = 20;
+import { useCurrentUser, useFriendCount, useAddFriend, useCheckinActivity } from "@/hooks/api";
+import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
+import type { ScanStatus } from "@/lib/scanMessages";
 
 export default function ScanPage() {
-    const router = useRouter();
     const [showMyQR, setShowMyQR] = useState(false);
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
+    const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
+
+    const { data: user } = useCurrentUser();
+    const { data: friendData } = useFriendCount();
+    const addFriend = useAddFriend();
+    const checkinActivity = useCheckinActivity();
 
     useEffect(() => {
         navigator.mediaDevices
@@ -26,8 +31,8 @@ export default function ScanPage() {
             .catch(console.error);
     }, []);
 
-    // TODO: replace with real user data from store
-    const friendCount = 17;
+    const friendCount = friendData?.count ?? 0;
+    const FRIEND_LIMIT = 20;
     const remaining = FRIEND_LIMIT - friendCount;
     const progress = friendCount / FRIEND_LIMIT;
 
@@ -38,12 +43,51 @@ export default function ScanPage() {
         setSelectedDeviceId(cameras[nextIdx].deviceId);
     };
 
-    const handleScan = (result: { rawValue: string }[]) => {
-        if (!result.length) return;
-        const value = result[0].rawValue;
-        console.log("Scanned:", value);
-        // TODO: handle scanned QR code value (unlock level, add friend, etc.)
-    };
+    const handleScan = useCallback(
+        (result: { rawValue: string }[]) => {
+            if (!result.length) return;
+            // Prevent duplicate scans while processing
+            if (
+                scanStatus.type === "scanning" ||
+                addFriend.isPending ||
+                checkinActivity.isPending
+            )
+                return;
+
+            const value = result[0].rawValue;
+            console.log("Scanned QR:", value);
+            setScanStatus({ type: "scanning" });
+
+            // Try adding as friend first; if the QR looks like an activity code, use checkin
+            if (value.startsWith("activity:")) {
+                checkinActivity.mutate(value, {
+                    onSuccess: (data) => {
+                        const msg = translateWithContext("activity-checkin", data?.status, "打卡成功！");
+                        setScanStatus({ type: isSuccessStatus(data?.status) ? "success" : "error", message: msg });
+                        setTimeout(() => setScanStatus({ type: "idle" }), 2000);
+                    },
+                    onError: (err) => {
+                        const msg = translateWithContext("activity-checkin", err instanceof Error ? err.message : undefined, "打卡失敗，請重試");
+                        setScanStatus({ type: "error", message: msg });
+                        setTimeout(() => setScanStatus({ type: "idle" }), 3000);
+                    },
+                });
+            } else {
+                addFriend.mutate(value, {
+                    onSuccess: () => {
+                        setScanStatus({ type: "success", message: translateWithContext("friendship", "friendship created") });
+                        setTimeout(() => setScanStatus({ type: "idle" }), 2000);
+                    },
+                    onError: (err) => {
+                        const msg = translateWithContext("friendship", err instanceof Error ? err.message : undefined, "加朋友失敗，請重試");
+                        setScanStatus({ type: "error", message: msg });
+                        setTimeout(() => setScanStatus({ type: "idle" }), 3000);
+                    },
+                });
+            }
+        },
+        [scanStatus, addFriend, checkinActivity]
+    );
 
     return (
         <div className="flex flex-1 flex-col items-center px-6 py-8">
@@ -115,6 +159,29 @@ export default function ScanPage() {
                             finder: true,
                         }}
                     />
+                )}
+
+                {/* Scan status overlay */}
+                {!showMyQR && scanStatus.type === "scanning" && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                        <div className="rounded-lg bg-white px-6 py-3 text-lg font-bold text-[var(--text-primary)]">
+                            處理中…
+                        </div>
+                    </div>
+                )}
+                {!showMyQR && scanStatus.type === "success" && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                        <div className="rounded-lg bg-green-500 px-6 py-3 text-lg font-bold text-white">
+                            {scanStatus.message}
+                        </div>
+                    </div>
+                )}
+                {!showMyQR && scanStatus.type === "error" && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                        <div className="rounded-lg bg-red-500 px-6 py-3 text-lg font-bold text-white text-center">
+                            {scanStatus.message}
+                        </div>
+                    </div>
                 )}
             </div>
 
