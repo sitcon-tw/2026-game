@@ -1,33 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-const HEADER_CONFIG: Record<
-    string,
-    { showPlay: boolean; showHelp: boolean }
-> = {
-    "/game": { showPlay: false, showHelp: false },
-    "/game/[id]": { showPlay: true, showHelp: true },
-    "/unlock": { showPlay: false, showHelp: false },
-    "/scanner": { showPlay: false, showHelp: false },
-    "/leaderboard": { showPlay: false, showHelp: false },
-    "/rewards": { showPlay: false, showHelp: false },
-};
-
-const resolveConfig = (pathname: string) => {
-    if (pathname.startsWith("/game/")) {
-        return HEADER_CONFIG["/game/[id]"];
-    }
-    return HEADER_CONFIG[pathname] ?? {
-        showPlay: false,
-        showHelp: false,
-    };
-};
-
 export default function Header() {
-    const pathname = usePathname();
-    const { showPlay, showHelp } = resolveConfig(pathname);
 
     return (
         <header className="sticky top-0 z-40 h-[var(--header-height)] bg-[var(--bg-header)]">
@@ -48,28 +21,6 @@ export default function Header() {
                         <div className="h-2.5 w-full overflow-hidden rounded-full bg-[rgba(239,235,233,0.35)]">
                             <div className="h-full w-[80%] rounded-full bg-[var(--accent-gold)]" />
                         </div>
-                        {showPlay || showHelp ? (
-                            <div className="flex items-center gap-2">
-                                {showPlay ? (
-                                    <button
-                                        type="button"
-                                        className="grid h-8 w-8 place-items-center rounded-full bg-[var(--accent-gold)] text-[var(--bg-header)] shadow-sm"
-                                        aria-label="播放"
-                                    >
-                                        ▶
-                                    </button>
-                                ) : null}
-                                {showHelp ? (
-                                    <Link
-                                        href="#"
-                                        className="grid h-8 w-8 place-items-center rounded-full border border-[rgba(239,235,233,0.5)] text-[var(--text-light)]"
-                                        aria-label="說明"
-                                    >
-                                        ?
-                                    </Link>
-                                ) : null}
-                            </div>
-                        ) : null}
                     </div>
                 </div>
             </div>
