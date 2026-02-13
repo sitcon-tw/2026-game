@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -14,6 +15,8 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/db"
 	"github.com/sitcon-tw/2026-game/pkg/logger"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
+	"github.com/sitcon-tw/2026-game/pkg/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
@@ -43,6 +46,20 @@ func main() {
 
 	logger := logger.New()
 
+	otelShutdown, err := telemetry.Init(context.Background(), logger)
+	if err != nil {
+		logger.Error("Failed to initialize OpenTelemetry; continuing without tracing", zap.Error(err))
+	} else {
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			if shutdownErr := otelShutdown(ctx); shutdownErr != nil {
+				logger.Error("Failed to shutdown OpenTelemetry", zap.Error(shutdownErr))
+			}
+		}()
+	}
+
 	db, err := db.InitDatabase(logger)
 	if err != nil {
 		logger.Fatal("Failed to initialize database", zap.Error(err))
@@ -52,6 +69,9 @@ func main() {
 	repo := repository.New(db, logger)
 
 	handler := initRoutes(repo, logger)
+	if config.Env().OTelEnabled {
+		handler = otelhttp.NewHandler(handler, config.Env().OTelService)
+	}
 
 	logger.Info("Starting server",
 		zap.String("port", cfg.AppPort),
@@ -75,6 +95,7 @@ func main() {
 
 func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
+
 	// logger
 	r.Use(middleware.Logger(logger))
 

@@ -26,6 +26,13 @@ type EnvConfig struct {
 	AppPort        string `env:"PORT" envDefault:"8000"`
 	AppAutoMigrate bool   `env:"APP_AUTO_MIGRATE" envDefault:"false"`
 
+	// OpenTelemetry settings
+	OTelEnabled    bool    `env:"OTEL_ENABLED" envDefault:"false"`
+	OTelEndpoint   string  `env:"OTEL_ENDPOINT" envDefault:"localhost:4317"`
+	OTelInsecure   bool    `env:"OTEL_INSECURE" envDefault:"true"`
+	OTelSampleRate float64 `env:"OTEL_SAMPLE_RATE" envDefault:"1.0"`
+	OTelService    string  `env:"OTEL_SERVICE_NAME" envDefault:"sitcon-2026-game-backend"`
+
 	// Gameplay data locations
 	LevelCSVPath      string `env:"LEVEL_CSV_PATH" envDefault:"data/level.csv"`
 	SheetMusicCSVPath string `env:"SHEET_MUSIC_CSV_PATH" envDefault:"data/sheet_music.csv"`
