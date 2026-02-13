@@ -20,6 +20,7 @@
 - **Framework:** Next.js 14+ (App Router)
 - **Styling:** Tailwind CSS (Mobile-first approach)
 - **State Management:** Zustand (Global state: user progress, unlocked levels, audio settings)
+- **Data Fetching:** TanStack React Query (`@tanstack/react-query`) — all API calls use custom hooks
 - **Animation:** Framer Motion (Critical for game button feedback and page transitions)
 - **Audio:** Web Audio API or Howler.js (Low latency is required for rhythm game)
 - **Scanner:** `html5-qrcode` or `@yudiel/react-qr-scanner`
@@ -492,378 +493,182 @@ import { Button } from '../../components/ui/Button';
 - [ ] Gold stars (✦) decorations
 - [ ] Serif headings, sans-serif body
 
----
+## API document
 
-## 12. Deployment Strategy
-
-### 12.1 Overview
-
-The project supports two primary deployment methods:
-
-1. **Docker (Containerized Deployment)** — For self-hosted servers or any Docker-compatible platform
-2. **Zeabur (Platform as a Service)** — For rapid deployment with auto-scaling and zero configuration
-
-### 12.2 Docker Deployment
-
-#### Prerequisites
-
-- Docker 20.10+ and Docker Compose V2+
-- The following files are already configured:
-  - `frontend/Dockerfile` — Multi-stage build for optimized image size
-  - `frontend/.dockerignore` — Excludes unnecessary files from the image
-  - `frontend/docker-compose.yml` — Orchestration configuration
-  - `frontend/.env.production` — Production environment variables
-
-#### Configuration
-
-**Critical:** `next.config.ts` must include `output: "standalone"` for Docker deployment:
-
-```typescript
-const nextConfig: NextConfig = {
-  output: "standalone", // Required for Docker
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "https://2026-game.sitcon.party/api/:path*",
-      },
-    ];
-  },
-};
-```
-
-#### Local Testing
-
-```bash
-cd frontend
-
-# Build and start container
-docker compose up --build -d
-
-# View logs
-docker logs -f sitcon-game-frontend
-
-# Stop container
-docker compose down
-```
-
-#### Production Deployment
-
-**Option A: Docker Hub**
-
-```bash
-# Build and tag
-docker build -t your-username/sitcon-game-frontend:latest .
-
-# Push to registry
-docker push your-username/sitcon-game-frontend:latest
-
-# On production server
-docker pull your-username/sitcon-game-frontend:latest
-docker run -d \
-  --name sitcon-game-frontend \
-  -p 3000:3000 \
-  -e NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api \
-  --restart unless-stopped \
-  your-username/sitcon-game-frontend:latest
-```
-
-**Option B: Direct Build on Server**
-
-```bash
-# Upload code to server
-scp -r frontend/ user@server:/path/to/deploy/
-
-# SSH and deploy
-ssh user@server
-cd /path/to/deploy/frontend
-docker compose up -d
-```
-
-#### Nginx Reverse Proxy (Optional)
-
-If you want to use a custom domain with SSL:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-Then enable HTTPS with Let's Encrypt:
-
-```bash
-sudo certbot --nginx -d your-domain.com
-```
+The file is at ./api/api-1.json. Please refer to it for API details when implementing frontend features.
 
 ---
 
-### 12.3 Zeabur Deployment (Recommended)
+## 11. TanStack React Query — API Data-Fetching Layer
 
-Zeabur provides zero-configuration deployment with automatic HTTPS, CDN, and continuous deployment.
+> All server-state is managed through `@tanstack/react-query`. **Never** use raw `fetch` or `useEffect` for API calls in page/component code — always go through the hooks defined in `@/hooks/api/`.
 
-#### Method 1: Auto-Detection (Recommended)
+### 11.1 Architecture Overview
 
-Zeabur automatically detects Next.js projects — no configuration files needed.
-
-**Steps:**
-
-1. **Push code to Git**
-   ```bash
-   git add .
-   git commit -m "Deploy to Zeabur"
-   git push origin main
-   ```
-
-2. **Create Project on Zeabur**
-   - Go to [dash.zeabur.com](https://dash.zeabur.com)
-   - Click "New Project" → "Deploy from GitHub"
-   - Select your repository (`2026-game`)
-   - **Important:** Set **Root Directory** to `frontend`
-
-3. **Configure Environment Variables**
-   In Zeabur Dashboard → Variables:
-   ```
-   NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api
-   ```
-
-4. **Deploy**
-   - Zeabur automatically runs `pnpm install` and `pnpm build`
-   - Your app will be available at `https://your-app.zeabur.app`
-
-**Advantages:**
-- Zero configuration — auto-detects Next.js
-- Automatic HTTPS with SSL certificate
-- Built-in CDN for static assets
-- Continuous deployment on every `git push`
-- Supports dynamic routes (`/game/[level]`)
-- Faster cold starts than Docker
-
-#### Method 2: Docker on Zeabur
-
-If you need more control or custom system packages:
-
-1. **Ensure Docker files exist**
-   - `Dockerfile` (already configured)
-   - `.dockerignore` (already configured)
-   - `next.config.ts` with `output: "standalone"`
-
-2. **Create Project on Zeabur**
-   - Same as Method 1
-   - Zeabur will detect `Dockerfile` and ask "Use Dockerfile?"
-   - Select "Yes"
-
-3. **Configure Environment Variables**
-   ```
-   NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api
-   ```
-
-4. **Deploy**
-   - Zeabur runs `docker build`
-   - Deployment complete!
-
-#### Custom Domain Setup
-
-1. In Zeabur Dashboard → Domains → "Add Domain"
-2. Enter your domain (e.g., `game.sitcon.party`)
-3. Add CNAME record in your DNS:
-   ```
-   CNAME  game  your-app.zeabur.app
-   ```
-4. Wait for DNS propagation (usually < 5 minutes)
-5. Zeabur automatically provisions SSL certificate
-
-#### Auto-Deployment
-
-- **Enabled by default:** Every `git push` triggers automatic deployment
-- **To disable:** Dashboard → Settings → Turn off "Auto Deploy"
-- **Branch deployment:** Create separate services for `main` (production) and `dev` (staging)
-
----
-
-### 12.4 Environment Variables
-
-All deployment methods require these environment variables:
-
-| Variable | Value | Required | Notes |
-|----------|-------|----------|-------|
-| `NEXT_PUBLIC_API_BASE_URL` | `https://2026-game.sitcon.party/api` | Yes | Backend API endpoint |
-| `NODE_ENV` | `production` | Auto-set | Build mode |
-| `NEXT_TELEMETRY_DISABLED` | `1` | Optional | Disable Next.js telemetry |
-
-**Important:** Variables prefixed with `NEXT_PUBLIC_` are embedded at build time and accessible in client-side code.
-
----
-
-### 12.5 Common Issues & Solutions
-
-#### Issue: `useSearchParams()` build error
-
-**Error:**
 ```
-useSearchParams() should be wrapped in a suspense boundary
+frontend/
+├── components/providers/QueryProvider.tsx   ← QueryClientProvider ("use client")
+├── lib/
+│   ├── api.ts                               ← Thin fetch wrapper with error handling
+│   └── queryKeys.ts                         ← Centralised query-key constants
+├── types/api.ts                             ← API response/request TypeScript types
+└── hooks/api/
+    ├── index.ts                             ← Barrel re-export
+    ├── useUser.ts                           ← /users/*
+    ├── useActivities.ts                     ← /activities/*
+    ├── useGames.ts                          ← /games/*
+    ├── useFriendships.ts                    ← /friendships/*
+    └── useCoupons.ts                        ← /discount-coupons/*
 ```
 
-**Solution:** All components using `useSearchParams()` must be wrapped in `<Suspense>`:
+### 11.2 QueryProvider
+
+**Path:** `@/components/providers/QueryProvider.tsx`
+
+Wrapped inside **both** `(player)/layout.tsx` and `(booth)/layout.tsx`.
 
 ```tsx
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+"use client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 
-function MyComponent() {
-  const params = useSearchParams();
-  // ...
-}
-
-export default function Page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <MyComponent />
-    </Suspense>
+export default function QueryProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 30 * 1000,
+            retry: 2,
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
   );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 ```
 
-#### Issue: QR Scanner not working
+### 11.3 API Client (`@/lib/api.ts`)
 
-**Cause:** Camera API requires HTTPS.
+- Base URL from `process.env.NEXT_PUBLIC_API_BASE_URL` (default `"/api"`)
+- All requests include `credentials: "include"` (cookie-based auth)
+- Throws `ApiError` with `status` and parsed body on non-2xx responses
+- Provides `api.get<T>`, `api.post<T>`, `api.put<T>`, `api.patch<T>`, `api.delete<T>`
 
-**Solution:**
-- Docker: Use Nginx with SSL certificate
-- Zeabur: HTTPS is automatic
-
-#### Issue: API requests fail (CORS)
-
-**Solution:** Ensure backend CORS settings allow your deployment domain:
-
-```go
-// Backend CORS configuration
-allowedOrigins := []string{
-    "https://your-app.zeabur.app",
-    "https://game.sitcon.party",
-    "http://localhost:3000", // Development
+```typescript
+export class ApiError extends Error {
+  constructor(public status: number, public data: { message?: string }) { ... }
 }
 ```
 
-#### Issue: Dynamic routes return 404
+### 11.4 Query Keys (`@/lib/queryKeys.ts`)
 
-**Solution:** This should not happen with proper Next.js configuration. Check:
-1. `next.config.ts` has `output: "standalone"`
-2. Build logs show successful page generation
-3. All `[param]` folders have `page.tsx` files
+All keys are `as const` tuples for type safety and targeted invalidation.
 
----
-
-### 12.6 Deployment Checklist
-
-Before deploying to production:
-
-- [ ] Environment variable `NEXT_PUBLIC_API_BASE_URL` is set correctly
-- [ ] `pnpm-lock.yaml` is committed to Git
-- [ ] `next.config.ts` has `output: "standalone"` (for Docker)
-- [ ] All components using `useSearchParams()` are wrapped in `<Suspense>`
-- [ ] Backend CORS allows your deployment domain
-- [ ] SSL/HTTPS is configured (required for QR Scanner)
-- [ ] Test all dynamic routes (`/game/1` through `/game/40`)
-- [ ] Test QR Scanner functionality (requires HTTPS)
-- [ ] Test API authentication (cookie-based)
-- [ ] Verify leaderboard pagination works
-- [ ] Check mobile responsiveness (viewport < 430px)
-
----
-
-### 12.7 Recommended Workflow
-
-**Development → Staging → Production**
-
-1. **Local Development**
-   ```bash
-   pnpm dev
-   # Test at http://localhost:3000
-   ```
-
-2. **Docker Testing**
-   ```bash
-   docker compose up --build
-   # Test containerized build locally
-   ```
-
-3. **Staging Deployment (Zeabur `dev` branch)**
-   ```bash
-   git checkout dev
-   git push origin dev
-   # Auto-deploys to staging.zeabur.app
-   ```
-
-4. **Production Deployment (Zeabur `main` branch)**
-   ```bash
-   git checkout main
-   git merge dev
-   git push origin main
-   # Auto-deploys to production
-   ```
-
----
-
-### 12.8 Monitoring & Logs
-
-#### Docker
-
-```bash
-# View live logs
-docker logs -f sitcon-game-frontend
-
-# Check container status
-docker ps
-
-# Restart container
-docker restart sitcon-game-frontend
+```typescript
+export const queryKeys = {
+  user: {
+    me:      ["user", "me"]      as const,
+    session: ["user", "session"] as const,
+  },
+  activities: {
+    stats:      ["activities", "stats"]        as const,
+    boothStats: ["activities", "booth", "stats"] as const,
+  },
+  games: {
+    leaderboard: (page?: number) => ["games", "leaderboard", page ?? 1] as const,
+  },
+  friendships: {
+    list:  ["friendships"]          as const,
+    count: ["friendships", "count"] as const,
+  },
+  coupons: {
+    list: ["coupons"] as const,
+  },
+} as const;
 ```
 
-#### Zeabur
+### 11.5 API Types (`@/types/api.ts`)
 
-- Dashboard → Logs → Real-time logs
-- Dashboard → Deployments → Build logs and deployment history
-- Dashboard → Metrics → CPU, Memory, Network usage
+Types are derived from the Swagger definitions in `./api/api-1.json`.
 
----
+Key response types (keep these in sync with the spec):
 
-### 12.9 Quick Reference
+| Swagger definition | TS type | Notes |
+|-|-|-|
+| `models.User` | `User` | `id`, `nickname`, `current_level`, `unlock_level`, `qrcode_token`, `coupon_token`, `last_pass_time`, timestamps |
+| `activities.activityWithStatus` | `ActivityWithStatus` | `id`, `name`, `type` ("booth"/"checkin"/"challenge"), `visited` |
+| `activities.checkinResponse` | `CheckinResponse` | `status` |
+| `activities.countResponse` | `ActivityCountResponse` | `count` |
+| `game.RankResponse` | `RankResponse` | `rank` (global page), `around` (±5), `me`, `page` |
+| `game.RankEntry` | `RankEntry` | `nickname`, `level`, `rank` |
+| `game.SubmitResponse` | `SubmitResponse` | `current_level`, `unlock_level`, `coupons[]` |
+| `friend.countResponse` | `FriendCountResponse` | `count`, `max` |
+| `models.DiscountCoupon` | `DiscountCoupon` | `id`, `discount_id`, `price`, `user_id`, `used_at`, `used_by`, `history_id`, timestamps |
+| `discount.getUserCouponsResponse` | `GetUserCouponsResponse` | `coupons[]`, `total` |
+| `discount.discountUsedResponse` | `DiscountUsedResponse` | `user_id`, `user_name`, `coupons[]`, `total`, `count`, `coupon_token`, `used_at`, `used_by` |
+| `discount.historyItem` | `DiscountHistoryItem` | `id`, `user_id`, `nickname`, `staff_id`, `total`, `used_at` |
+| `models.Staff` | `Staff` | `id`, `name`, `token`, timestamps |
+| `res.ErrorResponse` | `ErrorResponse` | `message` |
 
-| Task | Docker Command | Zeabur Action |
-|------|---------------|---------------|
-| Deploy | `docker compose up -d` | `git push` (auto-deploys) |
-| View logs | `docker logs -f sitcon-game-frontend` | Dashboard → Logs |
-| Redeploy | `docker compose up --build -d` | Dashboard → Redeploy |
-| Stop | `docker compose down` | Dashboard → Pause Service |
-| Environment vars | Edit `docker-compose.yml` | Dashboard → Variables |
-| Custom domain | Configure Nginx | Dashboard → Domains |
+### 11.6 Hooks Reference
 
----
+All hooks live in `@/hooks/api/` and are re-exported from `@/hooks/api/index.ts`.
 
-### 12.10 Files Reference
+#### Player hooks
 
-| File | Purpose | Required For |
-|------|---------|--------------|
-| `Dockerfile` | Container image build instructions | Docker, Zeabur (Docker mode) |
-| `.dockerignore` | Exclude files from Docker image | Docker, Zeabur (Docker mode) |
-| `docker-compose.yml` | Local Docker orchestration | Local testing only |
-| `.env.production` | Production environment variables | Reference only |
-| `next.config.ts` | Next.js configuration | All deployments |
-| `zbpack.json` | Zeabur build configuration | Zeabur (auto-detect mode) |
-| `.zeabur/config.yaml` | Zeabur deployment settings | Zeabur (advanced config) |
+| Hook | Method | Endpoint | Type | Invalidates |
+|-|-|-|-|-|
+| `useCurrentUser()` | `useQuery` | `GET /users/me` | `User` | — |
+| `useSession()` | `useQuery` | (validate cookie) | `SessionResponse` | — |
+| `useLoginWithToken()` | `useMutation` | `POST /users/session` | `User` | `user.me`, `user.session` |
+| `useActivityStats()` | `useQuery` | `GET /activities/stats` | `ActivityWithStatus[]` | — |
+| `useCheckinActivity()` | `useMutation` | `POST /activities/{activityQRCode}` | `CheckinResponse` | `activities.stats`, `user.me` |
+| `useLeaderboard(page)` | `useQuery` | `GET /games/leaderboards?page=` | `RankResponse` | — |
+| `useSubmitLevel()` | `useMutation` | `POST /games/submissions` | `SubmitResponse` | `user.me`, `games.*` |
+| `useFriendCount()` | `useQuery` | `GET /friendships/stats` | `FriendCountResponse` | — |
+| `useAddFriend()` | `useMutation` | `POST /friendships/{userQRCode}` | `string` | `friendships.*`, `user.me` |
+| `useCoupons()` | `useQuery` | `GET /discount-coupons` | `DiscountCoupon[]` | — |
 
-**Note:** `docker-compose.yml` is for local development only. Zeabur and most PaaS platforms do not use `docker-compose.yml`.
+#### Booth hooks
+
+| Hook | Method | Endpoint | Type | Invalidates |
+|-|-|-|-|-|
+| `useBoothLogin()` | `useMutation` | `POST /activities/booth/session` | `string` | — |
+| `useBoothStats()` | `useQuery` | `GET /activities/booth/stats` | `ActivityCountResponse` | — |
+| `useBoothCheckin()` | `useMutation` | `POST /activities/booth/user/{userQRCode}` | `CheckinResponse` | `activities.boothStats` |
+
+#### Staff / Discount hooks
+
+| Hook | Method | Endpoint | Type | Invalidates |
+|-|-|-|-|-|
+| `useStaffLogin()` | `useMutation` | `POST /discount-coupons/staff/session` | `Staff` | — |
+| `useStaffLookupCoupons(token)` | `useQuery` | `GET /discount-coupons/staff/coupon-tokens/{token}` | `GetUserCouponsResponse` | — |
+| `useStaffRedeemCoupon()` | `useMutation` | `POST /discount-coupons/staff/{token}/redemptions` | `DiscountUsedResponse` | lookupCoupons, history |
+| `useStaffRedemptionHistory()` | `useQuery` | `GET /discount-coupons/staff/current/redemptions` | `DiscountHistoryItem[]` | — |
+
+### 11.7 Convention Rules
+
+1. **Always import hooks from `@/hooks/api`**, never call `api.get()` directly in components.
+2. **Mutations must invalidate** related queries on success (see table above).
+3. **Login mutations** send `Authorization: Bearer {token}` header (not cookie); all other endpoints rely on the cookie set by login.
+4. **Query keys** must come from `@/lib/queryKeys.ts` — never hardcode key arrays.
+5. **Error handling:** Components can use `isError` / `error` from the hook; `ApiError.status` is available for conditional UI (e.g. 401 → redirect to login).
+6. **Optimistic updates** are encouraged for mutations with immediate UI feedback (e.g. level completion).
+7. **Environment variable:** `NEXT_PUBLIC_API_BASE_URL` in `.env.local` — defaults to `"/api"` (proxy in dev, same-origin in prod).
+
+### 11.8 Usage Example
+
+```tsx
+"use client";
+import { useCurrentUser, useActivityStats } from "@/hooks/api";
+
+export default function SomePage() {
+  const { data: user, isLoading } = useCurrentUser();
+  const { data: activities } = useActivityStats();
+
+  if (isLoading) return <div>載入中...</div>;
+  return <div>歡迎，{user?.nickname}！</div>;
+}
+```
