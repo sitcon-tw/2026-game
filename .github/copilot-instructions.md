@@ -497,6 +497,8 @@ import { Button } from '../../components/ui/Button';
 
 The file is at ./api/api-1.json. Please refer to it for API details when implementing frontend features.
 
+Endpoint: https://2026-game.sitcon.party/api
+
 ---
 
 ## 11. TanStack React Query — API Data-Fetching Layer
@@ -578,6 +580,7 @@ export const queryKeys = {
   },
   games: {
     leaderboard: (page?: number) => ["games", "leaderboard", page ?? 1] as const,
+    levelInfo: (level: number | "current") => ["games", "level", level] as const,
   },
   friendships: {
     list:  ["friendships"]          as const,
@@ -603,6 +606,7 @@ Key response types (keep these in sync with the spec):
 | `activities.countResponse` | `ActivityCountResponse` | `count` |
 | `game.RankResponse` | `RankResponse` | `rank` (global page), `around` (±5), `me`, `page` |
 | `game.RankEntry` | `RankEntry` | `nickname`, `level`, `rank` |
+| `game.LevelInfoResponse` | `LevelInfoResponse` | `level`, `notes`, `sheet: string[]`, `speed` |
 | `game.SubmitResponse` | `SubmitResponse` | `current_level`, `unlock_level`, `coupons[]` |
 | `friend.countResponse` | `FriendCountResponse` | `count`, `max` |
 | `models.DiscountCoupon` | `DiscountCoupon` | `id`, `discount_id`, `price`, `user_id`, `used_at`, `used_by`, `history_id`, timestamps |
@@ -612,41 +616,51 @@ Key response types (keep these in sync with the spec):
 | `models.Staff` | `Staff` | `id`, `name`, `token`, timestamps |
 | `res.ErrorResponse` | `ErrorResponse` | `message` |
 
+Key request types (endpoints that accept JSON body):
+
+| Swagger definition | TS type | Notes |
+|-|-|-|
+| `activities.activityCheckInRequest` | `ActivityCheckInRequest` | `activity_qr_code` |
+| `activities.boothCheckInRequest` | `BoothCheckInRequest` | `user_qr_code` |
+| `friend.addByQRCodeRequest` | `AddFriendRequest` | `user_qr_code` |
+| `discount.getUserCouponsRequest` | `GetUserCouponsRequest` | `user_coupon_token` |
+| `discount.discountUsedRequest` | `DiscountUsedRequest` | `user_coupon_token` |
+
 ### 11.6 Hooks Reference
 
 All hooks live in `@/hooks/api/` and are re-exported from `@/hooks/api/index.ts`.
 
 #### Player hooks
 
-| Hook | Method | Endpoint | Type | Invalidates |
-|-|-|-|-|-|
-| `useCurrentUser()` | `useQuery` | `GET /users/me` | `User` | — |
-| `useSession()` | `useQuery` | (validate cookie) | `SessionResponse` | — |
-| `useLoginWithToken()` | `useMutation` | `POST /users/session` | `User` | `user.me`, `user.session` |
-| `useActivityStats()` | `useQuery` | `GET /activities/stats` | `ActivityWithStatus[]` | — |
-| `useCheckinActivity()` | `useMutation` | `POST /activities/{activityQRCode}` | `CheckinResponse` | `activities.stats`, `user.me` |
-| `useLeaderboard(page)` | `useQuery` | `GET /games/leaderboards?page=` | `RankResponse` | — |
-| `useSubmitLevel()` | `useMutation` | `POST /games/submissions` | `SubmitResponse` | `user.me`, `games.*` |
-| `useFriendCount()` | `useQuery` | `GET /friendships/stats` | `FriendCountResponse` | — |
-| `useAddFriend()` | `useMutation` | `POST /friendships/{userQRCode}` | `string` | `friendships.*`, `user.me` |
-| `useCoupons()` | `useQuery` | `GET /discount-coupons` | `DiscountCoupon[]` | — |
+| Hook | Method | Endpoint | Body | Type | Invalidates |
+|-|-|-|-|-|-|
+| `useCurrentUser()` | `useQuery` | `GET /users/me` | — | `User` | — |
+| `useLoginWithToken()` | `useMutation` | `POST /users/session` | — (Auth header) | `User` | `user.me`, `user.session` |
+| `useActivityStats()` | `useQuery` | `GET /activities/stats` | — | `ActivityWithStatus[]` | — |
+| `useCheckinActivity()` | `useMutation` | `POST /activities/check-ins` | `{ activity_qr_code }` | `CheckinResponse` | `activities.stats`, `user.me` |
+| `useLevelInfo(level)` | `useQuery` | `GET /games/levels/{level}` | — | `LevelInfoResponse` | — |
+| `useLeaderboard(page)` | `useQuery` | `GET /games/leaderboards?page=` | — | `RankResponse` | — |
+| `useSubmitLevel()` | `useMutation` | `POST /games/submissions` | — | `SubmitResponse` | `user.me`, `games.*` |
+| `useFriendCount()` | `useQuery` | `GET /friendships/stats` | — | `FriendCountResponse` | — |
+| `useAddFriend()` | `useMutation` | `POST /friendships` | `{ user_qr_code }` | `string` | `friendships.*`, `user.me` |
+| `useCoupons()` | `useQuery` | `GET /discount-coupons` | — | `DiscountCoupon[]` | — |
 
 #### Booth hooks
 
-| Hook | Method | Endpoint | Type | Invalidates |
-|-|-|-|-|-|
-| `useBoothLogin()` | `useMutation` | `POST /activities/booth/session` | `string` | — |
-| `useBoothStats()` | `useQuery` | `GET /activities/booth/stats` | `ActivityCountResponse` | — |
-| `useBoothCheckin()` | `useMutation` | `POST /activities/booth/user/{userQRCode}` | `CheckinResponse` | `activities.boothStats` |
+| Hook | Method | Endpoint | Body | Type | Invalidates |
+|-|-|-|-|-|-|
+| `useBoothLogin()` | `useMutation` | `POST /activities/booth/session` | — (Auth header) | `string` | — |
+| `useBoothStats()` | `useQuery` | `GET /activities/booth/stats` | — | `ActivityCountResponse` | — |
+| `useBoothCheckin()` | `useMutation` | `POST /activities/booth/user/check-ins` | `{ user_qr_code }` | `CheckinResponse` | `activities.boothStats` |
 
 #### Staff / Discount hooks
 
-| Hook | Method | Endpoint | Type | Invalidates |
-|-|-|-|-|-|
-| `useStaffLogin()` | `useMutation` | `POST /discount-coupons/staff/session` | `Staff` | — |
-| `useStaffLookupCoupons(token)` | `useQuery` | `GET /discount-coupons/staff/coupon-tokens/{token}` | `GetUserCouponsResponse` | — |
-| `useStaffRedeemCoupon()` | `useMutation` | `POST /discount-coupons/staff/{token}/redemptions` | `DiscountUsedResponse` | lookupCoupons, history |
-| `useStaffRedemptionHistory()` | `useQuery` | `GET /discount-coupons/staff/current/redemptions` | `DiscountHistoryItem[]` | — |
+| Hook | Method | Endpoint | Body | Type | Invalidates |
+|-|-|-|-|-|-|
+| `useStaffLogin()` | `useMutation` | `POST /discount-coupons/staff/session` | — (Auth header) | `Staff` | — |
+| `useStaffLookupCoupons()` | `useMutation` | `POST /discount-coupons/staff/coupon-tokens/query` | `{ user_coupon_token }` | `GetUserCouponsResponse` | — |
+| `useStaffRedeemCoupon()` | `useMutation` | `POST /discount-coupons/staff/redemptions` | `{ user_coupon_token }` | `DiscountUsedResponse` | lookupCoupons, history |
+| `useStaffRedemptionHistory()` | `useQuery` | `GET /discount-coupons/staff/current/redemptions` | — | `DiscountHistoryItem[]` | — |
 
 ### 11.7 Convention Rules
 
