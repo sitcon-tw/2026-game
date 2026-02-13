@@ -21,11 +21,12 @@ import (
 )
 
 const (
-	readTimeout       = 15 * time.Second
-	readHeaderTimeout = 5 * time.Second
-	writeTimeout      = 15 * time.Second
-	idleTimeout       = 60 * time.Second
-	maxAge            = 300
+	readTimeout         = 15 * time.Second
+	readHeaderTimeout   = 5 * time.Second
+	writeTimeout        = 15 * time.Second
+	idleTimeout         = 60 * time.Second
+	otelShutdownTimeout = 5 * time.Second
+	maxAge              = 300
 )
 
 // @title SITGAME API
@@ -51,7 +52,7 @@ func main() {
 		logger.Error("Failed to initialize OpenTelemetry; continuing without tracing", zap.Error(err))
 	} else {
 		defer func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), otelShutdownTimeout)
 			defer cancel()
 
 			if shutdownErr := otelShutdown(ctx); shutdownErr != nil {
