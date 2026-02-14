@@ -26,6 +26,8 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 			r.Post("/redemptions", h.DiscountUsed)
 			// Staff previews user's available coupons
 			r.Post("/coupon-tokens/query", h.GetUserCoupons)
+			// Staff lists all coupon rules with issuance status
+			r.Get("/coupons", h.ListAllCoupons)
 			// Staff sees their own redemption history
 			r.Get("/current/redemptions", h.ListStaffHistory)
 		})

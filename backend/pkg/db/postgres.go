@@ -20,17 +20,17 @@ import (
 func InitDatabase(logger *zap.Logger) (*pgxpool.Pool, error) {
 	ctx := context.Background()
 
-	config, err := pgxpool.ParseConfig(getDatabaseURL())
+	poolConfig, err := pgxpool.ParseConfig(getDatabaseURL())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse database config: %w", err)
 	}
 
-	config.MaxConns = 25
-	config.MinConns = 5
+	poolConfig.MaxConns = 25
+	poolConfig.MinConns = 5
 
-	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
+	poolConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
 
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		return nil, err
 	}

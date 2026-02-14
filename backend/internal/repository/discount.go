@@ -52,6 +52,44 @@ ORDER BY created_at ASC`
 	return coupons, nil
 }
 
+// CountDiscountCouponsByDiscountIDs returns issued coupon counts keyed by discount_id.
+func (r *PGRepository) CountDiscountCouponsByDiscountIDs(
+	ctx context.Context,
+	tx pgx.Tx,
+	discountIDs []string,
+) (map[string]int, error) {
+	counts := make(map[string]int, len(discountIDs))
+	if len(discountIDs) == 0 {
+		return counts, nil
+	}
+
+	const query = `
+SELECT discount_id, COUNT(*)::int
+FROM discount_coupons
+WHERE discount_id = ANY($1)
+GROUP BY discount_id`
+
+	rows, err := tx.Query(ctx, query, discountIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var discountID string
+		var issuedQty int
+		if scanErr := rows.Scan(&discountID, &issuedQty); scanErr != nil {
+			return nil, scanErr
+		}
+		counts[discountID] = issuedQty
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return counts, nil
+}
+
 // MarkDiscountUsed sets used_at and used_by, returning the updated coupon.
 func (r *PGRepository) MarkDiscountUsed(
 	ctx context.Context,

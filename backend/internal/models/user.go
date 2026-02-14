@@ -9,6 +9,7 @@ type User struct {
 	ID           string    `db:"id" json:"id"`
 	AuthToken    string    `db:"auth_token" json:"-"`
 	Nickname     string    `db:"nickname" json:"nickname"`
+	Avatar       *string   `db:"avatar" json:"avatar,omitempty"`
 	QRCodeToken  string    `db:"qrcode_token" json:"qrcode_token"`
 	CouponToken  string    `db:"coupon_token" json:"coupon_token"`
 	UnlockLevel  int       `db:"unlock_level" json:"unlock_level"`

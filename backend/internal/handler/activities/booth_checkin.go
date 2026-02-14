@@ -67,14 +67,15 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to record visit")
 		return
 	}
+	if !inserted {
+		res.Fail(w, h.Logger, http.StatusBadRequest, nil, "already visited")
+		return
+	}
 
-	// Only reward on first-time visit.
-	if inserted {
-		err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
-		if err != nil {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user unlock level")
-			return
-		}
+	err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
+	if err != nil {
+		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user unlock level")
+		return
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
@@ -83,12 +84,7 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status := "already visited"
-	if inserted {
-		status = "visit recorded"
-	}
-
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(checkinResponse{Status: status})
+	_ = json.NewEncoder(w).Encode(checkinResponse{Status: "visit recorded"})
 }
