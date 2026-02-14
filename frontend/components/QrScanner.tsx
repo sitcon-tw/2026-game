@@ -89,7 +89,7 @@ export default function QrScanner({
             ) : (
                 <Scanner
                     key={selectedDeviceId}
-                    onScan={onScan}
+                    onScan={scanStatus.type === "idle" ? onScan : () => {}}
                     onError={(error) => console.error(error)}
                     constraints={{
                         deviceId: selectedDeviceId
