@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/(player)/Header";
 import BottomNav from "@/components/layout/(player)/BottomNav";
+import AuthGuard from "@/components/providers/AuthGuard";
 
 const HIDE_SHELL_PATHS = new Set(["/"]);
 
@@ -15,12 +16,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <div className="flex h-dvh max-w-[430px] flex-col mx-auto">
-            <Header />
-            <main className="flex-1 overflow-y-auto pb-[var(--navbar-height)]">
-                {children}
-            </main>
-            <BottomNav />
-        </div>
+        <AuthGuard>
+            <div className="flex h-dvh max-w-[430px] flex-col mx-auto">
+                <Header />
+                <main className="flex-1 overflow-y-auto pb-[var(--navbar-height)]">
+                    {children}
+                </main>
+                <BottomNav />
+            </div>
+        </AuthGuard>
     );
 }
