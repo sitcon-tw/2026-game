@@ -9,10 +9,10 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var handlerTracer = otel.Tracer("github.com/sitcon-tw/2026-game/handler")
-
 // TraceHandler creates a nested span for each routed handler.
 func TraceHandler() func(http.Handler) http.Handler {
+	handlerTracer := otel.Tracer("github.com/sitcon-tw/2026-game/handler")
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			spanName := fmt.Sprintf("%s %s", r.Method, r.URL.Path)

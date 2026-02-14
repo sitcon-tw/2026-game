@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/exaring/otelpgx"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Register postgres migrations driver.
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // Register file source for migrations.
@@ -29,6 +30,7 @@ func InitDatabase(logger *zap.Logger) (*pgxpool.Pool, error) {
 	poolConfig.MinConns = 5
 
 	poolConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
+	poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {

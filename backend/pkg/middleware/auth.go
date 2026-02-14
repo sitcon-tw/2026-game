@@ -7,6 +7,9 @@ import (
 
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.uber.org/zap"
 )
 
@@ -19,44 +22,61 @@ const staffContextKey contextKey = "staffUser"
 // Auth verifies the token cookie against the users table.
 // On success, it injects the *models.User into request context under userContextKey.
 func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) http.Handler {
+	authTracer := otel.Tracer("github.com/sitcon-tw/2026-game/auth")
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx, span := authTracer.Start(r.Context(), "auth.user")
+			defer span.End()
+
 			cookie, err := r.Cookie("token")
 			if err != nil || cookie.Value == "" {
+				span.SetAttributes(attribute.Bool("auth.authenticated", false))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
-			tx, err := repo.StartTransaction(r.Context())
+			tx, err := repo.StartTransaction(ctx)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "start tx failed")
 				logger.Error("auth: start tx failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
-			defer repo.DeferRollback(r.Context(), tx)
+			defer repo.DeferRollback(ctx, tx)
 
-			user, err := repo.GetUserByToken(r.Context(), tx, cookie.Value)
+			user, err := repo.GetUserByToken(ctx, tx, cookie.Value)
 			if err != nil {
 				if errors.Is(err, repository.ErrNotFound) {
+					span.SetAttributes(attribute.Bool("auth.authenticated", false))
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
 				}
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "fetch user failed")
 				logger.Error("auth: fetch user failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
 			if user == nil {
+				span.SetAttributes(attribute.Bool("auth.authenticated", false))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
-			err = repo.CommitTransaction(r.Context(), tx)
+			err = repo.CommitTransaction(ctx, tx)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "commit tx failed")
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
 
-			ctx := r.Context()
+			span.SetAttributes(
+				attribute.Bool("auth.authenticated", true),
+				attribute.String("auth.user_id", user.ID),
+			)
 			ctx = contextWithUser(ctx, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -66,45 +86,63 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 // StaffAuth verifies the staff_token cookie against the staff table.
 // On success, it injects the *models.Staff into request context under staffContextKey.
 func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler) http.Handler {
+	authTracer := otel.Tracer("github.com/sitcon-tw/2026-game/auth")
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx, span := authTracer.Start(r.Context(), "auth.staff")
+			defer span.End()
+
 			cookie, err := r.Cookie("staff_token")
 			if err != nil || cookie.Value == "" {
+				span.SetAttributes(attribute.Bool("auth.authenticated", false))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 			token := cookie.Value
 
-			tx, err := repo.StartTransaction(r.Context())
+			tx, err := repo.StartTransaction(ctx)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "start tx failed")
 				logger.Error("staff auth: start tx failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
-			defer repo.DeferRollback(r.Context(), tx)
+			defer repo.DeferRollback(ctx, tx)
 
-			staff, err := repo.GetStaffByToken(r.Context(), tx, token)
+			staff, err := repo.GetStaffByToken(ctx, tx, token)
 			if err != nil {
 				if errors.Is(err, repository.ErrNotFound) {
+					span.SetAttributes(attribute.Bool("auth.authenticated", false))
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
 				}
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "fetch staff failed")
 				logger.Error("staff auth: fetch staff failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
 			if staff == nil {
+				span.SetAttributes(attribute.Bool("auth.authenticated", false))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
-			err = repo.CommitTransaction(r.Context(), tx)
+			err = repo.CommitTransaction(ctx, tx)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "commit tx failed")
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
 
-			ctx := contextWithStaff(r.Context(), staff)
+			span.SetAttributes(
+				attribute.Bool("auth.authenticated", true),
+				attribute.String("auth.staff_id", staff.ID),
+			)
+			ctx = contextWithStaff(ctx, staff)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -114,44 +152,62 @@ func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 //
 //nolint:gocognit // multiple early exits keep middleware readable
 func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler) http.Handler {
+	authTracer := otel.Tracer("github.com/sitcon-tw/2026-game/auth")
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx, span := authTracer.Start(r.Context(), "auth.booth")
+			defer span.End()
+
 			cookie, err := r.Cookie("booth_token")
 			if err != nil || cookie.Value == "" {
+				span.SetAttributes(attribute.Bool("auth.authenticated", false))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
-			tx, err := repo.StartTransaction(r.Context())
+			tx, err := repo.StartTransaction(ctx)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "start tx failed")
 				logger.Error("booth auth: start tx failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
-			defer repo.DeferRollback(r.Context(), tx)
+			defer repo.DeferRollback(ctx, tx)
 
-			booth, err := repo.GetActivityByToken(r.Context(), tx, cookie.Value)
+			booth, err := repo.GetActivityByToken(ctx, tx, cookie.Value)
 			if err != nil {
 				if errors.Is(err, repository.ErrNotFound) {
+					span.SetAttributes(attribute.Bool("auth.authenticated", false))
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
 				}
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "fetch booth failed")
 				logger.Error("booth auth: fetch activity failed", zap.Error(err))
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
 			if booth == nil || booth.Type != models.ActivitiesTypeBooth {
+				span.SetAttributes(attribute.Bool("auth.authenticated", false))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
-			err = repo.CommitTransaction(r.Context(), tx)
+			err = repo.CommitTransaction(ctx, tx)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "commit tx failed")
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
 			}
 
-			ctx := contextWithBooth(r.Context(), booth)
+			span.SetAttributes(
+				attribute.Bool("auth.authenticated", true),
+				attribute.String("auth.activity_id", booth.ID),
+			)
+			ctx = contextWithBooth(ctx, booth)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

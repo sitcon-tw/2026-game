@@ -1,15 +1,21 @@
 package game
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
+
+var errLevelExceedsUnlock = errors.New("level exceeds unlock")
 
 // Submit handles POST /games/submissions.
 // @Summary      提交遊戲紀錄
@@ -46,16 +52,18 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Increment current level by 1 but do not exceed unlock_level
-	newLevel := fresh.CurrentLevel + 1
-	if newLevel > fresh.UnlockLevel {
-		res.Fail(
-			w,
-			r,
-			http.StatusBadRequest,
-			errors.New("level exceeds unlock"),
-			"current level cannot exceed unlock level",
-		)
+	newLevel, err := h.validateNextLevel(r.Context(), fresh)
+	if err != nil {
+		if errors.Is(err, errLevelExceedsUnlock) {
+			res.Fail(w,
+				r,
+				http.StatusBadRequest,
+				err,
+				"current level cannot exceed unlock level",
+			)
+			return
+		}
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to validate level")
 		return
 	}
 
@@ -65,34 +73,10 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Issue discount coupons for newly reached levels based on rules.
-	issued := []CouponResponse{}
-	var (
-		coupon  *models.DiscountCoupon
-		created bool
-	)
-	for _, rule := range config.GetCouponRulesByLevel(newLevel) {
-		coupon, created, err = h.Repo.CreateDiscountCoupon(
-			r.Context(),
-			tx,
-			fresh.ID,
-			rule.Amount,
-			rule.ID,
-			rule.MaxQty,
-		)
-		if err != nil {
-			res.Fail(w, r, http.StatusInternalServerError, err, "failed to issue coupon")
-			return
-		}
-		if !created {
-			continue
-		}
-
-		issued = append(issued, CouponResponse{
-			ID:         coupon.ID,
-			Price:      coupon.Price,
-			DiscountID: coupon.DiscountID,
-		})
+	issued, err := h.issueCoupons(r.Context(), tx, fresh.ID, newLevel)
+	if err != nil {
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to issue coupon")
+		return
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
@@ -110,4 +94,57 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Handler) validateNextLevel(ctx context.Context, fresh *models.User) (int, error) {
+	_, span := h.tracer.Start(ctx, "game.submit.validate_level")
+	defer span.End()
+
+	newLevel := fresh.CurrentLevel + 1
+	span.SetAttributes(
+		attribute.Int("game.current_level", fresh.CurrentLevel),
+		attribute.Int("game.unlock_level", fresh.UnlockLevel),
+		attribute.Int("game.next_level", newLevel),
+	)
+
+	if newLevel > fresh.UnlockLevel {
+		span.SetStatus(codes.Error, "level exceeds unlock")
+		return 0, errLevelExceedsUnlock
+	}
+
+	return newLevel, nil
+}
+
+func (h *Handler) issueCoupons(ctx context.Context, tx pgx.Tx, userID string, newLevel int) ([]CouponResponse, error) {
+	spanCtx, span := h.tracer.Start(ctx, "game.submit.issue_coupons")
+	defer span.End()
+
+	issued := []CouponResponse{}
+	for _, rule := range config.GetCouponRulesByLevel(newLevel) {
+		coupon, created, err := h.Repo.CreateDiscountCoupon(
+			spanCtx,
+			tx,
+			userID,
+			rule.Amount,
+			rule.ID,
+			rule.MaxQty,
+		)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "issue coupon failed")
+			return nil, err
+		}
+		if !created {
+			continue
+		}
+
+		issued = append(issued, CouponResponse{
+			ID:         coupon.ID,
+			Price:      coupon.Price,
+			DiscountID: coupon.DiscountID,
+		})
+	}
+
+	span.SetAttributes(attribute.Int("game.coupons.issued_count", len(issued)))
+	return issued, nil
 }
