@@ -23,7 +23,17 @@ ORDER BY created_at ASC, id ASC`
 	var list []models.Activities
 	for rows.Next() {
 		var a models.Activities
-		err = rows.Scan(&a.ID, &a.Token, &a.Type, &a.QRCodeToken, &a.Name, &a.Link, &a.Description, &a.CreatedAt, &a.UpdatedAt)
+		err = rows.Scan(
+			&a.ID,
+			&a.Token,
+			&a.Type,
+			&a.QRCodeToken,
+			&a.Name,
+			&a.Link,
+			&a.Description,
+			&a.CreatedAt,
+			&a.UpdatedAt,
+		)
 		if err != nil {
 			return nil, err
 		}
