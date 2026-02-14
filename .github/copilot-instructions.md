@@ -491,3 +491,379 @@ import { Button } from '../../components/ui/Button';
 - [ ] Preload audio
 - [ ] Gold stars (✦) decorations
 - [ ] Serif headings, sans-serif body
+
+---
+
+## 12. Deployment Strategy
+
+### 12.1 Overview
+
+The project supports two primary deployment methods:
+
+1. **Docker (Containerized Deployment)** — For self-hosted servers or any Docker-compatible platform
+2. **Zeabur (Platform as a Service)** — For rapid deployment with auto-scaling and zero configuration
+
+### 12.2 Docker Deployment
+
+#### Prerequisites
+
+- Docker 20.10+ and Docker Compose V2+
+- The following files are already configured:
+  - `frontend/Dockerfile` — Multi-stage build for optimized image size
+  - `frontend/.dockerignore` — Excludes unnecessary files from the image
+  - `frontend/docker-compose.yml` — Orchestration configuration
+  - `frontend/.env.production` — Production environment variables
+
+#### Configuration
+
+**Critical:** `next.config.ts` must include `output: "standalone"` for Docker deployment:
+
+```typescript
+const nextConfig: NextConfig = {
+  output: "standalone", // Required for Docker
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "https://2026-game.sitcon.party/api/:path*",
+      },
+    ];
+  },
+};
+```
+
+#### Local Testing
+
+```bash
+cd frontend
+
+# Build and start container
+docker compose up --build -d
+
+# View logs
+docker logs -f sitcon-game-frontend
+
+# Stop container
+docker compose down
+```
+
+#### Production Deployment
+
+**Option A: Docker Hub**
+
+```bash
+# Build and tag
+docker build -t your-username/sitcon-game-frontend:latest .
+
+# Push to registry
+docker push your-username/sitcon-game-frontend:latest
+
+# On production server
+docker pull your-username/sitcon-game-frontend:latest
+docker run -d \
+  --name sitcon-game-frontend \
+  -p 3000:3000 \
+  -e NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api \
+  --restart unless-stopped \
+  your-username/sitcon-game-frontend:latest
+```
+
+**Option B: Direct Build on Server**
+
+```bash
+# Upload code to server
+scp -r frontend/ user@server:/path/to/deploy/
+
+# SSH and deploy
+ssh user@server
+cd /path/to/deploy/frontend
+docker compose up -d
+```
+
+#### Nginx Reverse Proxy (Optional)
+
+If you want to use a custom domain with SSL:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+Then enable HTTPS with Let's Encrypt:
+
+```bash
+sudo certbot --nginx -d your-domain.com
+```
+
+---
+
+### 12.3 Zeabur Deployment (Recommended)
+
+Zeabur provides zero-configuration deployment with automatic HTTPS, CDN, and continuous deployment.
+
+#### Method 1: Auto-Detection (Recommended)
+
+Zeabur automatically detects Next.js projects — no configuration files needed.
+
+**Steps:**
+
+1. **Push code to Git**
+   ```bash
+   git add .
+   git commit -m "Deploy to Zeabur"
+   git push origin main
+   ```
+
+2. **Create Project on Zeabur**
+   - Go to [dash.zeabur.com](https://dash.zeabur.com)
+   - Click "New Project" → "Deploy from GitHub"
+   - Select your repository (`2026-game`)
+   - **Important:** Set **Root Directory** to `frontend`
+
+3. **Configure Environment Variables**
+   In Zeabur Dashboard → Variables:
+   ```
+   NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api
+   ```
+
+4. **Deploy**
+   - Zeabur automatically runs `pnpm install` and `pnpm build`
+   - Your app will be available at `https://your-app.zeabur.app`
+
+**Advantages:**
+- Zero configuration — auto-detects Next.js
+- Automatic HTTPS with SSL certificate
+- Built-in CDN for static assets
+- Continuous deployment on every `git push`
+- Supports dynamic routes (`/game/[level]`)
+- Faster cold starts than Docker
+
+#### Method 2: Docker on Zeabur
+
+If you need more control or custom system packages:
+
+1. **Ensure Docker files exist**
+   - `Dockerfile` (already configured)
+   - `.dockerignore` (already configured)
+   - `next.config.ts` with `output: "standalone"`
+
+2. **Create Project on Zeabur**
+   - Same as Method 1
+   - Zeabur will detect `Dockerfile` and ask "Use Dockerfile?"
+   - Select "Yes"
+
+3. **Configure Environment Variables**
+   ```
+   NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api
+   ```
+
+4. **Deploy**
+   - Zeabur runs `docker build`
+   - Deployment complete!
+
+#### Custom Domain Setup
+
+1. In Zeabur Dashboard → Domains → "Add Domain"
+2. Enter your domain (e.g., `game.sitcon.party`)
+3. Add CNAME record in your DNS:
+   ```
+   CNAME  game  your-app.zeabur.app
+   ```
+4. Wait for DNS propagation (usually < 5 minutes)
+5. Zeabur automatically provisions SSL certificate
+
+#### Auto-Deployment
+
+- **Enabled by default:** Every `git push` triggers automatic deployment
+- **To disable:** Dashboard → Settings → Turn off "Auto Deploy"
+- **Branch deployment:** Create separate services for `main` (production) and `dev` (staging)
+
+---
+
+### 12.4 Environment Variables
+
+All deployment methods require these environment variables:
+
+| Variable | Value | Required | Notes |
+|----------|-------|----------|-------|
+| `NEXT_PUBLIC_API_BASE_URL` | `https://2026-game.sitcon.party/api` | Yes | Backend API endpoint |
+| `NODE_ENV` | `production` | Auto-set | Build mode |
+| `NEXT_TELEMETRY_DISABLED` | `1` | Optional | Disable Next.js telemetry |
+
+**Important:** Variables prefixed with `NEXT_PUBLIC_` are embedded at build time and accessible in client-side code.
+
+---
+
+### 12.5 Common Issues & Solutions
+
+#### Issue: `useSearchParams()` build error
+
+**Error:**
+```
+useSearchParams() should be wrapped in a suspense boundary
+```
+
+**Solution:** All components using `useSearchParams()` must be wrapped in `<Suspense>`:
+
+```tsx
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+function MyComponent() {
+  const params = useSearchParams();
+  // ...
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MyComponent />
+    </Suspense>
+  );
+}
+```
+
+#### Issue: QR Scanner not working
+
+**Cause:** Camera API requires HTTPS.
+
+**Solution:**
+- Docker: Use Nginx with SSL certificate
+- Zeabur: HTTPS is automatic
+
+#### Issue: API requests fail (CORS)
+
+**Solution:** Ensure backend CORS settings allow your deployment domain:
+
+```go
+// Backend CORS configuration
+allowedOrigins := []string{
+    "https://your-app.zeabur.app",
+    "https://game.sitcon.party",
+    "http://localhost:3000", // Development
+}
+```
+
+#### Issue: Dynamic routes return 404
+
+**Solution:** This should not happen with proper Next.js configuration. Check:
+1. `next.config.ts` has `output: "standalone"`
+2. Build logs show successful page generation
+3. All `[param]` folders have `page.tsx` files
+
+---
+
+### 12.6 Deployment Checklist
+
+Before deploying to production:
+
+- [ ] Environment variable `NEXT_PUBLIC_API_BASE_URL` is set correctly
+- [ ] `pnpm-lock.yaml` is committed to Git
+- [ ] `next.config.ts` has `output: "standalone"` (for Docker)
+- [ ] All components using `useSearchParams()` are wrapped in `<Suspense>`
+- [ ] Backend CORS allows your deployment domain
+- [ ] SSL/HTTPS is configured (required for QR Scanner)
+- [ ] Test all dynamic routes (`/game/1` through `/game/40`)
+- [ ] Test QR Scanner functionality (requires HTTPS)
+- [ ] Test API authentication (cookie-based)
+- [ ] Verify leaderboard pagination works
+- [ ] Check mobile responsiveness (viewport < 430px)
+
+---
+
+### 12.7 Recommended Workflow
+
+**Development → Staging → Production**
+
+1. **Local Development**
+   ```bash
+   pnpm dev
+   # Test at http://localhost:3000
+   ```
+
+2. **Docker Testing**
+   ```bash
+   docker compose up --build
+   # Test containerized build locally
+   ```
+
+3. **Staging Deployment (Zeabur `dev` branch)**
+   ```bash
+   git checkout dev
+   git push origin dev
+   # Auto-deploys to staging.zeabur.app
+   ```
+
+4. **Production Deployment (Zeabur `main` branch)**
+   ```bash
+   git checkout main
+   git merge dev
+   git push origin main
+   # Auto-deploys to production
+   ```
+
+---
+
+### 12.8 Monitoring & Logs
+
+#### Docker
+
+```bash
+# View live logs
+docker logs -f sitcon-game-frontend
+
+# Check container status
+docker ps
+
+# Restart container
+docker restart sitcon-game-frontend
+```
+
+#### Zeabur
+
+- Dashboard → Logs → Real-time logs
+- Dashboard → Deployments → Build logs and deployment history
+- Dashboard → Metrics → CPU, Memory, Network usage
+
+---
+
+### 12.9 Quick Reference
+
+| Task | Docker Command | Zeabur Action |
+|------|---------------|---------------|
+| Deploy | `docker compose up -d` | `git push` (auto-deploys) |
+| View logs | `docker logs -f sitcon-game-frontend` | Dashboard → Logs |
+| Redeploy | `docker compose up --build -d` | Dashboard → Redeploy |
+| Stop | `docker compose down` | Dashboard → Pause Service |
+| Environment vars | Edit `docker-compose.yml` | Dashboard → Variables |
+| Custom domain | Configure Nginx | Dashboard → Domains |
+
+---
+
+### 12.10 Files Reference
+
+| File | Purpose | Required For |
+|------|---------|--------------|
+| `Dockerfile` | Container image build instructions | Docker, Zeabur (Docker mode) |
+| `.dockerignore` | Exclude files from Docker image | Docker, Zeabur (Docker mode) |
+| `docker-compose.yml` | Local Docker orchestration | Local testing only |
+| `.env.production` | Production environment variables | Reference only |
+| `next.config.ts` | Next.js configuration | All deployments |
+| `zbpack.json` | Zeabur build configuration | Zeabur (auto-detect mode) |
+| `.zeabur/config.yaml` | Zeabur deployment settings | Zeabur (advanced config) |
+
+**Note:** `docker-compose.yml` is for local development only. Zeabur and most PaaS platforms do not use `docker-compose.yml`.
