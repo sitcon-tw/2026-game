@@ -82,6 +82,14 @@ type Repository interface {
 	InsertCouponHistory(ctx context.Context, tx pgx.Tx, history *models.CouponHistory) error
 	ListUnusedDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)
 	ListCouponHistoryByStaff(ctx context.Context, tx pgx.Tx, staffID string) ([]models.CouponHistory, error)
+	ConsumeDiscountCouponGiftByToken(ctx context.Context, tx pgx.Tx, token string) (*models.DiscountCouponGift, error)
+	InsertDiscountCouponForUser(
+		ctx context.Context,
+		tx pgx.Tx,
+		userID string,
+		price int,
+		discountID string,
+	) (*models.DiscountCoupon, error)
 
 	// Staff operations
 	GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
@@ -16,6 +17,9 @@ import (
 )
 
 var errLevelExceedsUnlock = errors.New("level exceeds unlock")
+var errSubmissionTooFast = errors.New("submission too fast")
+
+const secondsPerMinute = 60
 
 // Submit handles POST /games/submissions.
 // @Summary      提交遊戲紀錄
@@ -24,6 +28,7 @@ var errLevelExceedsUnlock = errors.New("level exceeds unlock")
 // @Produce      json
 // @Success      200  {object}  SubmitResponse
 // @Failure      400  {object}  res.ErrorResponse "current level cannot exceed unlock level"
+// @Failure      429  {object}  res.ErrorResponse "submission too fast"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /games/submissions [post]
@@ -61,6 +66,10 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 				err,
 				"current level cannot exceed unlock level",
 			)
+			return
+		}
+		if errors.Is(err, errSubmissionTooFast) {
+			res.Fail(w, r, http.StatusTooManyRequests, err, "submission too fast")
 			return
 		}
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to validate level")
@@ -112,7 +121,41 @@ func (h *Handler) validateNextLevel(ctx context.Context, fresh *models.User) (in
 		return 0, errLevelExceedsUnlock
 	}
 
+	levelCfg, err := h.levelByNumber(newLevel)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "load level config failed")
+		return 0, err
+	}
+
+	requiredDuration := time.Duration(levelCfg.Notes*secondsPerMinute) * time.Second / time.Duration(levelCfg.Speed)
+	elapsed := time.Since(fresh.LastPassTime)
+	span.SetAttributes(
+		attribute.Int("game.next_level.speed", levelCfg.Speed),
+		attribute.Int("game.next_level.notes", levelCfg.Notes),
+		attribute.Int64("game.required_pass_ms", requiredDuration.Milliseconds()),
+		attribute.Int64("game.elapsed_since_last_pass_ms", elapsed.Milliseconds()),
+	)
+
+	if elapsed < requiredDuration {
+		span.SetStatus(codes.Error, "submission too fast")
+		return 0, errSubmissionTooFast
+	}
+
 	return newLevel, nil
+}
+
+func (h *Handler) levelByNumber(level int) (*models.Level, error) {
+	levels, err := config.Levels()
+	if err != nil {
+		return nil, err
+	}
+	for i := range levels {
+		if levels[i].Level == level {
+			return &levels[i], nil
+		}
+	}
+	return nil, errors.New("level config not found")
 }
 
 func (h *Handler) issueCoupons(ctx context.Context, tx pgx.Tx, userID string, newLevel int) ([]CouponResponse, error) {

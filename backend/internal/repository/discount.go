@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -322,4 +323,63 @@ RETURNING id, discount_id, user_id, price, used_by, used_at, history_id, created
 	}
 
 	return &c, true, nil
+}
+
+// ConsumeDiscountCouponGiftByToken returns and deletes a gift coupon by token.
+func (r *PGRepository) ConsumeDiscountCouponGiftByToken(
+	ctx context.Context,
+	tx pgx.Tx,
+	token string,
+) (*models.DiscountCouponGift, error) {
+	const query = `
+DELETE FROM discount_coupon_gift
+WHERE token = $1
+RETURNING id, token, price, discount_id`
+
+	var gift models.DiscountCouponGift
+	err := tx.QueryRow(ctx, query, token).Scan(
+		&gift.ID,
+		&gift.Token,
+		&gift.Price,
+		&gift.DiscountID,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &gift, nil
+}
+
+// InsertDiscountCouponForUser inserts a user coupon row.
+func (r *PGRepository) InsertDiscountCouponForUser(
+	ctx context.Context,
+	tx pgx.Tx,
+	userID string,
+	price int,
+	discountID string,
+) (*models.DiscountCoupon, error) {
+	const stmt = `
+INSERT INTO discount_coupons (id, discount_id, user_id, price, used_by, used_at, history_id, created_at)
+VALUES ($1, $2, $3, $4, NULL, NULL, NULL, NOW())
+RETURNING id, discount_id, user_id, price, used_by, used_at, history_id, created_at`
+
+	var c models.DiscountCoupon
+	err := tx.QueryRow(ctx, stmt, uuid.NewString(), discountID, userID, price).Scan(
+		&c.ID,
+		&c.DiscountID,
+		&c.UserID,
+		&c.Price,
+		&c.UsedBy,
+		&c.UsedAt,
+		&c.HistoryID,
+		&c.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }

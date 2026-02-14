@@ -7,6 +7,7 @@ import (
 
 	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/pkg/res"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -32,7 +33,7 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 			cookie, err := r.Cookie("token")
 			if err != nil || cookie.Value == "" {
 				span.SetAttributes(attribute.Bool("auth.authenticated", false))
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized")
 				return
 			}
 
@@ -41,7 +42,7 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "start tx failed")
 				logger.Error("auth: start tx failed", zap.Error(err))
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 			defer repo.DeferRollback(ctx, tx)
@@ -50,18 +51,18 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 			if err != nil {
 				if errors.Is(err, repository.ErrNotFound) {
 					span.SetAttributes(attribute.Bool("auth.authenticated", false))
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized")
 					return
 				}
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "fetch user failed")
 				logger.Error("auth: fetch user failed", zap.Error(err))
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 			if user == nil {
 				span.SetAttributes(attribute.Bool("auth.authenticated", false))
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
 				return
 			}
 
@@ -69,7 +70,7 @@ func Auth(repo repository.Repository, logger *zap.Logger) func(http.Handler) htt
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "commit tx failed")
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 
@@ -96,7 +97,7 @@ func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 			cookie, err := r.Cookie("staff_token")
 			if err != nil || cookie.Value == "" {
 				span.SetAttributes(attribute.Bool("auth.authenticated", false))
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized")
 				return
 			}
 			token := cookie.Value
@@ -106,7 +107,7 @@ func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "start tx failed")
 				logger.Error("staff auth: start tx failed", zap.Error(err))
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 			defer repo.DeferRollback(ctx, tx)
@@ -115,18 +116,18 @@ func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 			if err != nil {
 				if errors.Is(err, repository.ErrNotFound) {
 					span.SetAttributes(attribute.Bool("auth.authenticated", false))
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized")
 					return
 				}
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "fetch staff failed")
 				logger.Error("staff auth: fetch staff failed", zap.Error(err))
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 			if staff == nil {
 				span.SetAttributes(attribute.Bool("auth.authenticated", false))
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
 				return
 			}
 
@@ -134,7 +135,7 @@ func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "commit tx failed")
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 
@@ -162,7 +163,7 @@ func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 			cookie, err := r.Cookie("booth_token")
 			if err != nil || cookie.Value == "" {
 				span.SetAttributes(attribute.Bool("auth.authenticated", false))
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized")
 				return
 			}
 
@@ -171,7 +172,7 @@ func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "start tx failed")
 				logger.Error("booth auth: start tx failed", zap.Error(err))
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 			defer repo.DeferRollback(ctx, tx)
@@ -180,18 +181,18 @@ func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 			if err != nil {
 				if errors.Is(err, repository.ErrNotFound) {
 					span.SetAttributes(attribute.Bool("auth.authenticated", false))
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized")
 					return
 				}
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "fetch booth failed")
 				logger.Error("booth auth: fetch activity failed", zap.Error(err))
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 			if booth == nil || booth.Type != models.ActivitiesTypeBooth {
 				span.SetAttributes(attribute.Bool("auth.authenticated", false))
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
 				return
 			}
 
@@ -199,7 +200,7 @@ func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 			if err != nil {
 				span.RecordError(err)
 				span.SetStatus(codes.Error, "commit tx failed")
-				http.Error(w, "Internal error", http.StatusInternalServerError)
+				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
 
