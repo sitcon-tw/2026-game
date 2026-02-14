@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import Image from "next/image";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,17 +9,17 @@ import { useBoothStore } from "@/stores";
 import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
 
-
-export default function BoothScanPage() {
+function BoothScanContent() {
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-    const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
+    const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(
+        undefined
+    );
     const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
     const router = useRouter();
-
     const searchParams = useSearchParams();
 
     // Booth store
-    const { boothToken, setBoothToken } = useBoothStore();
+    const { boothToken, boothName, boothDescription, setBoothToken, setBoothName, setBoothDescription } = useBoothStore();
 
     // API hooks
     const boothLogin = useBoothLogin();
@@ -33,9 +33,9 @@ export default function BoothScanPage() {
             // Save token and login
             setBoothToken(tokenFromUrl);
             boothLogin.mutate(tokenFromUrl, {
-                onSuccess: () => {
-                    // Remove token from URL to keep it clean (cookie is now set)
-                    router.replace("/booth");
+                onSuccess: (data: any) => {
+                    if (data?.name) setBoothName(data.name);
+                    if (data?.description) setBoothDescription(data.description);
                 },
                 onError: (error) => {
                     console.error("Booth login failed:", error);
@@ -62,7 +62,6 @@ export default function BoothScanPage() {
             .then((devices) => {
                 const videoDevices = devices.filter((d) => d.kind === "videoinput");
                 setCameras(videoDevices);
-                // Default to the last camera (usually back-facing on mobile)
                 if (videoDevices.length > 0) {
                     setSelectedDeviceId(videoDevices[videoDevices.length - 1].deviceId);
                 }
@@ -71,16 +70,21 @@ export default function BoothScanPage() {
     }, []);
 
     const stopCamera = () => {
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                stream.getTracks().forEach(track => track.stop());
+        navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then((stream) => {
+                stream.getTracks().forEach((track) => track.stop());
             })
-            .catch(() => {/* Camera may not be active */ });
+            .catch(() => {
+                /* Camera may not be active */
+            });
     };
 
     const flipCamera = () => {
         if (cameras.length < 2) return;
-        const currentIdx = cameras.findIndex((c) => c.deviceId === selectedDeviceId);
+        const currentIdx = cameras.findIndex(
+            (c) => c.deviceId === selectedDeviceId
+        );
         const nextIdx = (currentIdx + 1) % cameras.length;
         setSelectedDeviceId(cameras[nextIdx].deviceId);
     };
@@ -124,11 +128,20 @@ export default function BoothScanPage() {
         <div className="flex flex-1 flex-col items-center px-6 py-8">
             {/* Title */}
             <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">
-                攤位掃描器
+                {boothName ?? "攤位掃描器"}
             </h1>
-            <h2 className="font-serif text-2xl text-[var(--text-primary)] text-center mt-2">
-                電繪版社
-            </h2>
+            {boothDescription && (
+                <p className="mt-2 text-sm text-[var(--text-secondary)] text-center max-w-[300px]">
+                    {boothDescription}
+                </p>
+            )}
+
+            {/* Login error */}
+            {boothLogin.isError && (
+                <div className="mt-4 rounded-lg bg-red-100 px-4 py-3 text-red-700 text-sm w-full max-w-[300px] text-center">
+                    攤位登入失敗，請確認連結是否正確
+                </div>
+            )}
 
             {/* Scanner area */}
             <div className="relative my-8 w-full max-w-[300px] aspect-square rounded-lg overflow-hidden bg-[#6b6b6b]">
@@ -158,6 +171,7 @@ export default function BoothScanPage() {
                         </svg>
                     </button>
                 )}
+
                 <Scanner
                     key={selectedDeviceId}
                     onScan={handleScan}
@@ -181,9 +195,33 @@ export default function BoothScanPage() {
                     }}
                 />
 
+                {/* Scan status overlay */}
+                {scanStatus.type === "scanning" && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                        <div className="rounded-lg bg-white px-6 py-3 text-lg font-bold text-[var(--text-primary)]">
+                            處理中…
+                        </div>
+                    </div>
+                )}
+                {scanStatus.type === "success" && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                        <div className="rounded-lg bg-green-500 px-6 py-3 text-lg font-bold text-white">
+                            {scanStatus.message}
+                        </div>
+                    </div>
+                )}
+                {scanStatus.type === "error" && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                        <div className="rounded-lg bg-red-500 px-6 py-3 text-lg font-bold text-white text-center">
+                            {scanStatus.message}
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Visitor count */}
             <h2 className="font-serif text-2xl text-[var(--text-primary)] text-center mt-2">
-                20 人來過
+                {statsLoading ? "載入中…" : `${visitorCount} 人來過`}
             </h2>
 
             {/* Identity Switcher Button */}
@@ -191,9 +229,7 @@ export default function BoothScanPage() {
                 type="button"
                 onClick={() => {
                     stopCamera();
-                    // TODO: handle identity switch
-                    console.log("Switch identity");
-                    router.push("/play"); // For now just navigate to player booths page
+                    router.push("/play");
                 }}
                 className="fixed bottom-20 right-6 z-50 flex flex-col items-center gap-1 transition-transform active:scale-95"
                 aria-label="切換身份"
@@ -211,5 +247,19 @@ export default function BoothScanPage() {
                 </span>
             </button>
         </div>
+    );
+}
+
+export default function BoothScanPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex flex-1 items-center justify-center">
+                    <div className="text-lg text-[var(--text-primary)]">載入中...</div>
+                </div>
+            }
+        >
+            <BoothScanContent />
+        </Suspense>
     );
 }
