@@ -24,20 +24,20 @@ type importTarget string
 
 const (
 	targetActivities importTarget = "activities"
-	targetStaff      importTarget = "staff"
-	targetUser       importTarget = "user"
+	targetStaffs     importTarget = "staffs"
+	targetUsers      importTarget = "users"
 )
 
 func main() {
 	const requiredArgs = 2
 	if len(os.Args) < requiredArgs {
-		fmt.Fprintln(os.Stderr, "usage: import [activities|staff|user]")
+		fmt.Fprintln(os.Stderr, "usage: import [activities|staffs|users]")
 		os.Exit(1)
 	}
 
 	target := importTarget(os.Args[1])
-	if target != targetActivities && target != targetStaff && target != targetUser {
-		fmt.Fprintf(os.Stderr, "unknown target %q. valid: activities, staff, user\n", target)
+	if target != targetActivities && target != targetStaffs && target != targetUsers {
+		fmt.Fprintf(os.Stderr, "unknown target %q. valid: activities, staffs, users\n", target)
 		os.Exit(1)
 	}
 
@@ -59,9 +59,9 @@ func main() {
 	switch target {
 	case targetActivities:
 		importErr = importActivities(ctx, pool, log)
-	case targetStaff:
+	case targetStaffs:
 		importErr = importStaff(ctx, pool, log)
-	case targetUser:
+	case targetUsers:
 		importErr = importUsers(ctx, pool, log)
 	}
 
@@ -82,6 +82,8 @@ func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) 
 		Type        models.ActivitiesTypes `json:"type"`
 		QRCodeToken string                 `json:"qrcode_token"`
 		Name        string                 `json:"name"`
+		Link        *string                `json:"link"`
+		Description *string                `json:"description"`
 		CreatedAt   time.Time              `json:"created_at"`
 		UpdatedAt   time.Time              `json:"updated_at"`
 	}
@@ -107,13 +109,15 @@ func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) 
 	}()
 
 	const stmt = `
-INSERT INTO activities (id, token, type, qrcode_token, name, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO activities (id, token, type, qrcode_token, name, link, description, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 ON CONFLICT (id) DO UPDATE
 SET token = EXCLUDED.token,
     type = EXCLUDED.type,
     qrcode_token = EXCLUDED.qrcode_token,
     name = EXCLUDED.name,
+    link = EXCLUDED.link,
+    description = EXCLUDED.description,
     updated_at = EXCLUDED.updated_at`
 
 	now := time.Now().UTC()
@@ -131,6 +135,8 @@ SET token = EXCLUDED.token,
 			items[i].Type,
 			items[i].QRCodeToken,
 			items[i].Name,
+			items[i].Link,
+			items[i].Description,
 			items[i].CreatedAt,
 			items[i].UpdatedAt,
 		); err != nil {
@@ -143,8 +149,8 @@ SET token = EXCLUDED.token,
 
 func importStaff(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
 	var items []models.Staff
-	if err := loadJSON(filepath.Join(dataDir, "staff.json"), &items); err != nil {
-		return fmt.Errorf("load staff: %w", err)
+	if err := loadJSON(filepath.Join(dataDir, "staffs.json"), &items); err != nil {
+		return fmt.Errorf("load staffs: %w", err)
 	}
 
 	if len(items) == 0 {
@@ -186,7 +192,7 @@ SET name = EXCLUDED.name,
 			items[i].CreatedAt,
 			items[i].UpdatedAt,
 		); err != nil {
-			return fmt.Errorf("insert staff[%d] (%s): %w", i, items[i].ID, err)
+			return fmt.Errorf("insert staffs[%d] (%s): %w", i, items[i].ID, err)
 		}
 	}
 
@@ -200,6 +206,7 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 		ID           string    `json:"id"`
 		AuthToken    string    `json:"auth_token"`
 		Nickname     string    `json:"nickname"`
+		Avatar       *string   `json:"avatar"`
 		QRCodeToken  string    `json:"qrcode_token"`
 		CouponToken  string    `json:"coupon_token"`
 		UnlockLevel  int       `json:"unlock_level"`
@@ -210,7 +217,7 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 	}
 
 	var items []userImport
-	if err := loadJSON(filepath.Join(dataDir, "user.json"), &items); err != nil {
+	if err := loadJSON(filepath.Join(dataDir, "users.json"), &items); err != nil {
 		return fmt.Errorf("load users: %w", err)
 	}
 
@@ -230,11 +237,12 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 	}()
 
 	const stmt = `
-INSERT INTO users (id, auth_token, nickname, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+INSERT INTO users (id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 ON CONFLICT (id) DO UPDATE
 SET auth_token = EXCLUDED.auth_token,
     nickname = EXCLUDED.nickname,
+    avatar = EXCLUDED.avatar,
     qrcode_token = EXCLUDED.qrcode_token,
     coupon_token = EXCLUDED.coupon_token,
     unlock_level = EXCLUDED.unlock_level,
@@ -258,6 +266,7 @@ SET auth_token = EXCLUDED.auth_token,
 			items[i].ID,
 			items[i].AuthToken,
 			items[i].Nickname,
+			items[i].Avatar,
 			items[i].QRCodeToken,
 			items[i].CouponToken,
 			items[i].UnlockLevel,

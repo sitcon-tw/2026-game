@@ -1,6 +1,7 @@
 .env
 tmp/
 data/
+.gocache
 
 docs/*
 !docs/index.html

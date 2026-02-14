@@ -11,10 +11,12 @@ import (
 
 // activityWithStatus is the payload for each activity in the list response.
 type activityWithStatus struct {
-	ID      string `json:"id"`
-	Type    string `json:"type"`
-	Name    string `json:"name"`
-	Visited bool   `json:"visited"`
+	ID          string  `json:"id"`
+	Type        string  `json:"type"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Link        *string `json:"link,omitempty"`
+	Visited     bool    `json:"visited"`
 }
 
 // List handles GET /activities/stats.
@@ -66,10 +68,12 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	for _, a := range activities {
 		_, visited := visitedSet[a.ID]
 		resp = append(resp, activityWithStatus{
-			ID:      a.ID,
-			Type:    string(a.Type),
-			Name:    a.Name,
-			Visited: visited,
+			ID:          a.ID,
+			Type:        string(a.Type),
+			Name:        a.Name,
+			Description: a.Description,
+			Link:        a.Link,
+			Visited:     visited,
 		})
 	}
 

@@ -72,6 +72,11 @@ type Repository interface {
 		usedAt time.Time,
 	) ([]models.DiscountCoupon, error)
 	ListDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)
+	CountDiscountCouponsByDiscountIDs(
+		ctx context.Context,
+		tx pgx.Tx,
+		discountIDs []string,
+	) (map[string]int, error)
 	InsertCouponHistory(ctx context.Context, tx pgx.Tx, history *models.CouponHistory) error
 	ListUnusedDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)
 	ListCouponHistoryByStaff(ctx context.Context, tx pgx.Tx, staffID string) ([]models.CouponHistory, error)

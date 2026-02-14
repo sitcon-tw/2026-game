@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -18,7 +19,7 @@ import (
 // @Description  攤位使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後攤位就可以使用此 cookie 來辨識自己身份。來使用 /activities/booth/ 底下的功能。
 // @Tags         activities
 // @Produce      json
-// @Success      200  {string}  string  ""
+// @Success      200  {object}  models.Activities
 // @Failure      400  {object}  res.ErrorResponse "missing token"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized booth"
 // @Failure      500  {object}  res.ErrorResponse
@@ -52,7 +53,9 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, helpers.NewCookie("booth_token", booth.Token, 30*24*time.Hour))
 
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(booth)
 }
 
 // requireBooth loads the activity by login token and ensures type=booth.

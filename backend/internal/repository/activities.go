@@ -21,7 +21,7 @@ func (r *PGRepository) CountVisitedActivities(ctx context.Context, tx pgx.Tx, us
 // GetActivityByQRCode fetches an activity by its QR code token.
 func (r *PGRepository) GetActivityByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.Activities, error) {
 	const query = `
-SELECT id, token, type, qrcode_token, name, created_at, updated_at
+SELECT id, token, type, qrcode_token, name, link, description, created_at, updated_at
 FROM activities
 WHERE qrcode_token = $1`
 
@@ -32,6 +32,8 @@ WHERE qrcode_token = $1`
 		&a.Type,
 		&a.QRCodeToken,
 		&a.Name,
+		&a.Link,
+		&a.Description,
 		&a.CreatedAt,
 		&a.UpdatedAt,
 	); err != nil {
@@ -46,7 +48,7 @@ WHERE qrcode_token = $1`
 // GetActivityByID fetches an activity by its ID.
 func (r *PGRepository) GetActivityByID(ctx context.Context, tx pgx.Tx, id string) (*models.Activities, error) {
 	const query = `
-SELECT id, token, type, qrcode_token, name, created_at, updated_at
+SELECT id, token, type, qrcode_token, name, link, description, created_at, updated_at
 FROM activities
 WHERE id = $1`
 
@@ -57,6 +59,8 @@ WHERE id = $1`
 		&a.Type,
 		&a.QRCodeToken,
 		&a.Name,
+		&a.Link,
+		&a.Description,
 		&a.CreatedAt,
 		&a.UpdatedAt,
 	); err != nil {
@@ -71,7 +75,7 @@ WHERE id = $1`
 // GetActivityByToken fetches an activity by its token.
 func (r *PGRepository) GetActivityByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Activities, error) {
 	const query = `
-SELECT id, token, type, qrcode_token, name, created_at, updated_at
+SELECT id, token, type, qrcode_token, name, link, description, created_at, updated_at
 FROM activities
 WHERE token = $1`
 
@@ -82,6 +86,8 @@ WHERE token = $1`
 		&a.Type,
 		&a.QRCodeToken,
 		&a.Name,
+		&a.Link,
+		&a.Description,
 		&a.CreatedAt,
 		&a.UpdatedAt,
 	); err != nil {
