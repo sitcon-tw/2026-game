@@ -2,18 +2,14 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Image from "next/image";
-import { Scanner } from "@yudiel/react-qr-scanner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useBoothLogin, useBoothStats, useBoothCheckin } from "@/hooks/api";
 import { useBoothStore } from "@/stores";
 import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
+import QrScanner from "@/components/QrScanner";
 
 function BoothScanContent() {
-    const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-    const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(
-        undefined
-    );
     const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -55,41 +51,7 @@ function BoothScanContent() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
-    // ── 2. Camera setup ──
-    useEffect(() => {
-        navigator.mediaDevices
-            .enumerateDevices()
-            .then((devices) => {
-                const videoDevices = devices.filter((d) => d.kind === "videoinput");
-                setCameras(videoDevices);
-                if (videoDevices.length > 0) {
-                    setSelectedDeviceId(videoDevices[videoDevices.length - 1].deviceId);
-                }
-            })
-            .catch(console.error);
-    }, []);
-
-    const stopCamera = () => {
-        navigator.mediaDevices
-            .getUserMedia({ video: true })
-            .then((stream) => {
-                stream.getTracks().forEach((track) => track.stop());
-            })
-            .catch(() => {
-                /* Camera may not be active */
-            });
-    };
-
-    const flipCamera = () => {
-        if (cameras.length < 2) return;
-        const currentIdx = cameras.findIndex(
-            (c) => c.deviceId === selectedDeviceId
-        );
-        const nextIdx = (currentIdx + 1) % cameras.length;
-        setSelectedDeviceId(cameras[nextIdx].deviceId);
-    };
-
-    // ── 3. Handle QR scan → booth check-in ──
+    // ── 2. Handle QR scan → booth check-in ──
     const handleScan = useCallback(
         (result: { rawValue: string }[]) => {
             if (!result.length) return;
@@ -122,7 +84,6 @@ function BoothScanContent() {
 
     // ── Render ──
     const visitorCount = boothStats?.count ?? 0;
-    const isLoggedIn = boothToken || boothLogin.isSuccess;
 
     return (
         <div className="flex flex-1 flex-col items-center px-6 py-8">
@@ -144,79 +105,8 @@ function BoothScanContent() {
             )}
 
             {/* Scanner area */}
-            <div className="relative my-8 w-full max-w-[300px] aspect-square rounded-lg overflow-hidden bg-[#6b6b6b]">
-                {/* Flip camera button */}
-                {cameras.length > 1 && (
-                    <button
-                        type="button"
-                        onClick={flipCamera}
-                        className="absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-full bg-[rgba(0,0,0,0.45)] text-white backdrop-blur-sm transition-transform active:scale-90"
-                        aria-label="切換鏡頭"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-5 w-5"
-                        >
-                            <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
-                            <path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" />
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="m18 22-3-3 3-3" />
-                            <path d="m6 2 3 3-3 3" />
-                        </svg>
-                    </button>
-                )}
-
-                <Scanner
-                    key={selectedDeviceId}
-                    onScan={handleScan}
-                    onError={(error) => console.error(error)}
-                    constraints={{
-                        deviceId: selectedDeviceId
-                            ? { exact: selectedDeviceId }
-                            : undefined,
-                    }}
-                    styles={{
-                        container: {
-                            width: "100%",
-                            height: "100%",
-                        },
-                        video: {
-                            objectFit: "cover",
-                        },
-                    }}
-                    components={{
-                        finder: true,
-                    }}
-                />
-
-                {/* Scan status overlay */}
-                {scanStatus.type === "scanning" && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
-                        <div className="rounded-lg bg-white px-6 py-3 text-lg font-bold text-[var(--text-primary)]">
-                            處理中…
-                        </div>
-                    </div>
-                )}
-                {scanStatus.type === "success" && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
-                        <div className="rounded-lg bg-green-500 px-6 py-3 text-lg font-bold text-white">
-                            {scanStatus.message}
-                        </div>
-                    </div>
-                )}
-                {scanStatus.type === "error" && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
-                        <div className="rounded-lg bg-red-500 px-6 py-3 text-lg font-bold text-white text-center">
-                            {scanStatus.message}
-                        </div>
-                    </div>
-                )}
+            <div className="my-8">
+                <QrScanner onScan={handleScan} scanStatus={scanStatus} />
             </div>
 
             {/* Visitor count */}
@@ -228,7 +118,6 @@ function BoothScanContent() {
             <button
                 type="button"
                 onClick={() => {
-                    stopCamera();
                     router.push("/play");
                 }}
                 className="fixed bottom-20 right-6 z-50 flex flex-col items-center gap-1 transition-transform active:scale-95"
