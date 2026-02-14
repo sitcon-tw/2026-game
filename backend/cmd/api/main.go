@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/internal/router"
 	"github.com/sitcon-tw/2026-game/pkg/config"
@@ -71,7 +72,13 @@ func main() {
 
 	handler := initRoutes(repo, logger)
 	if config.Env().OTelEnabled {
-		handler = otelhttp.NewHandler(handler, config.Env().OTelService)
+		handler = otelhttp.NewHandler(
+			handler,
+			"http.server",
+			otelhttp.WithSpanNameFormatter(func(_ string, r *http.Request) string {
+				return fmt.Sprintf("HTTP %s %s", r.Method, r.URL.Path)
+			}),
+		)
 	}
 
 	logger.Info("Starting server",
@@ -99,6 +106,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 
 	// logger
 	r.Use(middleware.Logger(logger))
+	r.Use(middleware.TraceHandler())
 
 	// CORS
 	if config.Env().AppEnv == config.AppEnvDev {
@@ -118,6 +126,9 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 		config.Env().RateLimitRequestsPerWindow,
 		config.Env().RateLimitWindow,
 	))
+
+	// Routes
+	r.Handle("/metrics", promhttp.Handler())
 
 	// Routes
 	r.Route("/api", func(r chi.Router) {

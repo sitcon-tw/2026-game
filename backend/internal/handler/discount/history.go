@@ -25,26 +25,26 @@ import (
 func (h *Handler) ListStaffHistory(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())
 	if !ok || staff == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
 	histories, err := h.Repo.ListCouponHistoryByStaff(r.Context(), tx, staff.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to list history")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to list history")
 		return
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

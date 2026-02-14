@@ -24,13 +24,13 @@ import (
 func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
@@ -38,11 +38,11 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	// Re-fetch latest user row to avoid stale data
 	fresh, err := h.Repo.GetUserByIDForUpdate(r.Context(), tx, user.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to load user")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to load user")
 		return
 	}
 	if fresh == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("user not found"), "unauthorized")
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("user not found"), "unauthorized")
 		return
 	}
 
@@ -51,7 +51,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	if newLevel > fresh.UnlockLevel {
 		res.Fail(
 			w,
-			h.Logger,
+			r,
 			http.StatusBadRequest,
 			errors.New("level exceeds unlock"),
 			"current level cannot exceed unlock level",
@@ -61,7 +61,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Repo.UpdateCurrentLevel(r.Context(), tx, fresh.ID, newLevel)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update level")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to update level")
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 			rule.MaxQty,
 		)
 		if err != nil {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to issue coupon")
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to issue coupon")
 			return
 		}
 		if !created {
@@ -97,7 +97,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

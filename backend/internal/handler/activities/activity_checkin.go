@@ -29,7 +29,7 @@ type activityCheckInRequest struct {
 func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
 		return
 	}
 
@@ -37,17 +37,17 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&req); err != nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid request body")
+		res.Fail(w, r, http.StatusBadRequest, err, "invalid request body")
 		return
 	}
 	if req.ActivityQRCode == "" {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
@@ -55,30 +55,30 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 	activity, err := h.Repo.GetActivityByQRCode(r.Context(), tx, req.ActivityQRCode)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("activity not found"), "activity not found")
+			res.Fail(w, r, http.StatusBadRequest, errors.New("activity not found"), "activity not found")
 			return
 		}
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch activity")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to fetch activity")
 		return
 	}
 
 	inserted, err := h.Repo.AddVisited(r.Context(), tx, user.ID, activity.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to record visit")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to record visit")
 		return
 	}
 
 	if inserted {
 		err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
 		if err != nil {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user unlock level")
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to update user unlock level")
 			return
 		}
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

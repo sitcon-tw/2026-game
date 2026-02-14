@@ -34,7 +34,7 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 
 	currentUser, ok := middleware.UserFromContext(ctx)
 	if !ok || currentUser == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized")
 		return
 	}
 
@@ -42,17 +42,17 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&req); err != nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid request body")
+		res.Fail(w, r, http.StatusBadRequest, err, "invalid request body")
 		return
 	}
 	if req.UserQRCode == "" {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("missing qr code"), "missing qr code")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(ctx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(ctx, tx)
@@ -60,30 +60,30 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 	targetUser, err := h.Repo.GetUserByQRCode(ctx, tx, req.UserQRCode)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("user not found"), "user not found")
+			res.Fail(w, r, http.StatusBadRequest, errors.New("user not found"), "user not found")
 			return
 		}
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch target user")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to fetch target user")
 		return
 	}
 	if targetUser == nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("user not found"), "user not found")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("user not found"), "user not found")
 		return
 	}
 	if targetUser.ID == currentUser.ID {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("cannot add yourself"), "cannot add yourself")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("cannot add yourself"), "cannot add yourself")
 		return
 	}
 
 	// eligibility: current user
 	currentFriendCount, err := h.Repo.CountFriends(ctx, tx, currentUser.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to check current user friend capacity")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to check current user friend capacity")
 		return
 	}
 	currentVisitedCount, err := h.Repo.CountVisitedActivities(ctx, tx, currentUser.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to check current user friend capacity")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to check current user friend capacity")
 		return
 	}
 	currentBudget := helpers.FriendCapacity(currentVisitedCount)
@@ -92,12 +92,12 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 	// eligibility: target user
 	targetFriendCount, err := h.Repo.CountFriends(ctx, tx, targetUser.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to check target user friend capacity")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to check target user friend capacity")
 		return
 	}
 	targetVisitedCount, err := h.Repo.CountVisitedActivities(ctx, tx, targetUser.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to check target user friend capacity")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to check target user friend capacity")
 		return
 	}
 	targetBudget := helpers.FriendCapacity(targetVisitedCount)
@@ -105,38 +105,38 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 
 	insertedA, err := h.Repo.AddFriend(ctx, tx, currentUser.ID, targetUser.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to add friend")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to add friend")
 		return
 	}
 	insertedB, err := h.Repo.AddFriend(ctx, tx, targetUser.ID, currentUser.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to add friend")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to add friend")
 		return
 	}
 
 	if !insertedA && !insertedB {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("already friends"), "already friends")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("already friends"), "already friends")
 		return
 	}
 
 	if insertedA && currentUserCanUnlock {
 		err = h.Repo.IncrementUnlockLevel(ctx, tx, currentUser.ID)
 		if err != nil {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update user")
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to update user")
 			return
 		}
 	}
 	if insertedB && targetUserCanUnlock {
 		err = h.Repo.IncrementUnlockLevel(ctx, tx, targetUser.ID)
 		if err != nil {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to update target user")
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to update target user")
 			return
 		}
 	}
 
 	err = h.Repo.CommitTransaction(ctx, tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

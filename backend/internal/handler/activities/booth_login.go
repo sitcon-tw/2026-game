@@ -28,26 +28,26 @@ import (
 func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing token"), "missing token")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("missing token"), "missing token")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
 	booth, err := h.requireBoothByToken(r.Context(), tx, token)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, err, "unauthorized booth")
+		res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized booth")
 		return
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

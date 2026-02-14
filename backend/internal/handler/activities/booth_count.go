@@ -24,26 +24,26 @@ type countResponse struct {
 func (h *Handler) BoothCount(w http.ResponseWriter, r *http.Request) {
 	booth, ok := middleware.BoothFromContext(r.Context())
 	if !ok || booth == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, nil, "unauthorized booth")
+		res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized booth")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
 	count, err := h.Repo.CountVisitedByActivity(r.Context(), tx, booth.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to count visits")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to count visits")
 		return
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

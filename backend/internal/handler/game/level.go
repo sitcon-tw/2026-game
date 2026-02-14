@@ -42,26 +42,26 @@ func (h *Handler) GetLevelInfo(w http.ResponseWriter, r *http.Request) {
 	if levelParam == "current" {
 		user, ok := middleware.UserFromContext(r.Context())
 		if !ok || user == nil {
-			res.Fail(w, h.Logger, http.StatusUnauthorized, nil, "unauthorized")
+			res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
 			return
 		}
 		// current_level is 0-based, so we add 1 to get the 1-based level.
 		lvl = user.CurrentLevel + 1
 		if lvl <= 0 {
-			res.Fail(w, h.Logger, http.StatusBadRequest, nil, "invalid level")
+			res.Fail(w, r, http.StatusBadRequest, nil, "invalid level")
 			return
 		}
 	} else {
 		lvl, err = strconv.Atoi(levelParam)
 		if err != nil || lvl <= 0 {
-			res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid level")
+			res.Fail(w, r, http.StatusBadRequest, err, "invalid level")
 			return
 		}
 	}
 
 	levels, err := config.Levels()
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to load level config")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to load level config")
 		return
 	}
 
@@ -83,18 +83,18 @@ func (h *Handler) GetLevelInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if current == nil {
-		res.Fail(w, h.Logger, http.StatusNotFound, nil, "level not found")
+		res.Fail(w, r, http.StatusNotFound, nil, "level not found")
 		return
 	}
 
 	sheet, err := config.SheetMusic()
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to load sheet music")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to load sheet music")
 		return
 	}
 
 	if len(sheet) < current.Notes {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, nil, "sheet music shorter than required notes")
+		res.Fail(w, r, http.StatusInternalServerError, nil, "sheet music shorter than required notes")
 		return
 	}
 

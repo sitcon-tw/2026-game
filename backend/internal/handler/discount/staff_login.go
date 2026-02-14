@@ -28,13 +28,13 @@ func (h *Handler) StaffLogin(w http.ResponseWriter, r *http.Request) {
 	// Accept token from Authorization for backward compatibility; issue cookie for future requests.
 	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing token"), "missing token")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("missing token"), "missing token")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(ctx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(ctx, tx)
@@ -42,20 +42,20 @@ func (h *Handler) StaffLogin(w http.ResponseWriter, r *http.Request) {
 	staff, err := h.Repo.GetStaffByToken(ctx, tx, token)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			res.Fail(w, h.Logger, http.StatusUnauthorized, err, "unauthorized staff")
+			res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized staff")
 			return
 		}
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to query staff")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to query staff")
 		return
 	}
 	if staff == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
 		return
 	}
 
 	err = h.Repo.CommitTransaction(ctx, tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

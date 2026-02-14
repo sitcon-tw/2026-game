@@ -15,6 +15,9 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/res"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var errUnauthorized = errors.New("unauthorized")
@@ -36,13 +39,13 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	token := helpers.BearerToken(r.Header.Get("Authorization"))
 	if token == "" {
 		err := errors.New("missing token")
-		res.Fail(w, h.Logger, http.StatusBadRequest, err, "Missing token")
+		res.Fail(w, r, http.StatusBadRequest, err, "Missing token")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
@@ -52,7 +55,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, repository.ErrNotFound) {
 			user = nil
 		} else {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to query user")
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to query user")
 			return
 		}
 	}
@@ -62,11 +65,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		userID, err = h.fetchOpassUserID(r.Context(), token)
 
 		if errors.Is(err, errUnauthorized) {
-			res.Fail(w, h.Logger, http.StatusUnauthorized, err, "Unauthorized")
+			res.Fail(w, r, http.StatusUnauthorized, err, "Unauthorized")
 			return
 		}
 		if err != nil {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to verify token")
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to verify token")
 			return
 		}
 
@@ -87,14 +90,14 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 		err = h.Repo.InsertUser(r.Context(), tx, user)
 		if err != nil {
-			res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to create user")
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to create user")
 			return
 		}
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 
@@ -107,20 +110,29 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) fetchOpassUserID(ctx context.Context, authToken string) (string, error) {
+	ctx, span := otel.Tracer("github.com/sitcon-tw/2026-game/users").Start(ctx, "users.fetch_opass_user_id")
+	defer span.End()
+
 	endpoint := fmt.Sprintf("%s/status?token=%s", config.Env().OPassURL, url.QueryEscape(authToken))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "build request failed")
 		return "", err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "request failed")
 		return "", err
 	}
 	defer resp.Body.Close()
+	span.SetAttributes(attribute.Int("http.status_code", resp.StatusCode))
 
 	if resp.StatusCode != http.StatusOK {
+		span.SetStatus(codes.Error, "unauthorized")
 		return "", errUnauthorized
 	}
 
@@ -129,11 +141,16 @@ func (h *Handler) fetchOpassUserID(ctx context.Context, authToken string) (strin
 	}
 	err = json.NewDecoder(resp.Body).Decode(&payload)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "decode response failed")
 		return "", err
 	}
 
 	if payload.UserID == "" {
-		return "", errors.New("opass response missing user_id")
+		err = errors.New("opass response missing user_id")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "empty user id")
+		return "", err
 	}
 
 	return payload.UserID, nil
