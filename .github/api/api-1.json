@@ -136,6 +136,14 @@
       },
       "type": "object"
     },
+    "discount.getGiftCouponRequest": {
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "discount.getUserCouponsRequest": {
       "properties": {
         "user_coupon_token": {
@@ -687,6 +695,64 @@
         ]
       }
     },
+    "/discount-coupons/gifts": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "需要登入 cookie，透過 token 使用 gift 折扣券；使用後會刪除該 token，並存入使用者折扣券。",
+        "parameters": [
+          {
+            "description": "Gift token",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/discount.getGiftCouponRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/models.DiscountCoupon"
+            }
+          },
+          "400": {
+            "description": "missing token",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "gift coupon not found",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "透過 gift token 取得折扣券",
+        "tags": [
+          "discount"
+        ]
+      }
+    },
     "/discount-coupons/staff/coupon-tokens/query": {
       "post": {
         "consumes": [
@@ -1124,6 +1190,12 @@
           },
           "401": {
             "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "429": {
+            "description": "submission too fast",
             "schema": {
               "$ref": "#/definitions/res.ErrorResponse"
             }
