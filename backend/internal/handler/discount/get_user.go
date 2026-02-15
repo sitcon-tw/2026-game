@@ -31,7 +31,7 @@ type getUserCouponsRequest struct {
 func (h *Handler) GetUserCoupons(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())
 	if !ok || staff == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
 		return
 	}
 
@@ -39,17 +39,17 @@ func (h *Handler) GetUserCoupons(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&req); err != nil {
-		res.Fail(w, h.Logger, http.StatusBadRequest, err, "invalid request body")
+		res.Fail(w, r, http.StatusBadRequest, err, "invalid request body")
 		return
 	}
 	if req.UserCouponToken == "" {
-		res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("missing coupon token"), "missing coupon token")
+		res.Fail(w, r, http.StatusBadRequest, errors.New("missing coupon token"), "missing coupon token")
 		return
 	}
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
@@ -57,16 +57,16 @@ func (h *Handler) GetUserCoupons(w http.ResponseWriter, r *http.Request) {
 	user, err := h.Repo.GetUserByCouponToken(r.Context(), tx, req.UserCouponToken)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			res.Fail(w, h.Logger, http.StatusBadRequest, errors.New("invalid coupon token"), "invalid coupon token")
+			res.Fail(w, r, http.StatusBadRequest, errors.New("invalid coupon token"), "invalid coupon token")
 			return
 		}
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch user")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to fetch user")
 		return
 	}
 
 	coupons, err := h.Repo.ListUnusedDiscountsByUser(r.Context(), tx, user.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to list coupons")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to list coupons")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *Handler) GetUserCoupons(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sitcon-tw/2026-game/pkg/res"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
@@ -30,6 +31,7 @@ func Logger(logger *zap.Logger) func(http.Handler) http.Handler {
 				statusCode:     http.StatusOK,
 			}
 
+			r = r.WithContext(res.WithLogger(r.Context(), logger))
 			next.ServeHTTP(wrapped, r)
 
 			fields := []zap.Field{

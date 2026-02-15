@@ -22,7 +22,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {
 		err := errors.New("unauthorized")
-		res.Fail(w, h.Logger, http.StatusUnauthorized, err, "Unauthorized")
+		res.Fail(w, r, http.StatusUnauthorized, err, "Unauthorized")
 		return
 	}
 

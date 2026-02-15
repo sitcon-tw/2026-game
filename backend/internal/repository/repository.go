@@ -7,6 +7,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sitcon-tw/2026-game/internal/models"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -80,6 +82,14 @@ type Repository interface {
 	InsertCouponHistory(ctx context.Context, tx pgx.Tx, history *models.CouponHistory) error
 	ListUnusedDiscountsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.DiscountCoupon, error)
 	ListCouponHistoryByStaff(ctx context.Context, tx pgx.Tx, staffID string) ([]models.CouponHistory, error)
+	ConsumeDiscountCouponGiftByToken(ctx context.Context, tx pgx.Tx, token string) (*models.DiscountCouponGift, error)
+	InsertDiscountCouponForUser(
+		ctx context.Context,
+		tx pgx.Tx,
+		userID string,
+		price int,
+		discountID string,
+	) (*models.DiscountCoupon, error)
 
 	// Staff operations
 	GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error)
@@ -89,6 +99,7 @@ type Repository interface {
 type PGRepository struct {
 	DB     *pgxpool.Pool
 	Logger *zap.Logger
+	tracer trace.Tracer
 }
 
 // New creates a repository backed by pgx pool.
@@ -96,5 +107,6 @@ func New(db *pgxpool.Pool, logger *zap.Logger) Repository {
 	return &PGRepository{
 		DB:     db,
 		Logger: logger,
+		tracer: otel.Tracer("github.com/sitcon-tw/2026-game/repository"),
 	}
 }

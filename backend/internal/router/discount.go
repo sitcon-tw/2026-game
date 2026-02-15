@@ -35,5 +35,7 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 
 	// Get the count of discounts used by the user
 	r.With(middleware.Auth(repo, logger)).Get("/", h.GetDiscount)
+	// User consumes a gift coupon by token in request body
+	r.With(middleware.Auth(repo, logger)).Post("/gifts", h.GetGiftCouponByToken)
 	return r
 }

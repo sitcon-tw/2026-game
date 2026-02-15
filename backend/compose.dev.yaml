@@ -12,5 +12,98 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # Uncomment the backend service if you want use loki
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: backend-api
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DB_HOST: postgres
+  #     OTEL_ENDPOINT: victoria-traces:4317
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - postgres
+  #     - victoria-traces
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  victoria-traces:
+    image: victoriametrics/victoria-traces:latest
+    container_name: victoria-traces
+    restart: unless-stopped
+    command:
+      - "-storageDataPath=/victoria-traces-data"
+      - "-retentionPeriod=7d"
+      - "-otlpGRPCListenAddr=:4317"
+      - "-otlpGRPC.tls=false"
+    ports:
+      - "10428:10428"
+      - "4317:4317"
+    volumes:
+      - victoria_traces_data:/victoria-traces-data
+
+  loki:
+    image: grafana/loki:3.5.4
+    container_name: loki
+    restart: unless-stopped
+    command:
+      - "-config.file=/etc/loki/local-config.yaml"
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:3.5.4
+    container_name: promtail
+    restart: unless-stopped
+    command:
+      - "-config.file=/etc/promtail/config.yml"
+    volumes:
+      - ./observability/promtail/promtail.yaml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_data:/tmp
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - victoria-traces
+      - loki
+
 volumes:
   postgres_data:
+  prometheus_data:
+  victoria_traces_data:
+  loki_data:
+  promtail_data:
+  grafana_data:

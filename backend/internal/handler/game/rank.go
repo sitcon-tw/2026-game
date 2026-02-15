@@ -24,7 +24,7 @@ const aroundSpan = 5
 func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.UserFromContext(r.Context())
 	if !ok || user == nil {
-		res.Fail(w, h.Logger, http.StatusUnauthorized, nil, "unauthorized")
+		res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
 			page = parsed
 		} else {
-			res.Fail(w, h.Logger, http.StatusBadRequest, nil, "invalid page parameter")
+			res.Fail(w, r, http.StatusBadRequest, nil, "invalid page parameter")
 			return
 		}
 	}
@@ -41,7 +41,7 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := h.Repo.StartTransaction(r.Context())
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to start transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
 		return
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
@@ -49,25 +49,25 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 	// Fetch pieces individually to keep repository concerns separated.
 	topRows, err := h.Repo.GetTopUsers(r.Context(), tx, pageSize, offset)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch top users")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to fetch top users")
 		return
 	}
 
 	meRow, meRank, err := h.Repo.GetUserWithRank(r.Context(), tx, user.ID)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch user rank")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to fetch user rank")
 		return
 	}
 
 	aroundRows, err := h.Repo.GetAroundUsers(r.Context(), tx, user.ID, aroundSpan)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to fetch around users")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to fetch around users")
 		return
 	}
 
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
-		res.Fail(w, h.Logger, http.StatusInternalServerError, err, "failed to commit transaction")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
 
