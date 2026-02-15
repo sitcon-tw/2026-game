@@ -1,0 +1,12 @@
+# Zeabur Configuration
+# This file is optional - Zeabur will auto-detect Next.js
+
+# If you want to use Docker deployment, uncomment below:
+# build:
+#   dockerfile: Dockerfile
+
+# Environment variables (also can be set in Zeabur Dashboard)
+env:
+  NODE_ENV: production
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_API_BASE_URL: "https://2026-game.sitcon.party/api"
