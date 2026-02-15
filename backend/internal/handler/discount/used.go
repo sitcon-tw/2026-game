@@ -38,7 +38,6 @@ var (
 // @Failure      400  {object}  res.ErrorResponse "missing token | invalid coupon"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Router       /discount-coupons/staff/redemptions [post]
-// @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 func (h *Handler) DiscountUsed(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())
 	if !ok || staff == nil {

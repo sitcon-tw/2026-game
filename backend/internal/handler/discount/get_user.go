@@ -27,7 +27,6 @@ type getUserCouponsRequest struct {
 // @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /discount-coupons/staff/coupon-tokens/query [post]
-// @Param        Authorization  header  string  false  "Bearer {token} (deprecated; use staff_token cookie)"
 func (h *Handler) GetUserCoupons(w http.ResponseWriter, r *http.Request) {
 	staff, ok := middleware.StaffFromContext(r.Context())
 	if !ok || staff == nil {
