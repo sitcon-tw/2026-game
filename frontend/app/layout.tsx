@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
+import QueryProvider from "@/components/providers/QueryProvider";
 import "@/app/globals.css";
 
 const notoSans = Noto_Sans_TC({
@@ -29,7 +30,7 @@ export default function RootLayout({
             <body
                 className={`${notoSans.variable} ${notoSerif.variable} bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased`}
             >
-                {children}
+                <QueryProvider>{children}</QueryProvider>
             </body>
         </html>
     );
