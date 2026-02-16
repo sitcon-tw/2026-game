@@ -34,8 +34,8 @@ export default function CouponDetailModal({
 				{/* Header with amount */}
 				<div
 					className={`relative flex items-center justify-center py-8 ${coupon.used_at
-							? "bg-[var(--bg-header)]"
-							: "bg-[var(--accent-gold)]"
+						? "bg-[var(--bg-header)]"
+						: "bg-[var(--accent-gold)]"
 						}`}
 				>
 					<span className="font-serif text-6xl italic text-white">
@@ -91,8 +91,8 @@ export default function CouponDetailModal({
 						</p>
 						<p
 							className={`mt-1 text-sm font-bold ${coupon.used_at
-									? "text-[var(--status-error)]"
-									: "text-[var(--status-success)]"
+								? "text-[var(--status-error)]"
+								: "text-[var(--status-success)]"
 								}`}
 						>
 							{coupon.used_at ? "已使用" : "可使用"}
@@ -106,11 +106,13 @@ export default function CouponDetailModal({
 						<p className="text-xs font-semibold text-[var(--text-secondary)]">
 							出示 QR Code 供工作人員掃描
 						</p>
-						<img
-							src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(user.coupon_token)}`}
-							alt="Coupon QR Code"
-							className="h-48 w-48 rounded-2xl"
-						/>
+						<div className="rounded-2xl bg-white p-3">
+							<img
+								src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(user.coupon_token)}`}
+								alt="Coupon QR Code"
+								className="h-44 w-44"
+							/>
+						</div>
 					</div>
 				)}
 
