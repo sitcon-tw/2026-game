@@ -11,6 +11,7 @@ export { useLeaderboard, useLevelInfo, useSubmitLevel } from "@/hooks/api/useGam
 export { useFriendCount, useAddFriend } from "@/hooks/api/useFriendships";
 export {
   useCoupons,
+  useRedeemGiftCoupon,
   useStaffLogin,
   useStaffLookupCoupons,
   useStaffRedeemCoupon,
