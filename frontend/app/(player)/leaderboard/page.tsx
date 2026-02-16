@@ -101,8 +101,13 @@ export default function LeaderboardPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
-                載入中...
+            <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                    <div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
+                        ✦
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)]">載入中…</p>
+                </div>
             </div>
         );
     }

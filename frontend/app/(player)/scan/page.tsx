@@ -91,7 +91,7 @@ export default function ScanPage() {
                                         className="h-48 w-48 rounded-md"
                                     />
                                 ) : (
-                                    <div className="h-48 w-48 rounded-md bg-[#6b6b6b]" />
+                                    <div className="h-48 w-48 animate-pulse rounded-md bg-[#6b6b6b]" />
                                 )}
                                 <span className="text-sm text-[var(--text-secondary)]">
                                     讓朋友掃描你的 QR Code
@@ -107,14 +107,18 @@ export default function ScanPage() {
                 在你逛更多攤位以前
                 <br />
                 還可認識{" "}
-                <span className="font-semibold text-[var(--text-primary)]">
-                    {remaining}
-                </span>{" "}
+                {friendData ? (
+                    <span className="font-semibold text-[var(--text-primary)]">
+                        {remaining}
+                    </span>
+                ) : (
+                    <span className="inline-block h-4 w-6 animate-pulse rounded bg-current opacity-20 align-middle" />
+                )}{" "}
                 位朋友
             </p>
 
             {/* Progress bar */}
-            <div className="mt-3 h-2.5 w-40 overflow-hidden rounded-full bg-[rgba(93,64,55,0.2)]">
+            <div className={`mt-3 h-2.5 w-40 overflow-hidden rounded-full bg-[rgba(93,64,55,0.2)]${!friendData ? " animate-pulse" : ""}`}>
                 <div
                     className="h-full rounded-full bg-[var(--text-primary)] transition-all"
                     style={{ width: `${progress * 100}%` }}

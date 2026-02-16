@@ -15,7 +15,8 @@ export default function UnlockMethodCard({
     total,
     onClick,
 }: UnlockMethodCardProps) {
-    const progress = (current / total) * 100;
+    const isLoading = total === 0;
+    const progress = isLoading ? 0 : (current / total) * 100;
 
     return (
         <button
@@ -33,16 +34,22 @@ export default function UnlockMethodCard({
                 </div>
 
                 {/* Progress Bar */}
-                <div className="relative w-40 h-3 bg-[#D7994A] rounded-full overflow-hidden">
-                    <div
-                        className="absolute left-0 top-0 h-full bg-[#945B17] transition-all duration-300"
-                        style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
+                <div className={`relative w-40 h-3 rounded-full overflow-hidden${isLoading ? " animate-pulse bg-white/20" : " bg-[#D7994A]"}`}>
+                    {!isLoading && (
+                        <div
+                            className="absolute left-0 top-0 h-full bg-[#945B17] transition-all duration-300"
+                            style={{ width: `${Math.min(progress, 100)}%` }}
+                        />
+                    )}
                 </div>
 
                 {/* Progress Text */}
                 <div className="text-[var(--text-light)] text-xl font-serif text-center">
-                    {current}/{total}
+                    {isLoading ? (
+                        <div className="h-6 w-12 animate-pulse rounded bg-white/20" />
+                    ) : (
+                        <span>{current}/{total}</span>
+                    )}
                 </div>
             </div>
 

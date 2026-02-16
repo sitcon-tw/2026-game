@@ -276,8 +276,13 @@ export default function ChallengesPage() {
 
     if (isUserLoading || isLevelLoading) {
         return (
-            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
-                載入中...
+            <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                    <div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
+                        ✦
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)]">載入中…</p>
+                </div>
             </div>
         );
     }
@@ -388,7 +393,7 @@ export default function ChallengesPage() {
                                 <p className="text-red-500 text-sm mb-4">{submitError}</p>
                             )}
                             {!isReplay && !isMaxLevel && submitLevel.isPending && (
-                                <p className="text-[var(--text-secondary)] text-sm mb-4">提交中...</p>
+                                <p className="animate-pulse text-[var(--text-secondary)] text-sm mb-4">提交中...</p>
                             )}
                             <div className="flex gap-3 justify-center">
                                 <button

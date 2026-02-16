@@ -37,8 +37,13 @@ export default function LevelsPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
-                載入中...
+            <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                    <div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
+                        ✦
+                    </div>
+                    <p className="text-sm text-[var(--text-secondary)]">載入中…</p>
+                </div>
             </div>
         );
     }
@@ -51,7 +56,11 @@ export default function LevelsPage() {
                         目前排名
                     </div>
                     <div className="font-serif text-2xl text-[var(--text-gold)]">
-                        {rank != null ? `第 ${rank} 名` : "—"}
+                        {rank != null ? (
+                            `第 ${rank} 名`
+                        ) : (
+                            <div className="h-7 w-24 animate-pulse rounded bg-current opacity-20" />
+                        )}
                     </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
