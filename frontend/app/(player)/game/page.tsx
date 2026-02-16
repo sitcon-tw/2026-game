@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useCurrentUser, useLeaderboard } from "@/hooks/api";
 
-const TOTAL_LEVELS = 40;
-
 function LevelNoteIcon({ className }: { className?: string }) {
     return (
         <svg
@@ -71,7 +69,7 @@ export default function LevelsPage() {
                     />
                 </div>
                 <div className="mt-2 text-xs text-[var(--text-secondary)]">
-                    目前解鎖 {unlockLevel} 關 / 全部 {TOTAL_LEVELS} 關
+                    已解鎖 {unlockLevel} 關
                 </div>
             </section>
 
