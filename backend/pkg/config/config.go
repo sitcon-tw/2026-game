@@ -25,6 +25,7 @@ type EnvConfig struct {
 	AppEnv         AppEnv `env:"APP_ENV" envDefault:"dev"`
 	AppPort        string `env:"PORT" envDefault:"8000"`
 	AppAutoMigrate bool   `env:"APP_AUTO_MIGRATE" envDefault:"false"`
+	AppDocs        bool   `env:"APP_DOCS" envDefault:"false"`
 
 	// OpenTelemetry settings
 	OTelEnabled    bool    `env:"OTEL_ENABLED" envDefault:"false"`

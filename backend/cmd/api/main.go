@@ -141,7 +141,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	})
 
 	// Swagger API docs
-	if config.Env().AppEnv == config.AppEnvDev {
+	if config.Env().AppDocs {
 		// Serve raw swagger spec at /docs for quick downloads
 		r.Get("/docs", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, "docs/swagger.yaml")
