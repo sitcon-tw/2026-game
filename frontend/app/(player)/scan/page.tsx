@@ -83,7 +83,7 @@ export default function ScanPage() {
                     showAlternate={showMyQR}
                     alternateContent={
                         <div className="flex h-full w-full items-center justify-center bg-[var(--bg-secondary)]">
-                            <div className="flex flex-col items-center gap-3">
+                            <div className="flex flex-col items-center gap-3 p-10">
                                 {user?.qrcode_token ? (
                                     <img
                                         src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(user.qrcode_token)}`}
