@@ -19,6 +19,19 @@ export function useCoupons() {
   });
 }
 
+/** POST /discount-coupons/gifts — 透過 gift token 兌換折扣券 */
+export function useRedeemGiftCoupon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) =>
+      api.post<DiscountCoupon>("/discount-coupons/gifts", { token }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.coupons.list });
+    },
+  });
+}
+
 /* ── Staff ── */
 
 /** POST /discount-coupons/staff/session — 工作人員登入 */

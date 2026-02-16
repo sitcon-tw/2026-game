@@ -33,11 +33,10 @@ export default function CouponDetailModal({
 			>
 				{/* Header with amount */}
 				<div
-					className={`relative flex items-center justify-center py-8 ${
-						coupon.used_at
+					className={`relative flex items-center justify-center py-8 ${coupon.used_at
 							? "bg-[var(--bg-header)]"
 							: "bg-[var(--accent-gold)]"
-					}`}
+						}`}
 				>
 					<span className="font-serif text-6xl italic text-white">
 						{coupon.price}
@@ -91,11 +90,10 @@ export default function CouponDetailModal({
 							狀態
 						</p>
 						<p
-							className={`mt-1 text-sm font-bold ${
-								coupon.used_at
+							className={`mt-1 text-sm font-bold ${coupon.used_at
 									? "text-[var(--status-error)]"
 									: "text-[var(--status-success)]"
-							}`}
+								}`}
 						>
 							{coupon.used_at ? "已使用" : "可使用"}
 						</p>
