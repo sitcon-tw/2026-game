@@ -72,6 +72,19 @@ const boothLoginMessages: Record<string, string> = {
     "unauthorized booth": "攤位驗證失敗，請確認連結是否正確",
 };
 
+/** ── 工作人員登入 (POST /discount-coupons/staff/session) ── */
+const staffLoginMessages: Record<string, string> = {
+    "missing token": "缺少工作人員 Token",
+    "unauthorized staff": "工作人員驗證失敗，請確認連結是否正確",
+};
+
+/** ── 工作人員核銷 (POST /discount-coupons/staff/redemptions) ── */
+const staffRedeemMessages: Record<string, string> = {
+    "missing token": "缺少折價券 Token",
+    "invalid coupon": "無效的折價券",
+    "unauthorized staff": "工作人員尚未登入，請重新開啟連結",
+};
+
 /** ── 使用者登入 (POST /users/session) ── */
 const userSessionMessages: Record<string, string> = {
     "Missing token": "缺少登入 Token",
@@ -98,7 +111,9 @@ export type ScanContext =
     | "activity-checkin"
     | "booth-checkin"
     | "booth-login"
-    | "game-submit";
+    | "game-submit"
+    | "staff-login"
+    | "staff-redeem";
 
 const contextTables: Record<ScanContext, Record<string, string>> = {
     "friendship": friendshipMessages,
@@ -106,6 +121,8 @@ const contextTables: Record<ScanContext, Record<string, string>> = {
     "booth-checkin": boothCheckinMessages,
     "booth-login": boothLoginMessages,
     "game-submit": gameSubmitMessages,
+    "staff-login": staffLoginMessages,
+    "staff-redeem": staffRedeemMessages,
 };
 
 /**
