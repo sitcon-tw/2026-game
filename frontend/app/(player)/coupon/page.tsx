@@ -36,7 +36,7 @@ export default function CouponPage() {
 	}
 
 	return (
-		<div className="relative min-h-screen w-full overflow-hidden">
+		<div className="relative w-full overflow-hidden">
 			<div className="mx-auto max-w-md pt-16 text-center">
 				{/* Title */}
 				<h1 className="text-4xl font-bold tracking-[0.4em] text-[var(--text-primary)]">
