@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useUserStore } from "@/stores/userStore";
 import type { DiscountCoupon } from "@/types/api";
 
 export default function CouponDetailModal({
@@ -10,6 +11,7 @@ export default function CouponDetailModal({
 	coupon: DiscountCoupon;
 	onClose: () => void;
 }) {
+	const user = useUserStore((state) => state.user);
 	return (
 		<motion.div
 			className="fixed inset-0 z-50 flex items-center justify-center px-6"
@@ -99,6 +101,20 @@ export default function CouponDetailModal({
 						</p>
 					</div>
 				</div>
+
+				{/* QR Code for staff scanning */}
+				{!coupon.used_at && user?.coupon_token && (
+					<div className="flex flex-col items-center gap-2 px-6 pb-4">
+						<p className="text-xs font-semibold text-[var(--text-secondary)]">
+							出示 QR Code 供工作人員掃描
+						</p>
+						<img
+							src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(user.coupon_token)}`}
+							alt="Coupon QR Code"
+							className="h-48 w-48 rounded-2xl"
+						/>
+					</div>
+				)}
 
 				{/* Close button */}
 				<div className="px-6 pb-6">
