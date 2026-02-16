@@ -6,6 +6,7 @@ import { useCoupons } from "@/hooks/api";
 import type { DiscountCoupon } from "@/types/api";
 import CouponTicket from "@/components/coupon/CouponTicket";
 import CouponDetailModal from "@/components/coupon/CouponDetailModal";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function CouponPage() {
 	const { data: coupons, isLoading } = useCoupons();
@@ -15,16 +16,7 @@ export default function CouponPage() {
 	const [redeemCode, setRedeemCode] = useState("");
 
 	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center py-20">
-				<div className="text-center">
-					<div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
-						✦
-					</div>
-					<p className="text-sm text-[var(--text-secondary)]">載入中…</p>
-				</div>
-			</div>
-		);
+		return <LoadingSpinner />;
 	}
 
 	if (!coupons || coupons.length === 0) {

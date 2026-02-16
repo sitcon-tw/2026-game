@@ -74,18 +74,17 @@
 以下 7 個頁面需統一改為帶有 `animate-spin` 的 spinner 區塊，與 `AuthGuard.tsx` 風格一致：
 
 ```tsx
-// 統一替換為：
+// 統一使用 LoadingSpinner 元件：
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
+// 頁面內 loading（預設）
 if (isLoading) {
-    return (
-        <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-                <div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
-                    ✦
-                </div>
-                <p className="text-sm text-[var(--text-secondary)]">載入中…</p>
-            </div>
-        </div>
-    );
+    return <LoadingSpinner />;
+}
+
+// 整頁 loading（如 AuthGuard）
+if (isLoading) {
+    return <LoadingSpinner fullPage />;
 }
 ```
 

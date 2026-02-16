@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUserStore } from "@/stores/userStore";
 import { api, ApiError } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import type { User } from "@/types/api";
 
 /**
@@ -65,16 +66,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Store not yet rehydrated or session check in flight
     if (!storeHydrated || (shouldCheck && isLoading)) {
-        return (
-            <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)]">
-                <div className="text-center">
-                    <div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
-                        ✦
-                    </div>
-                    <p className="text-sm text-[var(--text-secondary)]">載入中…</p>
-                </div>
-            </div>
-        );
+        return <LoadingSpinner fullPage />;
     }
 
     // No token → redirect in progress

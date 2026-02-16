@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/stores/gameStore';
 import { playNote } from '@/lib/audio';
 import type { SubmitResponse } from '@/types/api';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const BUTTON_COLORS = [
     'var(--btn-red)',
@@ -276,14 +277,7 @@ export default function ChallengesPage() {
 
     if (isUserLoading || isLevelLoading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <div className="text-center">
-                    <div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
-                        ✦
-                    </div>
-                    <p className="text-sm text-[var(--text-secondary)]">載入中…</p>
-                </div>
-            </div>
+            <LoadingSpinner />
         );
     }
 
