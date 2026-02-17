@@ -1,3 +1,5 @@
+import { motion } from "motion/react";
+
 export default function LoadingSpinner({ fullPage = false }: { fullPage?: boolean }) {
     return (
         <div
@@ -8,9 +10,17 @@ export default function LoadingSpinner({ fullPage = false }: { fullPage?: boolea
             }
         >
             <div className="text-center">
-                <div className="mb-4 inline-block animate-spin text-4xl text-[var(--text-gold)]">
-                    ✦
-                </div>
+                <motion.img
+                    src="/assets/landing/album-cd.svg"
+                    alt="Loading"
+                    className="mb-4 inline-block w-16 h-16"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                    }}
+                />
                 <p className="text-sm text-[var(--text-secondary)]">載入中…</p>
             </div>
         </div>
