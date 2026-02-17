@@ -1,7 +1,7 @@
-import { DiscountCoupon, DiscountUsedResponse } from "@/types/api";
+import { GetUserCouponsResponse } from "@/types/api";
 
 interface RedemptionCardProps {
-  lookupResult: DiscountUsedResponse; // Using DiscountUsedResponse for now, as it has more fields needed
+  lookupResult: GetUserCouponsResponse;
   onConfirmRedeem: () => void;
   isRedeeming: boolean;
 }
@@ -13,9 +13,6 @@ export function RedemptionCard({
 }: RedemptionCardProps) {
   return (
     <div className="mt-4 rounded-lg bg-white p-4 shadow-md w-full max-w-[300px]">
-      <h3 className="font-bold text-lg text-[var(--text-primary)]">
-        {lookupResult.user_name || "未知使用者"}
-      </h3>
       <p className="text-sm text-[var(--text-secondary)]">
         可用折扣券: {lookupResult.coupons.length} 張
       </p>
