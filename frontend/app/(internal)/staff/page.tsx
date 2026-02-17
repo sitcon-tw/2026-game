@@ -86,7 +86,7 @@ function StaffScanContent() {
       setScanStatus({ type: "scanning" });
 
       staffLookupCoupons.mutate(
-        { user_coupon_token: userCouponToken },
+        userCouponToken,
         {
           onSuccess: (data) => {
             setLookupResult(data);
@@ -119,19 +119,14 @@ function StaffScanContent() {
     setScanStatus({ type: "scanning" }); // Indicate redemption is in progress
 
     staffRedeemCoupon.mutate(
-      { user_coupon_token: scannedUserCouponToken },
+      scannedUserCouponToken,
       {
         onSuccess: (data) => {
           setLookupResult(null); // Clear lookup result after redemption
           setScannedUserCouponToken(null);
-          const msg = translateWithContext(
-            "staff-redeem",
-            data?.status,
-            "核銷成功！"
-          );
           setScanStatus({
-            type: isSuccessStatus(data?.status) ? "success" : "error",
-            message: msg,
+            type: "success",
+            message: `核銷成功！共折抵 ${data.total} 元`,
           });
           setTimeout(() => setScanStatus({ type: "idle" }), 2000);
         },
@@ -184,7 +179,7 @@ function StaffScanContent() {
       {/* Redemption History */}
       {!lookupResult && ( // Only show history if no lookup result is displayed
         <RedemptionHistoryList
-          history={redemptionHistory?.redemptions || []}
+          history={redemptionHistory ?? []}
           isLoading={historyLoading}
         />
       )}
