@@ -45,7 +45,7 @@ export default function PlayPage() {
         {
             title: '認識新朋友',
             current: friendData?.count ?? 0,
-            total: friendData?.max ?? 20,
+            total: friendData?.max ?? 0,
             route: '/scan',
         },
     ];

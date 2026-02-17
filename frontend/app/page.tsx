@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
+import { motion } from "motion/react";
 
 type AnimationPhase = "idle" | "sliding" | "spinning" | "expanding" | "done";
 
@@ -12,40 +13,27 @@ export default function LandingPage() {
 
   const handleEnter = useCallback(() => {
     if (phase !== "idle") return;
-
-    // Step 2: poster slides right, CD revealed & spinning
     setPhase("sliding");
-
-    // CD fully visible, spin for 1s
-    setTimeout(() => {
-      setPhase("spinning");
-    }, 600);
-
-    // Step 3: after 1s of spinning, start expanding
-    setTimeout(() => {
-      setPhase("expanding");
-    }, 1600);
-
-    // Navigate after expand finishes (~3s)
-    setTimeout(() => {
-      setPhase("done");
-      router.push("/game");
-    }, 4600);
-  }, [phase, router]);
+  }, [phase]);
 
   const isAnimating = phase !== "idle";
+
+  // Shared fade-out transition
+  const fadeOut = {
+    animate: isAnimating
+      ? { opacity: 0, y: 20 }
+      : { opacity: 1, y: 0 },
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  };
 
   return (
     <div className="bg-[url('/assets/landing/background.png')] bg-top bg-cover text-[var(--text-primary)] max-w-lg mx-auto overflow-hidden">
       <main className="mx-auto grid min-h-dvh grid-rows-[auto_1fr_auto_auto] px-6 py-6 relative">
         {/* Message box */}
-        <div
+        <motion.div
           className="flex items-center justify-center"
-          style={{
-            opacity: isAnimating ? 0 : 1,
-            transform: isAnimating ? "translateY(-40px)" : "translateY(0)",
-            transition: "opacity 0.5s linear, transform 0.5s linear",
-          }}
+          animate={isAnimating ? { opacity: 0, y: -40 } : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <div className="relative w-full max-w-[500px]">
             <Image
@@ -62,65 +50,95 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Album area: poster + CD */}
         <div className="flex flex-col items-center justify-center gap-4">
           <div className="relative">
             {/* CD (behind poster) — spinning + scaling */}
-            <div
+            <motion.div
               className="fixed inset-0 flex items-center justify-center"
-              style={{
-                zIndex:
-                  phase === "spinning" || phase === "expanding" || phase === "done" ? 60 : 1,
+              animate={{
                 opacity: isAnimating ? 1 : 0,
-                transition: "opacity 0.4s linear",
-                pointerEvents: isAnimating ? "auto" : "none",
+                zIndex:
+                  phase === "spinning" || phase === "expanding" || phase === "done"
+                    ? 60
+                    : 1,
               }}
+              transition={{ opacity: { duration: 0.4, ease: "easeOut" } }}
+              style={{ pointerEvents: isAnimating ? "auto" : "none" }}
             >
               {/* Outer wrapper: handles scale */}
-              <div
-                style={{
-                  transform:
-                    phase === "expanding" || phase === "done"
-                      ? "scale(20)"
-                      : "scale(1)",
-                  transition:
-                    phase === "expanding" || phase === "done"
-                      ? "transform 3s linear"
-                      : "none",
+              <motion.div
+                animate={{
+                  scale:
+                    phase === "expanding" || phase === "done" ? 20 : 1,
+                }}
+                transition={{
+                  duration: 2.5,
+                  ease: [0.4, 0, 1, 1], // easeIn curve
+                }}
+                onAnimationComplete={() => {
+                  if (phase === "expanding") {
+                    setPhase("done");
+                    router.push("/game");
+                  }
                 }}
               >
                 {/* Inner wrapper: handles spin */}
-                <div
-                  style={{
-                    animation: isAnimating
-                      ? "spin 2.5s linear infinite"
-                      : "none",
-                  }}
+                <motion.div
+                  animate={
+                    isAnimating
+                      ? { rotate: 360 }
+                      : { rotate: 0 }
+                  }
+                  transition={
+                    isAnimating
+                      ? {
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }
+                      : { duration: 0 }
+                  }
                 >
                   <Image
-                    src="/assets/landing/album-cd.png"
+                    src="/assets/landing/album-cd.svg"
                     alt="唱片"
                     width={280}
                     height={280}
                     priority
                     className="rounded-full"
                   />
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
 
             {/* Poster (slides right on click) */}
-            <div
+            <motion.div
               className="relative"
-              style={{
-                zIndex: 2,
-                transform: isAnimating
-                  ? "translateX(120%) rotate(6deg)"
-                  : "translateX(0) rotate(0deg)",
-                opacity: phase === "expanding" || phase === "done" ? 0 : 1,
-                transition: "transform 0.6s linear, opacity 0.3s linear",
+              style={{ zIndex: 2 }}
+              animate={
+                isAnimating
+                  ? {
+                      x: "120%",
+                      rotate: 6,
+                      opacity: phase === "expanding" || phase === "done" ? 0 : 1,
+                    }
+                  : { x: 0, rotate: 0, opacity: 1 }
+              }
+              transition={{
+                type: "spring",
+                stiffness: 200,
+                damping: 22,
+                opacity: { duration: 0.3, ease: "easeOut" },
+              }}
+              onAnimationComplete={() => {
+                if (phase === "sliding") {
+                  setPhase("spinning");
+                  // Let CD spin for ~1.2s then expand
+                  setTimeout(() => setPhase("expanding"), 1200);
+                }
               }}
             >
               <Image
@@ -130,17 +148,13 @@ export default function LandingPage() {
                 height={460}
                 priority
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Player controls — fade out */}
-          <div
+          <motion.div
             className="flex flex-col items-center gap-4"
-            style={{
-              opacity: isAnimating ? 0 : 1,
-              transform: isAnimating ? "translateY(20px)" : "translateY(0)",
-              transition: "opacity 0.4s linear, transform 0.4s linear",
-            }}
+            {...fadeOut}
           >
             <Image
               src="/assets/landing/player-controller.png"
@@ -154,17 +168,13 @@ export default function LandingPage() {
               width={320}
               height={44}
             />
-          </div>
+          </motion.div>
         </div>
 
         {/* Enter button */}
-        <div
+        <motion.div
           className="mt-8 flex items-center justify-center"
-          style={{
-            opacity: isAnimating ? 0 : 1,
-            transform: isAnimating ? "translateY(30px)" : "translateY(0)",
-            transition: "opacity 0.4s linear, transform 0.4s linear",
-          }}
+          {...fadeOut}
         >
           <button onClick={handleEnter} className="block cursor-pointer">
             <Image
@@ -174,16 +184,12 @@ export default function LandingPage() {
               height={64}
             />
           </button>
-        </div>
+        </motion.div>
 
         {/* Bottom decorations */}
-        <div
+        <motion.div
           className="grid grid-cols-[auto_1fr] items-end gap-3"
-          style={{
-            opacity: isAnimating ? 0 : 1,
-            transform: isAnimating ? "translateY(30px)" : "translateY(0)",
-            transition: "opacity 0.4s linear, transform 0.4s linear",
-          }}
+          {...fadeOut}
         >
           <Image
             src="/assets/landing/note.png"
@@ -199,22 +205,8 @@ export default function LandingPage() {
               height={60}
             />
           </div>
-        </div>
-
-
+        </motion.div>
       </main>
-
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-      `}</style>
     </div>
   );
 }

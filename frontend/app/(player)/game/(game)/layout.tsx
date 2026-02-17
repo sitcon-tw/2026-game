@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useGameStore } from '@/stores/gameStore';
 
 export default function ChallengesLayout({
     children,
@@ -9,6 +10,10 @@ export default function ChallengesLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const { phase, requestPlay, requestHint } = useGameStore();
+
+    const canPlay = phase === 'idle' || phase === 'fail';
+    const canHint = phase === 'idle' || phase === 'input' || phase === 'fail';
 
     return (
         <div className="flex flex-col h-full bg-[var(--bg-primary)]">
@@ -34,9 +39,10 @@ export default function ChallengesLayout({
                     {/* Play */}
                     <button
                         type="button"
-                        className="relative h-10 w-10 rounded-full cursor-pointer"
+                        className={`relative h-10 w-10 rounded-full cursor-pointer transition-opacity ${canPlay ? 'opacity-100' : 'opacity-40'}`}
                         aria-label="播放序列"
-                        onClick={() => { router.push("/game/challenges") }}
+                        disabled={!canPlay}
+                        onClick={requestPlay}
                     >
                         <Image
                             src="/assets/challenge/play.svg"
@@ -49,8 +55,10 @@ export default function ChallengesLayout({
                     {/* Hint / Lightbulb */}
                     <button
                         type="button"
-                        className="relative h-10 w-10 rounded-full cursor-pointer"
+                        className={`relative h-10 w-10 rounded-full cursor-pointer transition-opacity ${canHint ? 'opacity-100' : 'opacity-40'}`}
                         aria-label="提示"
+                        disabled={!canHint}
+                        onClick={requestHint}
                     >
                         <Image
                             src="/assets/challenge/idea.svg"

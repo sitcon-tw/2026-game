@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useCurrentUser, useLeaderboard } from "@/hooks/api";
-
-const TOTAL_LEVELS = 40;
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 function LevelNoteIcon({ className }: { className?: string }) {
     return (
@@ -39,9 +38,7 @@ export default function LevelsPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
-                載入中...
-            </div>
+            <LoadingSpinner />
         );
     }
 
@@ -53,7 +50,11 @@ export default function LevelsPage() {
                         目前排名
                     </div>
                     <div className="font-serif text-2xl text-[var(--text-gold)]">
-                        {rank != null ? `第 ${rank} 名` : "—"}
+                        {rank != null ? (
+                            `第 ${rank} 名`
+                        ) : (
+                            <div className="h-7 w-24 animate-pulse rounded bg-current opacity-20" />
+                        )}
                     </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3">
@@ -71,7 +72,7 @@ export default function LevelsPage() {
                     />
                 </div>
                 <div className="mt-2 text-xs text-[var(--text-secondary)]">
-                    目前解鎖 {unlockLevel} 關 / 全部 {TOTAL_LEVELS} 關
+                    已解鎖 {unlockLevel} 關
                 </div>
             </section>
 

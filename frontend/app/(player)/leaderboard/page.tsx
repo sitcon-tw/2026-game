@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLeaderboard } from "@/hooks/api";
 import type { RankEntry } from "@/types/api";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 /* ──────────── Components ──────────── */
 
@@ -101,9 +102,7 @@ export default function LeaderboardPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
-                載入中...
-            </div>
+            <LoadingSpinner />
         );
     }
 
