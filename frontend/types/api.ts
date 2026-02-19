@@ -81,6 +81,18 @@ export interface FriendCountResponse {
   max: number;
 }
 
+/* ── Coupon Definitions (from staff API) ── */
+
+export interface CouponDefinition {
+  id: string;
+  pass_level: number;
+  amount: number;
+  max_qty: number;
+  issued_qty: number;
+  description: string;
+  is_max_qty_reached: boolean;
+}
+
 /* ── Discount Coupons ── */
 
 export interface DiscountCoupon {

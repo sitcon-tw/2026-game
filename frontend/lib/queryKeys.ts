@@ -19,5 +19,6 @@ export const queryKeys = {
   },
   coupons: {
     list: ["coupons"] as const,
+    definitions: ["coupons", "definitions"] as const,
   },
 } as const;
