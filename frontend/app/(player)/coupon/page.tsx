@@ -212,6 +212,7 @@ export default function CouponPage() {
 							key={item.coupon?.id ?? `${item.definitionId}-locked-${index}`}
 							coupon={item.coupon}
 							status={item.status}
+							price={item.price}
 							passLevel={item.passLevel}
 							zIndex={displayList.length - index}
 							onClick={

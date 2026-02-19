@@ -11,22 +11,24 @@ export default function CouponTicket({
 	zIndex,
 	status,
 	passLevel,
+	price: priceProp,
 	onClick,
 }: {
 	coupon?: DiscountCoupon;
 	zIndex: number;
 	status: CouponStatus;
 	passLevel?: number;
+	price?: number;
 	onClick?: () => void;
 }) {
-	const price = coupon?.price ?? 0;
+	const price = priceProp ?? coupon?.price ?? 0;
 
 	const ticketFillColor =
 		status === "unused"
 			? "var(--accent-gold)"
 			: status === "used"
 				? "var(--bg-header)"
-				: "#3a3a3a";
+				: "#6b6b6b";
 
 	const textColor =
 		status === "locked" ? "text-gray-500" : "text-white";
