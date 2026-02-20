@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type {
+  CouponDefinition,
   DiscountCoupon,
   GetUserCouponsResponse,
   DiscountUsedResponse,
@@ -29,6 +30,14 @@ export function useRedeemGiftCoupon() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.coupons.list });
     },
+  });
+}
+
+/** GET /discount-coupons/staff/coupons — 取得所有折價券定義 */
+export function useCouponDefinitions() {
+  return useQuery({
+    queryKey: queryKeys.coupons.definitions,
+    queryFn: () => api.get<CouponDefinition[]>("/discount-coupons/staff/coupons"),
   });
 }
 

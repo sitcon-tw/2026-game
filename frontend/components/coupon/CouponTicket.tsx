@@ -4,26 +4,43 @@ import { motion } from "motion/react";
 import type { DiscountCoupon } from "@/types/api";
 import CouponShapeSVG from "./CouponShapeSVG";
 
+export type CouponStatus = "unused" | "used" | "locked";
+
 export default function CouponTicket({
 	coupon,
 	zIndex,
+	status,
+	passLevel,
+	price: priceProp,
 	onClick,
 }: {
-	coupon: DiscountCoupon;
+	coupon?: DiscountCoupon;
 	zIndex: number;
-	onClick: () => void;
+	status: CouponStatus;
+	passLevel?: number;
+	price?: number;
+	onClick?: () => void;
 }) {
-	const ticketFillColor = coupon.used_at
-		? "var(--bg-header)"
-		: "var(--accent-gold)";
-	const textColor = coupon.used_at ? "text-gray-300" : "text-white";
+	const price = priceProp ?? coupon?.price ?? 0;
+
+	const ticketFillColor =
+		status === "unused"
+			? "var(--accent-gold)"
+			: status === "used"
+				? "var(--bg-header)"
+				: "#6b6b6b";
+
+	const textColor =
+		status === "locked" ? "text-gray-500" : "text-white";
+
+	const isClickable = status !== "locked";
 
 	return (
 		<motion.div
-			className="relative h-32 w-full max-w-md cursor-pointer drop-shadow-lg"
+			className={`relative h-32 w-full max-w-md drop-shadow-lg ${isClickable ? "cursor-pointer" : "cursor-default"}`}
 			style={{ zIndex }}
-			onClick={onClick}
-			whileTap={{ scale: 0.97 }}
+			onClick={isClickable ? onClick : undefined}
+			whileTap={isClickable ? { scale: 0.97 } : undefined}
 		>
 			<div className="relative h-full w-full">
 				<CouponShapeSVG fillColor={ticketFillColor} />
@@ -34,9 +51,9 @@ export default function CouponTicket({
 						<span
 							className={`ml-25 font-serif text-5xl italic ${textColor}`}
 						>
-							{coupon.price}
+							{price}
 						</span>
-						<span className="mt-6 ml-2 text-lg font-bold text-white">
+						<span className={`mt-6 ml-2 text-lg font-bold ${textColor}`}>
 							元
 						</span>
 					</div>
@@ -46,7 +63,7 @@ export default function CouponTicket({
 				</div>
 
 				{/* Used Stamp */}
-				{coupon.used_at && (
+				{status === "used" && (
 					<div className="absolute inset-0 z-20 flex items-center justify-center">
 						<div className="-rotate-12 border-4 border-[var(--status-error)] px-6 py-2">
 							<p
@@ -58,6 +75,20 @@ export default function CouponTicket({
 							>
 								USED
 							</p>
+						</div>
+					</div>
+				)}
+
+				{/* Locked Overlay */}
+				{status === "locked" && (
+					<div className="absolute inset-0 z-20 flex items-center justify-center">
+						<div className="flex flex-col items-center gap-1">
+							<span className="text-3xl">🔒</span>
+							{passLevel !== undefined && (
+								<p className="text-xs font-bold text-gray-400">
+									通過第 {passLevel} 關解鎖
+								</p>
+							)}
 						</div>
 					</div>
 				)}

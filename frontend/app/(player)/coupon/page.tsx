@@ -2,11 +2,77 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCoupons, useRedeemGiftCoupon } from "@/hooks/api";
-import type { DiscountCoupon } from "@/types/api";
+import { useCoupons, useCouponDefinitions, useRedeemGiftCoupon } from "@/hooks/api";
+import type { DiscountCoupon, CouponDefinition } from "@/types/api";
 import CouponTicket from "@/components/coupon/CouponTicket";
+import type { CouponStatus } from "@/components/coupon/CouponTicket";
 import CouponDetailModal from "@/components/coupon/CouponDetailModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
+interface DisplayCoupon {
+	status: CouponStatus;
+	coupon?: DiscountCoupon;
+	price: number;
+	passLevel?: number;
+	definitionId: string;
+}
+
+function buildDisplayList(
+	definitions: CouponDefinition[],
+	userCoupons: DiscountCoupon[]
+): DisplayCoupon[] {
+	const items: DisplayCoupon[] = [];
+
+	// Map user coupons by discount_id
+	const couponsByDefId = new Map<string, DiscountCoupon[]>();
+	for (const c of userCoupons) {
+		const list = couponsByDefId.get(c.discount_id) ?? [];
+		list.push(c);
+		couponsByDefId.set(c.discount_id, list);
+	}
+
+	for (const def of definitions) {
+		const owned = couponsByDefId.get(def.id) ?? [];
+
+		if (owned.length > 0) {
+			// Show each owned coupon
+			for (const c of owned) {
+				items.push({
+					status: c.used_at ? "used" : "unused",
+					coupon: c,
+					price: c.price,
+					definitionId: def.id,
+				});
+			}
+			// If user hasn't reached max_qty yet, show remaining as locked
+			const remaining = def.max_qty - owned.length;
+			for (let i = 0; i < remaining; i++) {
+				items.push({
+					status: "locked",
+					price: def.amount,
+					passLevel: def.pass_level,
+					definitionId: def.id,
+				});
+			}
+		} else {
+			// User has none — show all as locked
+			for (let i = 0; i < def.max_qty; i++) {
+				items.push({
+					status: "locked",
+					price: def.amount,
+					passLevel: def.pass_level,
+					definitionId: def.id,
+				});
+			}
+		}
+	}
+
+	// Sort: unused first, then used, then locked
+	const order: Record<CouponStatus, number> = { unused: 0, used: 1, locked: 2 };
+	items.sort((a, b) => order[a.status] - order[b.status]);
+
+	return items;
+}
 
 function RedeemSection() {
 	const [showInput, setShowInput] = useState(false);
@@ -90,38 +156,24 @@ function RedeemSection() {
 	);
 }
 
+
 export default function CouponPage() {
-	const { data: coupons, isLoading } = useCoupons();
+	const { data: coupons, isLoading: couponsLoading } = useCoupons();
+	const { data: definitions, isLoading: defsLoading } = useCouponDefinitions();
 	const [selectedCoupon, setSelectedCoupon] = useState<DiscountCoupon | null>(
 		null
 	);
 
-	if (isLoading) {
+	if (couponsLoading || defsLoading) {
 		return <LoadingSpinner />;
 	}
 
-	if (!coupons || coupons.length === 0) {
-		return (
-			<div className="flex flex-col items-center justify-center py-20 gap-4">
-				<p className="text-[var(--text-secondary)] text-lg font-serif">
-					目前還沒有折價券
-				</p>
-				<p className="text-[var(--text-secondary)] text-sm">
-					繼續闖關就有機會獲得！
-				</p>
-				<RedeemSection />
-			</div>
-		);
-	}
+	const displayList = buildDisplayList(
+		definitions ?? [],
+		coupons ?? []
+	);
 
-	// Sort: unused first, used last
-	const sorted = [...coupons].sort((a, b) => {
-		const aUsed = a.used_at ? 1 : 0;
-		const bUsed = b.used_at ? 1 : 0;
-		return aUsed - bUsed;
-	});
-
-	const unusedCount = sorted.filter((c) => !c.used_at).length;
+	const unusedCount = displayList.filter((d) => d.status === "unused").length;
 
 	return (
 		<div className="px-6 py-8">
@@ -155,12 +207,19 @@ export default function CouponPage() {
 
 				{/* Coupon Stack */}
 				<div className="relative flex flex-col items-center space-y-[-2rem] my-8">
-					{sorted.map((coupon, index) => (
+					{displayList.map((item, index) => (
 						<CouponTicket
-							key={coupon.id}
-							coupon={coupon}
-							zIndex={sorted.length - index}
-							onClick={() => setSelectedCoupon(coupon)}
+							key={item.coupon?.id ?? `${item.definitionId}-locked-${index}`}
+							coupon={item.coupon}
+							status={item.status}
+							price={item.price}
+							passLevel={item.passLevel}
+							zIndex={displayList.length - index}
+							onClick={
+								item.coupon
+									? () => setSelectedCoupon(item.coupon!)
+									: undefined
+							}
 						/>
 					))}
 				</div>
