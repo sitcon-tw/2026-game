@@ -3,6 +3,7 @@
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginWithToken } from "@/hooks/api";
+import { motion } from "motion/react";
 
 function LoginContent() {
   const router = useRouter();
@@ -66,9 +67,17 @@ function LoginContent() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
       <div className="text-center">
-        <div className="mb-6 inline-block animate-spin text-6xl text-[var(--text-gold)]">
-          ✦
-        </div>
+        <motion.img
+          src="/assets/landing/album-cd.svg"
+          alt="Loading"
+          className="mb-6 inline-block w-16 h-16"
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
         <h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">
           登入中...
         </h1>
@@ -84,9 +93,17 @@ export default function LoginPage() {
       fallback={
         <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
           <div className="text-center">
-            <div className="mb-6 inline-block animate-spin text-6xl text-[var(--text-gold)]">
-              ✦
-            </div>
+            <motion.img
+              src="/assets/landing/album-cd.svg"
+              alt="Loading"
+              className="mb-6 inline-block w-16 h-16"
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
             <h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">
               載入中...
             </h1>
