@@ -54,6 +54,7 @@ type Repository interface {
 	CountVisitedByActivity(ctx context.Context, tx pgx.Tx, activityID string) (int, error)
 	ListActivities(ctx context.Context, tx pgx.Tx) ([]models.Activities, error)
 	ListVisitedActivityIDs(ctx context.Context, tx pgx.Tx, userID string) ([]string, error)
+	ListAnnouncements(ctx context.Context, tx pgx.Tx) ([]models.Announcement, error)
 
 	// Discount operations
 	CreateDiscountCoupon(

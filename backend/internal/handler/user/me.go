@@ -11,7 +11,7 @@ import (
 
 // Me godoc
 // @Summary      取得使用者資料
-// @Description  取得目前登入使用者的資料，需要登入後才能取得。會取得包括目前的 level、解鎖多少 level、QR code token 等等資訊。備註：要取得 QR code token 就是用這邊。
+// @Description  取得目前登入使用者的資料，需要登入後才能取得。回傳基本資料與遊戲進度，不包含 QR secret。
 // @Tags         users
 // @Produce      json
 // @Success      200  {object}  models.User
