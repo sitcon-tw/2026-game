@@ -20,6 +20,8 @@ func UserRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r.Post("/session", h.Login)
 	// Get user profile/data
 	r.With(middleware.Auth(repo, logger)).Get("/me", h.Me)
+	// Get short-lived one-time token for friend QR scan
+	r.With(middleware.Auth(repo, logger)).Get("/me/one-time-qr", h.OneTimeQR)
 
 	return r
 }

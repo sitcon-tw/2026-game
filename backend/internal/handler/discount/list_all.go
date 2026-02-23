@@ -2,11 +2,9 @@ package discount
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/sitcon-tw/2026-game/pkg/config"
-	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
@@ -20,22 +18,15 @@ type couponRuleWithStatus struct {
 	IsMaxQtyReached bool   `json:"is_max_qty_reached"`
 }
 
-// ListAllCoupons handles GET /discount-coupons/staff/coupons.
+// ListAllCoupons handles GET /discount-coupons/coupons.
 // @Summary      取得所有折扣券規則與發放狀態
-// @Description  需要 staff_token cookie，回傳所有折扣券規則、目前發放數量，以及是否已達 MaxQty。
+// @Description  公開回傳所有折扣券規則、目前發放數量，以及是否已達 MaxQty。
 // @Tags         discount
 // @Produce      json
 // @Success      200  {array}   couponRuleWithStatus
-// @Failure      401  {object}  res.ErrorResponse "unauthorized staff"
 // @Failure      500  {object}  res.ErrorResponse
-// @Router       /discount-coupons/staff/coupons [get]
+// @Router       /discount-coupons/coupons [get]
 func (h *Handler) ListAllCoupons(w http.ResponseWriter, r *http.Request) {
-	staff, ok := middleware.StaffFromContext(r.Context())
-	if !ok || staff == nil {
-		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
-		return
-	}
-
 	rules := config.GetCouponRules()
 	discountIDs := make([]string, 0, len(rules))
 	for _, rule := range rules {

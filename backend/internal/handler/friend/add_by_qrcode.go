@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
@@ -136,7 +137,29 @@ func parseAddByQRCodeRequest(r *http.Request) (addByQRCodeRequest, error) {
 }
 
 func (h *Handler) loadTargetUser(ctx context.Context, tx pgx.Tx, userQRCode string, currentUserID string) (*models.User, error) {
-	targetUser, err := h.Repo.GetUserByQRCode(ctx, tx, userQRCode)
+	targetUserID, err := helpers.VerifyAndExtractUserIDFromOneTimeQRToken(
+		userQRCode,
+		time.Now().UTC(),
+		func(userID string) (string, error) {
+			targetUser, lookupErr := h.Repo.GetUserByID(ctx, tx, userID)
+			if lookupErr != nil {
+				if errors.Is(lookupErr, repository.ErrNotFound) {
+					return "", errUserNotFound
+				}
+				return "", lookupErr
+			}
+
+			return targetUser.QRCodeToken, nil
+		},
+	)
+	if err != nil {
+		if errors.Is(err, errUserNotFound) {
+			return nil, errUserNotFound
+		}
+		return nil, errUserNotFound
+	}
+
+	targetUser, err := h.Repo.GetUserByID(ctx, tx, targetUserID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, errUserNotFound

@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -52,7 +54,30 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	user, err := h.Repo.GetUserByQRCode(r.Context(), tx, req.UserQRCode)
+	targetUserID, err := helpers.VerifyAndExtractUserIDFromOneTimeQRToken(
+		req.UserQRCode,
+		time.Now().UTC(),
+		func(userID string) (string, error) {
+			targetUser, lookupErr := h.Repo.GetUserByID(r.Context(), tx, userID)
+			if lookupErr != nil {
+				if errors.Is(lookupErr, repository.ErrNotFound) {
+					return "", repository.ErrNotFound
+				}
+				return "", lookupErr
+			}
+			return targetUser.QRCodeToken, nil
+		},
+	)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			res.Fail(w, r, http.StatusBadRequest, nil, "user not found")
+			return
+		}
+		res.Fail(w, r, http.StatusBadRequest, err, "invalid or expired user qr code")
+		return
+	}
+
+	user, err := h.Repo.GetUserByID(r.Context(), tx, targetUserID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			res.Fail(w, r, http.StatusBadRequest, nil, "user not found")
