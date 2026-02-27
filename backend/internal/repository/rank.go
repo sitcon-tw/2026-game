@@ -9,11 +9,16 @@ import (
 )
 
 // GetTopUsers returns users ordered by level then last_pass_time with pagination.
-func (r *PGRepository) GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]models.User, error) {
+func (r *PGRepository) GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]RankedUser, error) {
 	const query = `
-SELECT nickname, avatar, current_level, last_pass_time
-FROM users
-ORDER BY current_level DESC, last_pass_time ASC
+WITH ranked AS (
+    SELECT id, nickname, avatar, current_level, last_pass_time,
+           RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
+    FROM users
+)
+SELECT nickname, avatar, current_level, last_pass_time, rank
+FROM ranked
+ORDER BY current_level DESC, last_pass_time ASC, id ASC
 LIMIT $1 OFFSET $2`
 
 	rows, err := tx.Query(ctx, query, limit, offset)
@@ -22,14 +27,20 @@ LIMIT $1 OFFSET $2`
 	}
 	defer rows.Close()
 
-	var out []models.User
+	var out []RankedUser
 	for rows.Next() {
-		var u models.User
-		err = rows.Scan(&u.Nickname, &u.Avatar, &u.CurrentLevel, &u.LastPassTime)
+		var ru RankedUser
+		err = rows.Scan(
+			&ru.User.Nickname,
+			&ru.User.Avatar,
+			&ru.User.CurrentLevel,
+			&ru.User.LastPassTime,
+			&ru.Rank,
+		)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, u)
+		out = append(out, ru)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -67,20 +78,21 @@ WHERE id = $1`
 	return &u, rank, nil
 }
 
-// GetAroundUsers returns users ranked within ±span of the given user.
-func (r *PGRepository) GetAroundUsers(ctx context.Context, tx pgx.Tx, userID string, span int) ([]models.User, error) {
+// GetAroundUsers returns users within ±span rows around the given user.
+func (r *PGRepository) GetAroundUsers(ctx context.Context, tx pgx.Tx, userID string, span int) ([]RankedUser, error) {
 	const query = `
 WITH ranked AS (
     SELECT id, nickname, avatar, current_level, last_pass_time,
-           RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
+           RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank,
+           ROW_NUMBER() OVER (ORDER BY current_level DESC, last_pass_time ASC, id ASC) AS rn
     FROM users
-), my_rank AS (
-    SELECT rank FROM ranked WHERE id = $1
+), my_row AS (
+    SELECT rn FROM ranked WHERE id = $1
 )
-SELECT nickname, avatar, current_level, last_pass_time
-FROM ranked, my_rank
-WHERE ranked.rank BETWEEN my_rank.rank - $2 AND my_rank.rank + $2
-ORDER BY ranked.rank`
+SELECT nickname, avatar, current_level, last_pass_time, rank
+FROM ranked, my_row
+WHERE ranked.rn BETWEEN my_row.rn - $2 AND my_row.rn + $2
+ORDER BY ranked.rn`
 
 	rows, err := tx.Query(ctx, query, userID, span)
 	if err != nil {
@@ -88,14 +100,20 @@ ORDER BY ranked.rank`
 	}
 	defer rows.Close()
 
-	var out []models.User
+	var out []RankedUser
 	for rows.Next() {
-		var u models.User
-		err = rows.Scan(&u.Nickname, &u.Avatar, &u.CurrentLevel, &u.LastPassTime)
+		var ru RankedUser
+		err = rows.Scan(
+			&ru.User.Nickname,
+			&ru.User.Avatar,
+			&ru.User.CurrentLevel,
+			&ru.User.LastPassTime,
+			&ru.Rank,
+		)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, u)
+		out = append(out, ru)
 	}
 	err = rows.Err()
 	if err != nil {

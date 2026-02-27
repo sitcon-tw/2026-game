@@ -22,6 +22,7 @@ const dataDir = "data"
 const fakeDataDir = "fake_data"
 
 type importTarget string
+type dataSource string
 
 const (
 	targetActivities    importTarget = "activities"
@@ -32,10 +33,17 @@ const (
 	targetAll           importTarget = "all"
 )
 
+const (
+	sourceAuto dataSource = "auto"
+	sourceFake dataSource = "fake"
+	sourceData dataSource = "data"
+)
+
 func main() {
 	const requiredArgs = 2
+	const argsWithSource = 3
 	if len(os.Args) < requiredArgs {
-		fmt.Fprintln(os.Stderr, "usage: import [activities|staffs|users|announcements|gift-coupons|all]")
+		fmt.Fprintln(os.Stderr, "usage: import [activities|staffs|users|announcements|gift-coupons|all] [auto|fake|data]")
 		os.Exit(1)
 	}
 
@@ -51,6 +59,15 @@ func main() {
 			"unknown target %q. valid: activities, staffs, users, announcements, gift-coupons, all\n",
 			target,
 		)
+		os.Exit(1)
+	}
+
+	source := sourceAuto
+	if len(os.Args) >= argsWithSource {
+		source = dataSource(os.Args[2])
+	}
+	if source != sourceAuto && source != sourceFake && source != sourceData {
+		fmt.Fprintf(os.Stderr, "unknown source %q. valid: auto, fake, data\n", source)
 		os.Exit(1)
 	}
 
@@ -71,28 +88,28 @@ func main() {
 	var importErr error
 	switch target {
 	case targetActivities:
-		importErr = importActivities(ctx, pool, log)
+		importErr = importActivities(ctx, pool, log, source)
 	case targetStaffs:
-		importErr = importStaff(ctx, pool, log)
+		importErr = importStaff(ctx, pool, log, source)
 	case targetUsers:
-		importErr = importUsers(ctx, pool, log)
+		importErr = importUsers(ctx, pool, log, source)
 	case targetAnnouncements:
-		importErr = importAnnouncements(ctx, pool, log)
+		importErr = importAnnouncements(ctx, pool, log, source)
 	case targetGiftCoupons:
-		importErr = importGiftCoupons(ctx, pool, log)
+		importErr = importGiftCoupons(ctx, pool, log, source)
 	case targetAll:
-		importErr = importAll(ctx, pool, log)
+		importErr = importAll(ctx, pool, log, source)
 	}
 
 	if importErr != nil {
-		log.Error("import failed", zap.Error(importErr), zap.String("target", string(target)))
+		log.Error("import failed", zap.Error(importErr), zap.String("target", string(target)), zap.String("source", string(source)))
 		return
 	}
 
-	log.Info("import completed", zap.String("target", string(target)))
+	log.Info("import completed", zap.String("target", string(target)), zap.String("source", string(source)))
 }
 
-func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, source dataSource) error {
 	// activities.json needs token, but models.Activities omits it from JSON to avoid
 	// leaking login tokens via API responses. Use a dedicated struct for import.
 	type activityImport struct {
@@ -108,7 +125,7 @@ func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) 
 	}
 
 	var items []activityImport
-	if err := loadJSONCandidates(&items, "activities.json"); err != nil {
+	if err := loadJSONCandidates(source, &items, "activities.json"); err != nil {
 		return fmt.Errorf("load activities: %w", err)
 	}
 
@@ -166,9 +183,9 @@ SET token = EXCLUDED.token,
 	return tx.Commit(ctx)
 }
 
-func importStaff(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+func importStaff(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, source dataSource) error {
 	var items []models.Staff
-	if err := loadJSONCandidates(&items, "staff.json", "staffs.json"); err != nil {
+	if err := loadJSONCandidates(source, &items, "staff.json", "staffs.json"); err != nil {
 		return fmt.Errorf("load staffs: %w", err)
 	}
 
@@ -218,7 +235,7 @@ SET name = EXCLUDED.name,
 	return tx.Commit(ctx)
 }
 
-func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, source dataSource) error {
 	// user.json contains auth_token, which is omitted from models.User JSON tags.
 	// Use a dedicated struct so tokens are loaded during import.
 	type userImport struct {
@@ -236,7 +253,7 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 	}
 
 	var items []userImport
-	if err := loadJSONCandidates(&items, "user.json", "users.json"); err != nil {
+	if err := loadJSONCandidates(source, &items, "user.json", "users.json"); err != nil {
 		return fmt.Errorf("load users: %w", err)
 	}
 
@@ -301,9 +318,9 @@ SET auth_token = EXCLUDED.auth_token,
 	return tx.Commit(ctx)
 }
 
-func importAnnouncements(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+func importAnnouncements(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, source dataSource) error {
 	var items []models.Announcement
-	if err := loadJSONCandidates(&items, "announcement.json", "announcements.json"); err != nil {
+	if err := loadJSONCandidates(source, &items, "announcement.json", "announcements.json"); err != nil {
 		return fmt.Errorf("load announcements: %w", err)
 	}
 
@@ -342,9 +359,10 @@ SET content = EXCLUDED.content,
 	return tx.Commit(ctx)
 }
 
-func importGiftCoupons(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+func importGiftCoupons(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, source dataSource) error {
 	var items []models.DiscountCouponGift
 	if err := loadJSONCandidates(
+		source,
 		&items,
 		"gift_coupon.json",
 		"gift_coupons.json",
@@ -386,10 +404,10 @@ SET token = EXCLUDED.token,
 	return tx.Commit(ctx)
 }
 
-func importAll(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+func importAll(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, source dataSource) error {
 	importers := []struct {
 		name string
-		fn   func(context.Context, *pgxpool.Pool, *zap.Logger) error
+		fn   func(context.Context, *pgxpool.Pool, *zap.Logger, dataSource) error
 	}{
 		{name: string(targetActivities), fn: importActivities},
 		{name: string(targetStaffs), fn: importStaff},
@@ -399,7 +417,7 @@ func importAll(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
 	}
 
 	for _, importer := range importers {
-		if err := importer.fn(ctx, pool, log); err != nil {
+		if err := importer.fn(ctx, pool, log, source); err != nil {
 			return fmt.Errorf("%s: %w", importer.name, err)
 		}
 	}
@@ -421,8 +439,18 @@ func loadJSON[T any](path string, out *T) error {
 	return nil
 }
 
-func loadJSONCandidates[T any](out *T, fileNames ...string) error {
-	for _, dir := range []string{fakeDataDir, dataDir} {
+func loadJSONCandidates[T any](source dataSource, out *T, fileNames ...string) error {
+	dirs := []string{fakeDataDir, dataDir}
+	switch source {
+	case sourceAuto:
+		dirs = []string{fakeDataDir, dataDir}
+	case sourceFake:
+		dirs = []string{fakeDataDir}
+	case sourceData:
+		dirs = []string{dataDir}
+	}
+
+	for _, dir := range dirs {
 		for _, name := range fileNames {
 			fullPath := filepath.Join(dir, name)
 			_, err := os.Stat(fullPath)
