@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginWithToken } from "@/hooks/api";
 import { motion } from "motion/react";
@@ -23,6 +23,8 @@ function LoginContent() {
     });
   }, [token, login, router]);
 
+  const [manualToken, setManualToken] = useState("");
+
   if (!token) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
@@ -32,11 +34,43 @@ function LoginContent() {
             無效的登入資訊
           </h1>
           <p className="mt-4 text-[var(--text-secondary)]">
-            請重新從 OPass 登入，操作路徑為 <code className="rounded bg-[var(--bg-header)] px-1 font-mono text-sm text-[var(--text-light)] text-nowrap">OPass APP &gt; SITCON 2026 &gt; 大地遊戲</code>，或尋找現場工作人員協助。
+            請重新從 OPass 登入，操作路徑為 <br />
+            <code className="rounded bg-[var(--bg-header)] px-1 font-mono text-sm text-[var(--text-light)] text-nowrap">
+              OPass APP &gt; SITCON 2026 &gt; 大地遊戲
+            </code>
+            <br />
+            ，或尋找現場工作人員協助。
           </p>
           <p className="mt-4 text-[var(--text-secondary)]">
-            如果您尚未下載 OPass，請前往 <a href="https://opass.app" className="underline">https://opass.app</a> 下載並使用票券登入。
+            如果您尚未下載 OPass，
+            <br />
+            請前往{" "}
+            <a href="https://opass.app" className="underline">
+              https://opass.app
+            </a>{" "}
+            下載並使用票券登入。
           </p>
+          <div className="mt-8 flex flex-col gap-2">
+            <input
+              type="text"
+              value={manualToken}
+              onChange={(e) => setManualToken(e.target.value)}
+              placeholder="輸入 Token"
+              className="rounded-xl bg-[var(--bg-header)] px-4 py-3 font-mono text-sm text-[var(--text-light)] placeholder-[var(--text-secondary)] outline-none"
+            />
+            <button
+              onClick={() => {
+                if (manualToken.trim()) {
+                  router.push(
+                    `/login?token=${encodeURIComponent(manualToken.trim())}`,
+                  );
+                }
+              }}
+              className="rounded-xl bg-[#AC8B58] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
+            >
+              登入
+            </button>
+          </div>
         </div>
       </div>
     );
