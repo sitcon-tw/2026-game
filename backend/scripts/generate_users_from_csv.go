@@ -43,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("wrote %s\n", *outputPath)
+	fmt.Fprintf(os.Stdout, "wrote %s\n", *outputPath)
 }
 
 func run(inputPath, outputPath string) error {

@@ -25,18 +25,18 @@ var (
 	errLevelInfos  error
 )
 
-// Levels returns the parsed list of levels from the CSV path configured via env.
+// Levels returns the parsed list of levels from the CSV URL configured via env.
 func Levels() ([]models.Level, error) {
 	levelsOnce.Do(func() {
-		levels, errLevels = loader.LoadLevels(Env().LevelCSVPath)
+		levels, errLevels = loader.LoadLevels(Env().LevelCSVURL)
 	})
 	return levels, errLevels
 }
 
-// SheetMusic returns the ordered notes from the CSV path configured via env.
+// SheetMusic returns the ordered notes from the CSV URL configured via env.
 func SheetMusic() ([]string, error) {
 	sheetOnce.Do(func() {
-		sheet, errSheet = loader.LoadSheetMusic(Env().SheetMusicCSVPath)
+		sheet, errSheet = loader.LoadSheetMusic(Env().SheetMusicCSVURL)
 	})
 	return sheet, errSheet
 }
@@ -89,7 +89,7 @@ func buildLevelInfos(levels []models.Level, sheet []string) (map[int]models.Leve
 			}
 
 			notes := make([]string, lvl.Notes)
-			for i := 0; i < lvl.Notes; i++ {
+			for i := range lvl.Notes {
 				notes[i] = sheet[(start+i)%len(sheet)]
 			}
 

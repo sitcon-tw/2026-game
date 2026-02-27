@@ -1,6 +1,6 @@
 package models
 
-// Level represents a single row in data/level.csv.
+// Level represents a single row in the configured level CSV.
 // It is not persisted in the database; used for runtime gameplay config.
 type Level struct {
 	StartLevel int `json:"start_level"`
@@ -18,7 +18,7 @@ type LevelInfo struct {
 }
 
 // SheetMusic holds the ordered list of note names for gameplay.
-// Notes map directly to the lines in data/sheet_music.csv.
+// Notes map directly to the lines in the configured sheet music CSV.
 type SheetMusic struct {
 	Notes []string `json:"notes"`
 }

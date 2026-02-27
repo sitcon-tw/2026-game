@@ -2,9 +2,10 @@ package game
 
 // RankEntry is the public representation of a leaderboard row.
 type RankEntry struct {
-	Nickname string `json:"nickname"`
-	Level    int    `json:"level"`
-	Rank     int    `json:"rank"`
+	Nickname string  `json:"nickname"`
+	Avatar   *string `json:"avatar,omitempty"`
+	Level    int     `json:"level"`
+	Rank     int     `json:"rank"`
 }
 
 // RankResponse is returned by GET /game/rank.

@@ -1,24 +1,30 @@
 package loader
 
 import (
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
-	"os"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sitcon-tw/2026-game/internal/models"
 )
 
-const minLevelColumns = 3
+const (
+	minLevelColumns = 3
+	newLevelColumns = 4
+	requestTimeout  = 10 * time.Second
+)
 
-// LoadLevels reads level configuration from a CSV file (data/level.csv).
-func LoadLevels(path string) ([]models.Level, error) {
-	f, err := os.Open(path)
+// LoadLevels reads level configuration from a CSV URL.
+func LoadLevels(csvURL string) ([]models.Level, error) {
+	f, err := fetchCSV(csvURL)
 	if err != nil {
-		return nil, fmt.Errorf("open level csv: %w", err)
+		return nil, fmt.Errorf("fetch level csv: %w", err)
 	}
 	defer f.Close()
 
@@ -32,87 +38,109 @@ func LoadLevels(path string) ([]models.Level, error) {
 		return nil, fmt.Errorf("level csv has %d columns, want at least %d", len(header), minLevelColumns)
 	}
 
+	return readLevels(r)
+}
+
+func readLevels(r *csv.Reader) ([]models.Level, error) {
 	levels := []models.Level{}
 
 	for {
-		row, readErr := r.Read()
-		if errors.Is(readErr, io.EOF) {
+		row, err := r.Read()
+		if errors.Is(err, io.EOF) {
 			break
 		}
-		if readErr != nil {
-			return nil, fmt.Errorf("read row: %w", readErr)
-		}
-		if len(row) < minLevelColumns {
-			return nil, fmt.Errorf("row has %d columns, want at least %d", len(row), minLevelColumns)
+		if err != nil {
+			return nil, fmt.Errorf("read row: %w", err)
 		}
 
-		// New format: level_start, level_end, speed, notes.
-		if len(row) >= 4 {
-			levelStart, convErr := strconv.Atoi(strings.TrimSpace(row[0]))
-			if convErr != nil {
-				return nil, fmt.Errorf("parse level start %q: %w", row[0], convErr)
-			}
-			levelEnd, convErr := strconv.Atoi(strings.TrimSpace(row[1]))
-			if convErr != nil {
-				return nil, fmt.Errorf("parse level end %q: %w", row[1], convErr)
-			}
-			speed, convErr := strconv.Atoi(strings.TrimSpace(row[2]))
-			if convErr != nil {
-				return nil, fmt.Errorf("parse speed %q: %w", row[2], convErr)
-			}
-			notes, convErr := strconv.Atoi(strings.TrimSpace(row[3]))
-			if convErr != nil {
-				return nil, fmt.Errorf("parse notes %q: %w", row[3], convErr)
-			}
-			if levelStart <= 0 || levelEnd <= 0 || levelEnd < levelStart {
-				return nil, fmt.Errorf("invalid level range: start=%d end=%d", levelStart, levelEnd)
-			}
-			if speed <= 0 || notes <= 0 {
-				return nil, fmt.Errorf("invalid speed/notes: speed=%d notes=%d", speed, notes)
-			}
-
-			levels = append(levels, models.Level{
-				StartLevel: levelStart,
-				EndLevel:   levelEnd,
-				Speed:      speed,
-				Notes:      notes,
-			})
-			continue
+		level, err := parseLevelRow(row)
+		if err != nil {
+			return nil, err
 		}
-
-		// Legacy format: level, speed, notes.
-		lvl, convErr := strconv.Atoi(strings.TrimSpace(row[0]))
-		if convErr != nil {
-			return nil, fmt.Errorf("parse level %q: %w", row[0], convErr)
-		}
-		speed, convErr := strconv.Atoi(strings.TrimSpace(row[1]))
-		if convErr != nil {
-			return nil, fmt.Errorf("parse speed %q: %w", row[1], convErr)
-		}
-		notes, convErr := strconv.Atoi(strings.TrimSpace(row[2]))
-		if convErr != nil {
-			return nil, fmt.Errorf("parse notes %q: %w", row[2], convErr)
-		}
-		if lvl <= 0 || speed <= 0 || notes <= 0 {
-			return nil, fmt.Errorf("invalid level row: level=%d speed=%d notes=%d", lvl, speed, notes)
-		}
-
-		levels = append(levels, models.Level{
-			StartLevel: lvl,
-			EndLevel:   lvl,
-			Speed:      speed,
-			Notes:      notes,
-		})
+		levels = append(levels, level)
 	}
 
 	return levels, nil
 }
 
-// LoadSheetMusic reads a list of note names from a one-column CSV (data/sheet_music.csv).
-func LoadSheetMusic(path string) ([]string, error) {
-	f, err := os.Open(path)
+func parseLevelRow(row []string) (models.Level, error) {
+	if len(row) < minLevelColumns {
+		return models.Level{}, fmt.Errorf("row has %d columns, want at least %d", len(row), minLevelColumns)
+	}
+
+	if len(row) >= newLevelColumns {
+		return parseRangeLevelRow(row)
+	}
+	return parseLegacyLevelRow(row)
+}
+
+func parseRangeLevelRow(row []string) (models.Level, error) {
+	levelStart, err := parsePositiveInt(row[0], "level start")
 	if err != nil {
-		return nil, fmt.Errorf("open sheet music csv: %w", err)
+		return models.Level{}, err
+	}
+	levelEnd, err := parsePositiveInt(row[1], "level end")
+	if err != nil {
+		return models.Level{}, err
+	}
+	speed, err := parsePositiveInt(row[2], "speed")
+	if err != nil {
+		return models.Level{}, err
+	}
+	notes, err := parsePositiveInt(row[3], "notes")
+	if err != nil {
+		return models.Level{}, err
+	}
+	if levelEnd < levelStart {
+		return models.Level{}, fmt.Errorf("invalid level range: start=%d end=%d", levelStart, levelEnd)
+	}
+
+	return models.Level{
+		StartLevel: levelStart,
+		EndLevel:   levelEnd,
+		Speed:      speed,
+		Notes:      notes,
+	}, nil
+}
+
+func parseLegacyLevelRow(row []string) (models.Level, error) {
+	lvl, err := parsePositiveInt(row[0], "level")
+	if err != nil {
+		return models.Level{}, err
+	}
+	speed, err := parsePositiveInt(row[1], "speed")
+	if err != nil {
+		return models.Level{}, err
+	}
+	notes, err := parsePositiveInt(row[2], "notes")
+	if err != nil {
+		return models.Level{}, err
+	}
+
+	return models.Level{
+		StartLevel: lvl,
+		EndLevel:   lvl,
+		Speed:      speed,
+		Notes:      notes,
+	}, nil
+}
+
+func parsePositiveInt(raw, field string) (int, error) {
+	value, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil {
+		return 0, fmt.Errorf("parse %s %q: %w", field, raw, err)
+	}
+	if value <= 0 {
+		return 0, fmt.Errorf("invalid %s: %d", field, value)
+	}
+	return value, nil
+}
+
+// LoadSheetMusic reads a list of note names from a one-column CSV URL.
+func LoadSheetMusic(csvURL string) ([]string, error) {
+	f, err := fetchCSV(csvURL)
+	if err != nil {
+		return nil, fmt.Errorf("fetch sheet music csv: %w", err)
 	}
 	defer f.Close()
 
@@ -134,4 +162,31 @@ func LoadSheetMusic(path string) ([]string, error) {
 	}
 
 	return notes, nil
+}
+
+func fetchCSV(csvURL string) (io.ReadCloser, error) {
+	if strings.TrimSpace(csvURL) == "" {
+		return nil, errors.New("csv url is empty")
+	}
+
+	client := &http.Client{
+		Timeout: requestTimeout,
+	}
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, csvURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("build request for csv url %q: %w", csvURL, err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("http get csv url %q: %w", csvURL, err)
+	}
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		defer resp.Body.Close()
+		return nil, fmt.Errorf("csv url returned status %d", resp.StatusCode)
+	}
+
+	return resp.Body, nil
 }

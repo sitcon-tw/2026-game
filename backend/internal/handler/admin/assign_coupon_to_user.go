@@ -15,7 +15,7 @@ type assignCouponRequest struct {
 	DiscountID string `json:"discount_id"`
 }
 
-// AssignCouponToUser handles POST /admin/gift-coupons/assignments.
+// AssignCouponToUser handles POST /admin/discount-coupons/assignments.
 // @Summary      直接發放折扣券給使用者
 // @Description  需要 admin_token cookie。透過 user_id 直接建立 discount coupon 給該使用者。
 // @Tags         admin
@@ -27,7 +27,7 @@ type assignCouponRequest struct {
 // @Failure      401          {object}  res.ErrorResponse "unauthorized"
 // @Failure      404          {object}  res.ErrorResponse "user not found"
 // @Failure      500          {object}  res.ErrorResponse
-// @Router       /admin/gift-coupons/assignments [post]
+// @Router       /admin/discount-coupons/assignments [post]
 func (h *Handler) AssignCouponToUser(w http.ResponseWriter, r *http.Request) {
 	var req assignCouponRequest
 	decoder := json.NewDecoder(r.Body)

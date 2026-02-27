@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
+	"github.com/sitcon-tw/2026-game/pkg/helpers"
 )
 
 // CreateDiscountCouponGift inserts a gift coupon row with generated id/token.
@@ -19,25 +21,44 @@ func (r *PGRepository) CreateDiscountCouponGift(
 	const stmt = `
 INSERT INTO discount_coupon_gift (id, token, price, discount_id)
 VALUES ($1, $2, $3, $4)
+ON CONFLICT (token) DO NOTHING
 RETURNING id, token, price, discount_id`
 
-	gift := models.DiscountCouponGift{
-		ID:         uuid.NewString(),
-		Token:      uuid.NewString(),
-		Price:      price,
-		DiscountID: discountID,
-	}
+	const (
+		tokenLength = 8
+		maxAttempts = 5
+	)
 
-	if err := tx.QueryRow(ctx, stmt, gift.ID, gift.Token, gift.Price, gift.DiscountID).Scan(
-		&gift.ID,
-		&gift.Token,
-		&gift.Price,
-		&gift.DiscountID,
-	); err != nil {
+	for range maxAttempts {
+		token, err := helpers.RandomAlphabetToken(tokenLength)
+		if err != nil {
+			return nil, err
+		}
+
+		gift := models.DiscountCouponGift{
+			ID:         uuid.NewString(),
+			Token:      token,
+			Price:      price,
+			DiscountID: discountID,
+		}
+
+		if err = tx.QueryRow(ctx, stmt, gift.ID, gift.Token, gift.Price, gift.DiscountID).Scan(
+			&gift.ID,
+			&gift.Token,
+			&gift.Price,
+			&gift.DiscountID,
+		); err == nil {
+			return &gift, nil
+		}
+
+		if errors.Is(err, pgx.ErrNoRows) {
+			continue
+		}
+
 		return nil, err
 	}
 
-	return &gift, nil
+	return nil, errors.New("failed to generate unique gift coupon token")
 }
 
 // DeleteDiscountCouponGiftByID deletes gift coupon by id.

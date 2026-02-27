@@ -48,6 +48,19 @@ func main() {
 
 	logger := logger.New()
 
+	levels, err := config.Levels()
+	if err != nil {
+		logger.Fatal("Failed to load level CSV from LEVEL_CSV_URL", zap.Error(err))
+	}
+	logger.Info("Level config loaded", zap.Int("level_ranges", len(levels)))
+
+	sheetMusic, err := config.SheetMusic()
+	if err != nil {
+		logger.Fatal("Failed to load sheet music CSV from SHEET_MUSIC_CSV_URL", zap.Error(err))
+	}
+	logger.Info("Sheet music loaded", zap.Int("notes", len(sheetMusic)))
+	logger.Info("Game config preload completed")
+
 	otelShutdown, err := telemetry.Init(context.Background(), logger)
 	if err != nil {
 		logger.Error("Failed to initialize OpenTelemetry; continuing without tracing", zap.Error(err))

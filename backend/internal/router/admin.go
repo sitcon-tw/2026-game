@@ -23,7 +23,9 @@ func AdminRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 		r.Post("/gift-coupons", h.CreateGiftCoupon)
 		r.Delete("/gift-coupons/{id}", h.DeleteGiftCoupon)
 		r.Get("/gift-coupons", h.ListGiftCoupons)
+		// Legacy alias: kept for backward compatibility.
 		r.Post("/gift-coupons/assignments", h.AssignCouponToUser)
+		r.Post("/discount-coupons/assignments", h.AssignCouponToUser)
 		r.Get("/users", h.SearchUsers)
 	})
 
