@@ -15,9 +15,8 @@ import (
 )
 
 const (
-	minLevelColumns = 3
-	newLevelColumns = 4
-	requestTimeout  = 10 * time.Second
+	levelColumns   = 4
+	requestTimeout = 10 * time.Second
 )
 
 // LoadLevels reads level configuration from a CSV URL.
@@ -34,8 +33,8 @@ func LoadLevels(csvURL string) ([]models.Level, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read header: %w", err)
 	}
-	if len(header) < minLevelColumns {
-		return nil, fmt.Errorf("level csv has %d columns, want at least %d", len(header), minLevelColumns)
+	if err := validateLevelHeader(header); err != nil {
+		return nil, err
 	}
 
 	return readLevels(r)
@@ -64,14 +63,11 @@ func readLevels(r *csv.Reader) ([]models.Level, error) {
 }
 
 func parseLevelRow(row []string) (models.Level, error) {
-	if len(row) < minLevelColumns {
-		return models.Level{}, fmt.Errorf("row has %d columns, want at least %d", len(row), minLevelColumns)
+	if len(row) != levelColumns {
+		return models.Level{}, fmt.Errorf("row has %d columns, want exactly %d", len(row), levelColumns)
 	}
 
-	if len(row) >= newLevelColumns {
-		return parseRangeLevelRow(row)
-	}
-	return parseLegacyLevelRow(row)
+	return parseRangeLevelRow(row)
 }
 
 func parseRangeLevelRow(row []string) (models.Level, error) {
@@ -103,28 +99,6 @@ func parseRangeLevelRow(row []string) (models.Level, error) {
 	}, nil
 }
 
-func parseLegacyLevelRow(row []string) (models.Level, error) {
-	lvl, err := parsePositiveInt(row[0], "level")
-	if err != nil {
-		return models.Level{}, err
-	}
-	speed, err := parsePositiveInt(row[1], "speed")
-	if err != nil {
-		return models.Level{}, err
-	}
-	notes, err := parsePositiveInt(row[2], "notes")
-	if err != nil {
-		return models.Level{}, err
-	}
-
-	return models.Level{
-		StartLevel: lvl,
-		EndLevel:   lvl,
-		Speed:      speed,
-		Notes:      notes,
-	}, nil
-}
-
 func parsePositiveInt(raw, field string) (int, error) {
 	value, err := strconv.Atoi(strings.TrimSpace(raw))
 	if err != nil {
@@ -134,6 +108,21 @@ func parsePositiveInt(raw, field string) (int, error) {
 		return 0, fmt.Errorf("invalid %s: %d", field, value)
 	}
 	return value, nil
+}
+
+func validateLevelHeader(header []string) error {
+	if len(header) != levelColumns {
+		return fmt.Errorf("level csv has %d columns, want exactly %d", len(header), levelColumns)
+	}
+
+	expected := []string{"level start", "level end", "speed", "notes"}
+	for i := range expected {
+		actual := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(header[i], "\ufeff")))
+		if actual != expected[i] {
+			return fmt.Errorf("invalid level csv header at column %d: got %q, want %q", i+1, header[i], expected[i])
+		}
+	}
+	return nil
 }
 
 // LoadSheetMusic reads a list of note names from a one-column CSV URL.
