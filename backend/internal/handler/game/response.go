@@ -9,7 +9,7 @@ type RankEntry struct {
 }
 
 // RankResponse is returned by GET /game/rank.
-// Rank contains the global ranking list (paged); Around contains the caller's ±5 neighbors (inclusive);
+// Rank contains the global ranking list (paged); Around contains the caller's ±10 neighbors (inclusive);
 // Me is the caller; Page echoes the requested page number for Rank.
 type RankResponse struct {
 	Rank   []RankEntry `json:"rank"`

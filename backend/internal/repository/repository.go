@@ -35,7 +35,7 @@ type Repository interface {
 
 	// Game operations
 	IncrementUnlockLevel(ctx context.Context, tx pgx.Tx, userID string) error
-	GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]models.User, error)
+	GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]RankedUser, error)
 	UpdateCurrentLevel(ctx context.Context, tx pgx.Tx, userID string, newLevel int) error
 	GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error)
 	GetAroundUsers(
@@ -43,7 +43,7 @@ type Repository interface {
 		tx pgx.Tx,
 		userID string,
 		span int,
-	) ([]models.User, error)
+	) ([]RankedUser, error)
 
 	// Activity operations
 	CountVisitedActivities(ctx context.Context, tx pgx.Tx, userID string) (int, error)
