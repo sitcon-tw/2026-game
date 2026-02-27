@@ -121,8 +121,14 @@ func (h *Handler) validateNextLevel(ctx context.Context, fresh *models.User) (in
 		return 0, errLevelExceedsUnlock
 	}
 
-	levelCfg, err := h.levelByNumber(newLevel)
+	levelCfg, found, err := config.LevelInfo(newLevel)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "load level config failed")
+		return 0, err
+	}
+	if !found {
+		err = errors.New("level config not found")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "load level config failed")
 		return 0, err
@@ -143,19 +149,6 @@ func (h *Handler) validateNextLevel(ctx context.Context, fresh *models.User) (in
 	}
 
 	return newLevel, nil
-}
-
-func (h *Handler) levelByNumber(level int) (*models.Level, error) {
-	levels, err := config.Levels()
-	if err != nil {
-		return nil, err
-	}
-	for i := range levels {
-		if levels[i].Level == level {
-			return &levels[i], nil
-		}
-	}
-	return nil, errors.New("level config not found")
 }
 
 func (h *Handler) issueCoupons(ctx context.Context, tx pgx.Tx, userID string, newLevel int) ([]CouponResponse, error) {

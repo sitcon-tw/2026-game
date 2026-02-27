@@ -28,11 +28,24 @@ type LevelInfoResponse struct {
 // @Success      200    {object}  LevelInfoResponse
 // @Failure      400    {object}  res.ErrorResponse "invalid level"
 // @Failure      401    {object}  res.ErrorResponse "unauthorized (when using current without login)"
+// @Failure      403    {object}  res.ErrorResponse "requested level exceeds current level"
 // @Failure      404    {object}  res.ErrorResponse "level not found"
 // @Failure      500    {object}  res.ErrorResponse
 // @Router       /games/levels/{level} [get]
 func (h *Handler) GetLevelInfo(w http.ResponseWriter, r *http.Request) {
 	levelParam := chi.URLParam(r, "level")
+	user, ok := middleware.UserFromContext(r.Context())
+	if !ok || user == nil {
+		res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
+		return
+	}
+
+	// current_level is 0-based, so we add 1 to get the 1-based playable level.
+	maxAllowedLevel := user.CurrentLevel + 1
+	if maxAllowedLevel <= 0 {
+		res.Fail(w, r, http.StatusBadRequest, nil, "invalid current level")
+		return
+	}
 
 	var (
 		lvl int
@@ -40,17 +53,7 @@ func (h *Handler) GetLevelInfo(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if levelParam == "current" {
-		user, ok := middleware.UserFromContext(r.Context())
-		if !ok || user == nil {
-			res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
-			return
-		}
-		// current_level is 0-based, so we add 1 to get the 1-based level.
-		lvl = user.CurrentLevel + 1
-		if lvl <= 0 {
-			res.Fail(w, r, http.StatusBadRequest, nil, "invalid level")
-			return
-		}
+		lvl = maxAllowedLevel
 	} else {
 		lvl, err = strconv.Atoi(levelParam)
 		if err != nil || lvl <= 0 {
@@ -59,50 +62,26 @@ func (h *Handler) GetLevelInfo(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	levels, err := config.Levels()
+	if lvl > maxAllowedLevel {
+		res.Fail(w, r, http.StatusForbidden, nil, "requested level exceeds current level")
+		return
+	}
+
+	info, ok, err := config.LevelInfo(lvl)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to load level config")
 		return
 	}
-
-	var current *struct {
-		Speed int
-		Notes int
-	}
-	for i := range levels {
-		if levels[i].Level == lvl {
-			current = &struct {
-				Speed int
-				Notes int
-			}{
-				Speed: levels[i].Speed,
-				Notes: levels[i].Notes,
-			}
-			break
-		}
-	}
-
-	if current == nil {
+	if !ok {
 		res.Fail(w, r, http.StatusNotFound, nil, "level not found")
 		return
 	}
 
-	sheet, err := config.SheetMusic()
-	if err != nil {
-		res.Fail(w, r, http.StatusInternalServerError, err, "failed to load sheet music")
-		return
-	}
-
-	if len(sheet) < current.Notes {
-		res.Fail(w, r, http.StatusInternalServerError, nil, "sheet music shorter than required notes")
-		return
-	}
-
 	resp := LevelInfoResponse{
-		Level: lvl,
-		Speed: current.Speed,
-		Notes: current.Notes,
-		Sheet: sheet[:current.Notes],
+		Level: info.Level,
+		Speed: info.Speed,
+		Notes: info.Notes,
+		Sheet: info.Sheet,
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
