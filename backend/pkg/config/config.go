@@ -51,6 +51,7 @@ type EnvConfig struct {
 
 	// Other
 	OPassURL string `env:"OPASS_URL" envDefault:"https://ccip.opass.app/"`
+	AdminKey string `env:"ADMIN_KEY" envDefault:"dev-admin-key"`
 
 	// Gameplay tuning
 	FriendCapacityMultiplier int `env:"FRIEND_CAPACITY_MULTIPLIER" envDefault:"3"`

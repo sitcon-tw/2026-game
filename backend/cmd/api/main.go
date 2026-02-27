@@ -136,6 +136,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 		r.Mount("/activities", router.ActivityRoutes(repo, logger))
 		r.Mount("/discount-coupons", router.DiscountRoutes(repo, logger))
 		r.Mount("/announcements", router.AnnouncementRoutes(repo, logger))
+		r.Mount("/admin", router.AdminRoutes(repo, logger))
 
 		r.Mount("/friendships", router.FriendRoutes(repo, logger))
 		r.Mount("/games", router.GameRoutes(repo, logger))
