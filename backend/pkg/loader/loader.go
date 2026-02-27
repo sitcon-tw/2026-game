@@ -33,7 +33,7 @@ func LoadLevels(csvURL string) ([]models.Level, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read header: %w", err)
 	}
-	if err := validateLevelHeader(header); err != nil {
+	if err = validateLevelHeader(header); err != nil {
 		return nil, err
 	}
 
