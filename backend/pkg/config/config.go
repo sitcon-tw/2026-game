@@ -34,9 +34,9 @@ type EnvConfig struct {
 	OTelSampleRate float64 `env:"OTEL_SAMPLE_RATE" envDefault:"1.0"`
 	OTelService    string  `env:"OTEL_SERVICE_NAME" envDefault:"sitcon-2026-game-backend"`
 
-	// Gameplay data locations
-	LevelCSVPath      string `env:"LEVEL_CSV_PATH" envDefault:"data/level.csv"`
-	SheetMusicCSVPath string `env:"SHEET_MUSIC_CSV_PATH" envDefault:"data/sheet_music.csv"`
+	// Gameplay data URLs
+	LevelCSVURL      string `env:"LEVEL_CSV_URL"`
+	SheetMusicCSVURL string `env:"SHEET_MUSIC_CSV_URL"`
 
 	// CORS
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:"," envDefault:"http://localhost:3000"`
@@ -51,6 +51,7 @@ type EnvConfig struct {
 
 	// Other
 	OPassURL string `env:"OPASS_URL" envDefault:"https://ccip.opass.app/"`
+	AdminKey string `env:"ADMIN_KEY" envDefault:"dev-admin-key"`
 
 	// Gameplay tuning
 	FriendCapacityMultiplier int `env:"FRIEND_CAPACITY_MULTIPLIER" envDefault:"3"`

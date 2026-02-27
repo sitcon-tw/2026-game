@@ -91,6 +91,15 @@ type Repository interface {
 		price int,
 		discountID string,
 	) (*models.DiscountCoupon, error)
+	CreateDiscountCouponGift(
+		ctx context.Context,
+		tx pgx.Tx,
+		price int,
+		discountID string,
+	) (*models.DiscountCouponGift, error)
+	DeleteDiscountCouponGiftByID(ctx context.Context, tx pgx.Tx, id string) error
+	ListDiscountCouponGifts(ctx context.Context, tx pgx.Tx) ([]models.DiscountCouponGift, error)
+	SearchUsersByNickname(ctx context.Context, tx pgx.Tx, query string, limit int) ([]models.User, error)
 
 	// Staff operations
 	GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error)

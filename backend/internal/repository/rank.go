@@ -11,7 +11,7 @@ import (
 // GetTopUsers returns users ordered by level then last_pass_time with pagination.
 func (r *PGRepository) GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]models.User, error) {
 	const query = `
-SELECT nickname, current_level, last_pass_time
+SELECT nickname, avatar, current_level, last_pass_time
 FROM users
 ORDER BY current_level DESC, last_pass_time ASC
 LIMIT $1 OFFSET $2`
@@ -25,7 +25,7 @@ LIMIT $1 OFFSET $2`
 	var out []models.User
 	for rows.Next() {
 		var u models.User
-		err = rows.Scan(&u.Nickname, &u.CurrentLevel, &u.LastPassTime)
+		err = rows.Scan(&u.Nickname, &u.Avatar, &u.CurrentLevel, &u.LastPassTime)
 		if err != nil {
 			return nil, err
 		}
@@ -42,8 +42,8 @@ LIMIT $1 OFFSET $2`
 // Ranking rule: higher level first, then earlier last_pass_time.
 func (r *PGRepository) GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error) {
 	const query = `
-SELECT nickname, current_level, last_pass_time, rank FROM (
-    SELECT id, nickname, current_level, last_pass_time,
+SELECT nickname, avatar, current_level, last_pass_time, rank FROM (
+    SELECT id, nickname, avatar, current_level, last_pass_time,
            RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
     FROM users
 ) ranked
@@ -53,6 +53,7 @@ WHERE id = $1`
 	var rank int
 	err := tx.QueryRow(ctx, query, userID).Scan(
 		&u.Nickname,
+		&u.Avatar,
 		&u.CurrentLevel,
 		&u.LastPassTime,
 		&rank,
@@ -70,13 +71,13 @@ WHERE id = $1`
 func (r *PGRepository) GetAroundUsers(ctx context.Context, tx pgx.Tx, userID string, span int) ([]models.User, error) {
 	const query = `
 WITH ranked AS (
-    SELECT id, nickname, current_level, last_pass_time,
+    SELECT id, nickname, avatar, current_level, last_pass_time,
            RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
     FROM users
 ), my_rank AS (
     SELECT rank FROM ranked WHERE id = $1
 )
-SELECT nickname, current_level, last_pass_time
+SELECT nickname, avatar, current_level, last_pass_time
 FROM ranked, my_rank
 WHERE ranked.rank BETWEEN my_rank.rank - $2 AND my_rank.rank + $2
 ORDER BY ranked.rank`
@@ -90,7 +91,7 @@ ORDER BY ranked.rank`
 	var out []models.User
 	for rows.Next() {
 		var u models.User
-		err = rows.Scan(&u.Nickname, &u.CurrentLevel, &u.LastPassTime)
+		err = rows.Scan(&u.Nickname, &u.Avatar, &u.CurrentLevel, &u.LastPassTime)
 		if err != nil {
 			return nil, err
 		}

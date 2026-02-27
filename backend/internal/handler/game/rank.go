@@ -76,6 +76,7 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 	for i, u := range topRows {
 		top[i] = RankEntry{
 			Nickname: u.Nickname,
+			Avatar:   u.Avatar,
 			Level:    u.CurrentLevel,
 			Rank:     startRankTop + i,
 		}
@@ -83,7 +84,12 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 
 	var me *RankEntry
 	if meRow != nil {
-		me = &RankEntry{Nickname: meRow.Nickname, Level: meRow.CurrentLevel, Rank: meRank}
+		me = &RankEntry{
+			Nickname: meRow.Nickname,
+			Avatar:   meRow.Avatar,
+			Level:    meRow.CurrentLevel,
+			Rank:     meRank,
+		}
 	}
 
 	around := make([]RankEntry, len(aroundRows))
@@ -94,6 +100,7 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 	for i, u := range aroundRows {
 		around[i] = RankEntry{
 			Nickname: u.Nickname,
+			Avatar:   u.Avatar,
 			Level:    u.CurrentLevel,
 			Rank:     startRank + i,
 		}

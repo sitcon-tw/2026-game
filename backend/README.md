@@ -16,6 +16,13 @@ docker compose -f compose.dev.yml up -d
 make run
 ```
 
+啟動前請先設定 Google Sheet 的 CSV URL：
+
+```bash
+LEVEL_CSV_URL="https://docs.google.com/spreadsheets/d/<sheet-id>/export?format=csv&gid=<gid>"
+SHEET_MUSIC_CSV_URL="https://docs.google.com/spreadsheets/d/<sheet-id>/export?format=csv&gid=<gid>"
+```
+
 如果你看到類似：
 ```
 2026-02-04T12:25:27.940+0800    INFO    cmd/main.go:48  Starting server {"port": "8000", "env": "dev"}

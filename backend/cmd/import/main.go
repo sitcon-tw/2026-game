@@ -19,25 +19,38 @@ import (
 )
 
 const dataDir = "data"
+const fakeDataDir = "fake_data"
 
 type importTarget string
 
 const (
-	targetActivities importTarget = "activities"
-	targetStaffs     importTarget = "staffs"
-	targetUsers      importTarget = "users"
+	targetActivities    importTarget = "activities"
+	targetStaffs        importTarget = "staffs"
+	targetUsers         importTarget = "users"
+	targetAnnouncements importTarget = "announcements"
+	targetGiftCoupons   importTarget = "gift-coupons"
+	targetAll           importTarget = "all"
 )
 
 func main() {
 	const requiredArgs = 2
 	if len(os.Args) < requiredArgs {
-		fmt.Fprintln(os.Stderr, "usage: import [activities|staffs|users]")
+		fmt.Fprintln(os.Stderr, "usage: import [activities|staffs|users|announcements|gift-coupons|all]")
 		os.Exit(1)
 	}
 
 	target := importTarget(os.Args[1])
-	if target != targetActivities && target != targetStaffs && target != targetUsers {
-		fmt.Fprintf(os.Stderr, "unknown target %q. valid: activities, staffs, users\n", target)
+	if target != targetActivities &&
+		target != targetStaffs &&
+		target != targetUsers &&
+		target != targetAnnouncements &&
+		target != targetGiftCoupons &&
+		target != targetAll {
+		fmt.Fprintf(
+			os.Stderr,
+			"unknown target %q. valid: activities, staffs, users, announcements, gift-coupons, all\n",
+			target,
+		)
 		os.Exit(1)
 	}
 
@@ -63,6 +76,12 @@ func main() {
 		importErr = importStaff(ctx, pool, log)
 	case targetUsers:
 		importErr = importUsers(ctx, pool, log)
+	case targetAnnouncements:
+		importErr = importAnnouncements(ctx, pool, log)
+	case targetGiftCoupons:
+		importErr = importGiftCoupons(ctx, pool, log)
+	case targetAll:
+		importErr = importAll(ctx, pool, log)
 	}
 
 	if importErr != nil {
@@ -89,7 +108,7 @@ func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) 
 	}
 
 	var items []activityImport
-	if err := loadJSON(filepath.Join(dataDir, "activities.json"), &items); err != nil {
+	if err := loadJSONCandidates(&items, "activities.json"); err != nil {
 		return fmt.Errorf("load activities: %w", err)
 	}
 
@@ -149,7 +168,7 @@ SET token = EXCLUDED.token,
 
 func importStaff(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
 	var items []models.Staff
-	if err := loadJSON(filepath.Join(dataDir, "staffs.json"), &items); err != nil {
+	if err := loadJSONCandidates(&items, "staff.json", "staffs.json"); err != nil {
 		return fmt.Errorf("load staffs: %w", err)
 	}
 
@@ -217,7 +236,7 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error
 	}
 
 	var items []userImport
-	if err := loadJSON(filepath.Join(dataDir, "users.json"), &items); err != nil {
+	if err := loadJSONCandidates(&items, "user.json", "users.json"); err != nil {
 		return fmt.Errorf("load users: %w", err)
 	}
 
@@ -282,6 +301,112 @@ SET auth_token = EXCLUDED.auth_token,
 	return tx.Commit(ctx)
 }
 
+func importAnnouncements(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+	var items []models.Announcement
+	if err := loadJSONCandidates(&items, "announcement.json", "announcements.json"); err != nil {
+		return fmt.Errorf("load announcements: %w", err)
+	}
+
+	if len(items) == 0 {
+		log.Warn("announcement.json is empty; nothing to import")
+		return nil
+	}
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Warn("rollback failed", zap.Error(rollbackErr))
+		}
+	}()
+
+	const stmt = `
+INSERT INTO announcements (id, content, created_at)
+VALUES ($1, $2, $3)
+ON CONFLICT (id) DO UPDATE
+SET content = EXCLUDED.content,
+    created_at = EXCLUDED.created_at`
+
+	now := time.Now().UTC()
+	for i := range items {
+		if items[i].CreatedAt.IsZero() {
+			items[i].CreatedAt = now
+		}
+		if _, err = tx.Exec(ctx, stmt, items[i].ID, items[i].Content, items[i].CreatedAt); err != nil {
+			return fmt.Errorf("insert announcements[%d] (%s): %w", i, items[i].ID, err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func importGiftCoupons(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+	var items []models.DiscountCouponGift
+	if err := loadJSONCandidates(
+		&items,
+		"gift_coupon.json",
+		"gift_coupons.json",
+		"discount_coupon_gift.json",
+		"discount_coupon_gifts.json",
+	); err != nil {
+		return fmt.Errorf("load gift coupons: %w", err)
+	}
+
+	if len(items) == 0 {
+		log.Warn("gift coupon json is empty; nothing to import")
+		return nil
+	}
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Warn("rollback failed", zap.Error(rollbackErr))
+		}
+	}()
+
+	const stmt = `
+INSERT INTO discount_coupon_gift (id, token, price, discount_id)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT (id) DO UPDATE
+SET token = EXCLUDED.token,
+    price = EXCLUDED.price,
+    discount_id = EXCLUDED.discount_id`
+
+	for i := range items {
+		if _, err = tx.Exec(ctx, stmt, items[i].ID, items[i].Token, items[i].Price, items[i].DiscountID); err != nil {
+			return fmt.Errorf("insert gift_coupons[%d] (%s): %w", i, items[i].ID, err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func importAll(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger) error {
+	importers := []struct {
+		name string
+		fn   func(context.Context, *pgxpool.Pool, *zap.Logger) error
+	}{
+		{name: string(targetActivities), fn: importActivities},
+		{name: string(targetStaffs), fn: importStaff},
+		{name: string(targetUsers), fn: importUsers},
+		{name: string(targetAnnouncements), fn: importAnnouncements},
+		{name: string(targetGiftCoupons), fn: importGiftCoupons},
+	}
+
+	for _, importer := range importers {
+		if err := importer.fn(ctx, pool, log); err != nil {
+			return fmt.Errorf("%s: %w", importer.name, err)
+		}
+	}
+
+	return nil
+}
+
 func loadJSON[T any](path string, out *T) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -294,4 +419,22 @@ func loadJSON[T any](path string, out *T) error {
 		return fmt.Errorf("parse %s: %w", filepath.Base(path), err)
 	}
 	return nil
+}
+
+func loadJSONCandidates[T any](out *T, fileNames ...string) error {
+	for _, dir := range []string{fakeDataDir, dataDir} {
+		for _, name := range fileNames {
+			fullPath := filepath.Join(dir, name)
+			_, err := os.Stat(fullPath)
+			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					continue
+				}
+				return err
+			}
+			return loadJSON(fullPath, out)
+		}
+	}
+
+	return fmt.Errorf("none of candidate files found: %v", fileNames)
 }
