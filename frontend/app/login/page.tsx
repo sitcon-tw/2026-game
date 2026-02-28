@@ -3,7 +3,7 @@
 import { useEffect, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginWithToken } from "@/hooks/api";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 function LoginContent() {
   const router = useRouter();
@@ -24,6 +24,8 @@ function LoginContent() {
   }, [token, login, router]);
 
   const [manualToken, setManualToken] = useState("");
+  const [showManualInput, setShowManualInput] = useState(false);
+
 
   if (!token) {
     return (
@@ -50,26 +52,54 @@ function LoginContent() {
             </a>{" "}
             下載並使用票券登入。
           </p>
-          <div className="mt-8 flex flex-col gap-2">
-            <input
-              type="text"
-              value={manualToken}
-              onChange={(e) => setManualToken(e.target.value)}
-              placeholder="輸入 Token"
-              className="rounded-xl bg-[var(--bg-header)] px-4 py-3 font-mono text-sm text-[var(--text-light)] placeholder-[var(--text-secondary)] outline-none"
-            />
+          <div className="mt-8">
             <button
-              onClick={() => {
-                if (manualToken.trim()) {
-                  router.push(
-                    `/login?token=${encodeURIComponent(manualToken.trim())}`,
-                  );
-                }
-              }}
-              className="rounded-xl bg-[#AC8B58] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
+              onClick={() => setShowManualInput((v) => !v)}
+              className="inline-flex items-center gap-1 text-sm text-[var(--text-secondary)]"
             >
-              登入
+              <motion.span
+                animate={{ rotate: showManualInput ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="inline-block text-xs"
+              >
+                ▶
+              </motion.span>
+              手動輸入票券 Token
             </button>
+            <AnimatePresence initial={false}>
+              {showManualInput && (
+                <motion.div
+                  key="manual-input"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4 flex flex-col gap-2">
+                    <input
+                      type="text"
+                      value={manualToken}
+                      onChange={(e) => setManualToken(e.target.value)}
+                      placeholder="輸入 Token"
+                      className="rounded-xl bg-[var(--bg-header)] px-4 py-3 font-mono text-sm text-[var(--text-light)] placeholder-[var(--text-secondary)] outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        if (manualToken.trim()) {
+                          router.push(
+                            `/login?token=${encodeURIComponent(manualToken.trim())}`,
+                          );
+                        }
+                      }}
+                      className="rounded-xl bg-[#AC8B58] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
+                    >
+                      登入
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -87,12 +117,27 @@ function LoginContent() {
           <p className="mt-4 text-[var(--text-secondary)]">
             {error instanceof Error ? error.message : "請稍後再試"}
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-6 rounded-xl bg-[var(--bg-header)] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
-          >
-            重試
-          </button>
+          <p className="mt-4 text-[var(--text-secondary)]">
+            目前使用的 Token：
+            <br />
+            <code className="mt-1 inline-block rounded bg-[var(--bg-header)] px-2 py-1 font-mono text-sm text-[var(--text-light)] break-all">
+              {token}
+            </code>
+          </p>
+          <div className="mt-6 flex flex-col gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-xl bg-[var(--bg-header)] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
+            >
+              重試
+            </button>
+            <button
+              onClick={() => router.push("/login")}
+              className="rounded-xl bg-[var(--bg-header)] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
+            >
+              返回登入頁
+            </button>
+          </div>
         </div>
       </div>
     );
