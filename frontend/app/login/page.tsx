@@ -4,6 +4,7 @@ import { useEffect, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginWithToken } from "@/hooks/api";
 import { motion, AnimatePresence } from "motion/react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 function LoginContent() {
   const router = useRouter();
@@ -143,52 +144,13 @@ function LoginContent() {
     );
   }
 
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
-      <div className="text-center">
-        <motion.img
-          src="/assets/landing/album-cd.svg"
-          alt="Loading"
-          className="mb-6 inline-block w-16 h-16"
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-        <h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">
-          登入中...
-        </h1>
-        <p className="mt-4 text-[var(--text-secondary)]">請稍候</p>
-      </div>
-    </div>
-  );
+  return <LoadingSpinner fullPage />;
 }
 
 export default function LoginPage() {
   return (
     <Suspense
-      fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
-          <div className="text-center">
-            <motion.img
-              src="/assets/landing/album-cd.svg"
-              alt="Loading"
-              className="mb-6 inline-block w-16 h-16"
-              animate={{ rotate: 360 }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            />
-            <h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">
-              載入中...
-            </h1>
-          </div>
-        </div>
-      }
+      fallback={<LoadingSpinner fullPage />}
     >
       <LoginContent />
     </Suspense>
