@@ -1,0 +1,65 @@
+name: Bug Report
+description: 回報前端或後端的 Bug
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感謝你回報問題！請盡量填寫以下資訊，幫助我們快速定位與修復。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 問題描述
+      description: 清楚描述發生了什麼問題
+      placeholder: 例：折價券頁面使用了需要 staff 權限的 API，一般玩家會收到 401
+    validations:
+      required: true
+
+  - type: textarea
+    id: why-not-found
+    attributes:
+      label: 為什麼沒被發現
+      description: 如果知道的話，說明為什麼這個問題在開發或 code review 時沒被抓到
+      placeholder: 例：開發者瀏覽器同時有 staff_token cookie，所以剛好能正常回應
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影響範圍
+      description: 這個問題會影響哪些功能或使用者
+      placeholder: |
+        - 一般玩家看不到未解鎖的折價券
+        - 無法得知解鎖條件
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 預期行為
+      description: 正確的行為應該是什麼
+      placeholder: 例：玩家不需要 staff 權限就能看到折價券樣板
+    validations:
+      required: true
+
+  - type: textarea
+    id: fix-suggestion
+    attributes:
+      label: 建議修復方向
+      description: 如果有想法，描述前端 / 後端各自需要怎麼改
+      placeholder: |
+        ### 前端
+        - ...
+        ### 後端
+        - ...
+
+  - type: textarea
+    id: related-files
+    attributes:
+      label: 相關檔案
+      description: 列出與此問題相關的檔案路徑
+      placeholder: |
+        - `frontend/app/(player)/coupon/page.tsx`
+        - `frontend/hooks/api/useCoupons.ts`

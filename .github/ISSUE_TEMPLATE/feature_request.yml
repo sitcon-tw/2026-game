@@ -1,0 +1,54 @@
+name: Feature Request
+description: 提出新功能或功能補強需求
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感謝你提出需求！請盡量填寫以下資訊，幫助我們評估與規劃。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 功能描述
+      description: 清楚描述你想要的功能是什麼
+      placeholder: 例：在頁面上方加入跑馬燈，顯示即時公告訊息
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 動機與使用情境
+      description: 為什麼需要這個功能？在什麼情境下會用到？
+      placeholder: 例：活動當天需要即時通知會眾場地變更、時程異動等資訊
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: 建議做法
+      description: 如果有想法，描述前端 / 後端各自需要怎麼做
+      placeholder: |
+        ### 後端
+        - ...
+        ### 前端
+        - ...
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影響範圍
+      description: 這個功能會影響哪些頁面或模組
+      placeholder: |
+        - `frontend/app/page.tsx`
+        - `frontend/app/(player)/coupon/page.tsx`
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 其他方案
+      description: 有考慮過其他替代方案嗎？為什麼不採用？
+      placeholder: 例：靜態寫死公告文字，但無法即時更新
