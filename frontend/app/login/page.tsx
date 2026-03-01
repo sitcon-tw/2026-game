@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, Suspense, useState } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginWithToken } from "@/hooks/api";
-import { motion } from "motion/react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import ManualTokenInput from "@/components/ui/ManualTokenInput";
 
 function LoginContent() {
   const router = useRouter();
@@ -22,8 +23,6 @@ function LoginContent() {
       },
     });
   }, [token, login, router]);
-
-  const [manualToken, setManualToken] = useState("");
 
   if (!token) {
     return (
@@ -50,27 +49,7 @@ function LoginContent() {
             </a>{" "}
             下載並使用票券登入。
           </p>
-          <div className="mt-8 flex flex-col gap-2">
-            <input
-              type="text"
-              value={manualToken}
-              onChange={(e) => setManualToken(e.target.value)}
-              placeholder="輸入 Token"
-              className="rounded-xl bg-[var(--bg-header)] px-4 py-3 font-mono text-sm text-[var(--text-light)] placeholder-[var(--text-secondary)] outline-none"
-            />
-            <button
-              onClick={() => {
-                if (manualToken.trim()) {
-                  router.push(
-                    `/login?token=${encodeURIComponent(manualToken.trim())}`,
-                  );
-                }
-              }}
-              className="rounded-xl bg-[#AC8B58] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
-            >
-              登入
-            </button>
-          </div>
+          <ManualTokenInput />
         </div>
       </div>
     );
@@ -87,63 +66,26 @@ function LoginContent() {
           <p className="mt-4 text-[var(--text-secondary)]">
             {error instanceof Error ? error.message : "請稍後再試"}
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-6 rounded-xl bg-[var(--bg-header)] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
-          >
-            重試
-          </button>
+          <p className="mt-4 text-[var(--text-secondary)]">
+            目前使用的 Token：
+            <br />
+            <code className="mt-1 inline-block rounded bg-[var(--bg-header)] px-2 py-1 font-mono text-sm text-[var(--text-light)] break-all">
+              {token}
+            </code>
+          </p>
+          <ManualTokenInput />
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
-      <div className="text-center">
-        <motion.img
-          src="/assets/landing/album-cd.svg"
-          alt="Loading"
-          className="mb-6 inline-block w-16 h-16"
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-        <h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">
-          登入中...
-        </h1>
-        <p className="mt-4 text-[var(--text-secondary)]">請稍候</p>
-      </div>
-    </div>
-  );
+  return <LoadingSpinner fullPage />;
 }
 
 export default function LoginPage() {
   return (
     <Suspense
-      fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
-          <div className="text-center">
-            <motion.img
-              src="/assets/landing/album-cd.svg"
-              alt="Loading"
-              className="mb-6 inline-block w-16 h-16"
-              animate={{ rotate: 360 }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            />
-            <h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">
-              載入中...
-            </h1>
-          </div>
-        </div>
-      }
+      fallback={<LoadingSpinner fullPage />}
     >
       <LoginContent />
     </Suspense>
