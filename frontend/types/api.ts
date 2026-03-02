@@ -12,6 +12,10 @@ export interface User {
   updated_at: string;
 }
 
+export interface OneTimeQrResponse {
+  token: string;
+}
+
 /* ── Activities ── */
 
 export interface ActivityWithStatus {

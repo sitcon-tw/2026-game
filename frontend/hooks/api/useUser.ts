@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { useUserStore } from "@/stores/userStore";
-import type { User } from "@/types/api";
+import type { User, OneTimeQrResponse } from "@/types/api";
 
 /** GET /users/me — 取得目前登入使用者的資料
  *  只在有 authToken 時才發送請求，避免未登入時產生 401。
@@ -27,6 +27,17 @@ export function useCurrentUser() {
   }, [query.data, setUser]);
 
   return query;
+}
+
+/** GET /users/me/one-time-qr — 取得一次性 QR Code token */
+export function useOneTimeQr() {
+  const authToken = useUserStore((state) => state.authToken);
+
+  return useQuery({
+    queryKey: queryKeys.user.oneTimeQr,
+    queryFn: () => api.get<OneTimeQrResponse>("/users/me/one-time-qr"),
+    enabled: !!authToken,
+  });
 }
 
 /** POST /users/session — 使用 OPass token 登入，設定 cookie */
