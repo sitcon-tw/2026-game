@@ -1,7 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import type { RankResponse, SubmitResponse, LevelInfoResponse } from "@/types/api";
+import type {
+  RankResponse,
+  SubmitResponse,
+  LevelInfoResponse,
+} from "@/types/api";
 
 /** GET /games/levels/{level} — 取得指定關卡資訊 */
 export function useLevelInfo(level: number | "current") {

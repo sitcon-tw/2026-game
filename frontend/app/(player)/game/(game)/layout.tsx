@@ -23,7 +23,9 @@ export default function ChallengesLayout({
         {/* Back */}
         <button
           type="button"
-          onClick={() => pathname === "/game/rule" ? router.back() : router.push("/game")}
+          onClick={() =>
+            pathname === "/game/rule" ? router.back() : router.push("/game")
+          }
           className="relative h-10 w-10 rounded-full cursor-pointer"
           aria-label="返回"
         >

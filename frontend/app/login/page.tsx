@@ -84,9 +84,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={<LoadingSpinner fullPage />}
-    >
+    <Suspense fallback={<LoadingSpinner fullPage />}>
       <LoginContent />
     </Suspense>
   );

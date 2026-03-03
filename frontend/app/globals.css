@@ -2,11 +2,11 @@
 
 :root {
   color-scheme: light;
-  --bg-primary: #DFBC84;
+  --bg-primary: #dfbc84;
   --bg-secondary: #d7ccc8;
   --bg-header: #5e3808;
   --bg-header-accent: #5e3808;
-  --bg-header-in-layout: #945B17;
+  --bg-header-in-layout: #945b17;
   --text-primary: #5d4037;
   --text-secondary: #8d6e63;
   --text-light: #efebe9;
@@ -14,13 +14,13 @@
   --accent-gold: #d4af37;
   --accent-gold-light: #ffd54f;
   --accent-bronze: #b77a18;
-  --btn-red: #B17457;
-  --btn-yellow: #BC9C32;
-  --btn-green: #7E951E;
-  --btn-blue: #45889B;
-  --btn-orange: #3F5373;
-  --btn-purple: #613F73;
-  --btn-pink: #9D5093;
+  --btn-red: #b17457;
+  --btn-yellow: #bc9c32;
+  --btn-green: #7e951e;
+  --btn-blue: #45889b;
+  --btn-orange: #3f5373;
+  --btn-purple: #613f73;
+  --btn-pink: #9d5093;
   --btn-cyan: #595854;
   --status-success: #4caf50;
   --status-error: #f44336;
@@ -42,5 +42,9 @@
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-body), system-ui, -apple-system, sans-serif;
+  font-family:
+    var(--font-body),
+    system-ui,
+    -apple-system,
+    sans-serif;
 }

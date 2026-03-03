@@ -7,6 +7,7 @@ Zeabur 會自動識別 Next.js 項目，無需 Docker 配置。
 ### 步驟
 
 1. **推送程式碼到 Git**
+
    ```bash
    git add .
    git commit -m "Ready for Zeabur deployment"
@@ -22,6 +23,7 @@ Zeabur 會自動識別 Next.js 項目，無需 Docker 配置。
 
 3. **設定環境變數**
    在 Zeabur Dashboard 中設定：
+
    ```
    NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api
    ```
@@ -31,6 +33,7 @@ Zeabur 會自動識別 Next.js 項目，無需 Docker 配置。
    - 幾分鐘後就可以訪問你的應用！
 
 ### 優點
+
 - ✅ 零配置，自動檢測
 - ✅ 自動 HTTPS
 - ✅ 自動 CD（push 即部署）
@@ -59,6 +62,7 @@ Zeabur 會自動識別 Next.js 項目，無需 Docker 配置。
    - 選擇「Use Dockerfile」
 
 4. **設定環境變數**
+
    ```
    NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api
    ```
@@ -68,6 +72,7 @@ Zeabur 會自動識別 Next.js 項目，無需 Docker 配置。
    - 部署完成！
 
 ### 優點
+
 - ✅ 完全控制建置過程
 - ✅ 與本地環境一致
 - ✅ 可以加入自訂套件
@@ -84,7 +89,7 @@ Zeabur 會自動識別 Next.js 項目，無需 Docker 配置。
 # Build Command
 pnpm install && pnpm build
 
-# Start Command  
+# Start Command
 pnpm start
 ```
 
@@ -105,12 +110,14 @@ Zeabur 會自動處理 Port，無需設定。Next.js 預設使用 3000，Zeabur 
 ## 📊 監控與日誌
 
 ### 查看建置日誌
+
 1. 前往 Zeabur Dashboard
 2. 點擊你的服務
 3. 點擊「Deployments」分頁
 4. 點擊最新的部署查看詳細日誌
 
 ### 查看執行日誌
+
 1. 點擊「Logs」分頁
 2. 即時查看應用程式日誌
 
@@ -139,6 +146,7 @@ Zeabur 會自動處理 Port，無需設定。Next.js 預設使用 3000，Zeabur 
 Zeabur 預設會在每次 `git push` 時自動部署。
 
 **關閉自動部署**（如果需要）：
+
 1. 前往「Settings」
 2. 關閉「Auto Deploy」
 3. 之後需要手動點擊「Redeploy」
@@ -146,6 +154,7 @@ Zeabur 預設會在每次 `git push` 時自動部署。
 ### 分支部署
 
 Zeabur 支援多分支部署：
+
 - `main` → 生產環境
 - `dev` → 開發環境
 
@@ -168,6 +177,7 @@ git push
 ### 問題 2：環境變數沒有生效
 
 **解決方案**：
+
 1. 檢查變數名稱是否以 `NEXT_PUBLIC_` 開頭
 2. 修改環境變數後需要重新部署
 3. 在 Zeabur Dashboard 點擊「Redeploy」
@@ -177,6 +187,7 @@ git push
 **解決方案**：確保後端 API 的 CORS 設定允許你的 Zeabur 域名
 
 在後端設定：
+
 ```go
 // 允許 Zeabur 域名
 allowedOrigins := []string{
@@ -220,19 +231,22 @@ allowedOrigins := []string{
 ## ⚡ 效能優化
 
 ### 啟用 CDN
+
 Zeabur 自動為靜態資源啟用 CDN，無需額外設定。
 
 ### 設定 Cache
+
 Next.js 已內建 ISR（Incremental Static Regeneration），Zeabur 完全支援。
 
 ### Prerendering
+
 在 `next.config.ts` 中可以設定需要預渲染的路徑：
 
 ```typescript
 export default {
   output: "standalone",
   // ...其他設定
-}
+};
 ```
 
 ---

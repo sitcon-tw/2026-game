@@ -20,6 +20,6 @@ export const useStaffStore = create<StaffState>()(
     }),
     {
       name: "sitcon-staff-storage",
-    }
-  )
+    },
+  ),
 );

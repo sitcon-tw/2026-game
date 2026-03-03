@@ -19,61 +19,61 @@ import type { User } from "@/types/api";
 
 /** Subscribe to Zustand persist hydration state (SSR-safe) */
 function useStoreHydrated() {
-    return useSyncExternalStore(
-        (cb) => useUserStore.persist.onFinishHydration(cb),
-        () => useUserStore.persist.hasHydrated(),
-        () => false, // SSR always returns false
-    );
+  return useSyncExternalStore(
+    (cb) => useUserStore.persist.onFinishHydration(cb),
+    () => useUserStore.persist.hasHydrated(),
+    () => false, // SSR always returns false
+  );
 }
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-    const router = useRouter();
-    const storeHydrated = useStoreHydrated();
-    const authToken = useUserStore((s) => s.authToken);
-    const clearUser = useUserStore((s) => s.clearUser);
-    const setUser = useUserStore((s) => s.setUser);
+  const router = useRouter();
+  const storeHydrated = useStoreHydrated();
+  const authToken = useUserStore((s) => s.authToken);
+  const clearUser = useUserStore((s) => s.clearUser);
+  const setUser = useUserStore((s) => s.setUser);
 
-    // Only fire the session check when we have a token AND store is hydrated
-    const shouldCheck = storeHydrated && !!authToken;
+  // Only fire the session check when we have a token AND store is hydrated
+  const shouldCheck = storeHydrated && !!authToken;
 
-    const { data, isLoading, isError, error } = useQuery({
-        queryKey: queryKeys.user.me,
-        queryFn: () => api.get<User>("/users/me"),
-        enabled: shouldCheck,
-        retry: false, // Never retry auth checks
-    });
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: queryKeys.user.me,
+    queryFn: () => api.get<User>("/users/me"),
+    enabled: shouldCheck,
+    retry: false, // Never retry auth checks
+  });
 
-    // Sync user data to store on success
-    useEffect(() => {
-        if (data) setUser(data);
-    }, [data, setUser]);
+  // Sync user data to store on success
+  useEffect(() => {
+    if (data) setUser(data);
+  }, [data, setUser]);
 
-    // Redirect on auth failure
-    useEffect(() => {
-        if (!storeHydrated) return;
+  // Redirect on auth failure
+  useEffect(() => {
+    if (!storeHydrated) return;
 
-        if (!authToken) {
-            clearUser();
-            router.replace("/login");
-            return;
-        }
-
-        if (isError && error instanceof ApiError && error.status === 401) {
-            clearUser();
-            router.replace("/login");
-        }
-    }, [storeHydrated, authToken, isError, error, clearUser, router]);
-
-    // Store not yet rehydrated or session check in flight
-    if (!storeHydrated || (shouldCheck && isLoading)) {
-        return <LoadingSpinner fullPage />;
+    if (!authToken) {
+      clearUser();
+      router.replace("/login");
+      return;
     }
 
-    // No token → redirect in progress
-    if (!authToken) return null;
+    if (isError && error instanceof ApiError && error.status === 401) {
+      clearUser();
+      router.replace("/login");
+    }
+  }, [storeHydrated, authToken, isError, error, clearUser, router]);
 
-    // 401 → redirect in progress
-    if (isError && error instanceof ApiError && error.status === 401) return null;
+  // Store not yet rehydrated or session check in flight
+  if (!storeHydrated || (shouldCheck && isLoading)) {
+    return <LoadingSpinner fullPage />;
+  }
 
-    return <>{children}</>;
+  // No token → redirect in progress
+  if (!authToken) return null;
+
+  // 401 → redirect in progress
+  if (isError && error instanceof ApiError && error.status === 401) return null;
+
+  return <>{children}</>;
 }
