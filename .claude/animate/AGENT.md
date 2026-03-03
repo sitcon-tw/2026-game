@@ -67,101 +67,158 @@
 
 ---
 
-## 需要修改的檔案清單
+## 已完成的修改清單
 
-### 1. 整頁 loading guard — 「載入中...」改為 spinner
+### 1. 整頁 loading guard — 「載入中...」改為 spinner ✅
+### 2. Header — 排名與關卡數改為 skeleton 色塊 ✅
+### 3. play/page.tsx — UnlockMethodCard skeleton 色塊 ✅
+### 4. scan/page.tsx — QR Code placeholder 與好友數 skeleton ✅
+### 5. game/page.tsx — 排名 skeleton ✅
+### 6. game/[level]/page.tsx — 提交中文字加 `animate-pulse` ✅
 
-以下 7 個頁面需統一改為帶有 `animate-spin` 的 spinner 區塊，與 `AuthGuard.tsx` 風格一致：
+---
 
-```tsx
-// 統一使用 LoadingSpinner 元件：
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+## 7. Landing Page 公告跑馬燈動畫（待實作）
 
-// 頁面內 loading（預設）
-if (isLoading) {
-    return <LoadingSpinner />;
-}
+**檔案**：`frontend/app/page.tsx`（Landing Page）
 
-// 整頁 loading（如 AuthGuard）
-if (isLoading) {
-    return <LoadingSpinner fullPage />;
+### 需求
+
+將 Landing Page 頂部的訊息框（目前是靜態文字「歡迎來到 SITCON 2026 大地遊戲！」）改為從 `GET /announcements` API 抓取公告資料，並以跑馬燈動畫輪播呈現。
+
+### API 資訊
+
+- **端點**：`GET /api/announcements`（公開，不需登入）
+- **回傳格式**：`Announcement[]`，依 `created_at` 由新到舊排序
+- **Announcement Model**：
+  ```ts
+  interface Announcement {
+    id: string;
+    content: string;
+    created_at: string;
+  }
+  ```
+
+### 動畫流程（每則公告）
+
+1. **翻動上來（Flip Up）**：新的一則公告從下方往上翻入訊息框，取代前一則
+2. **往右捲動（Scroll Right）**：文字從左向右水平捲動，展示完整內容（因為公告文字可能超過訊息框寬度）
+3. **停留（Pause）**：捲動到底後停留約 **2 秒**
+4. **往下翻出（Flip Down）**：當前公告往下翻出，同時下一則從上方翻入（回到步驟 1）
+5. **循環**：所有公告輪播完畢後，從第一則重新開始
+
+### 實作步驟
+
+#### Step 1：新增 Announcement 型別、query key、API hook
+
+遵循 `frontend/hooks/api/` 的慣例模式：
+
+1. 在 `frontend/types/api.ts` 新增 `Announcement` interface
+2. 在 `frontend/lib/queryKeys.ts` 新增 `announcements` query key
+3. 新增 `frontend/hooks/api/useAnnouncements.ts`，使用 `useQuery` + `api.get` + `queryKeys`
+4. 在 `frontend/hooks/api/index.ts` re-export `useAnnouncements`
+
+```ts
+// frontend/hooks/api/useAnnouncements.ts
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
+import type { Announcement } from "@/types/api";
+
+/** GET /announcements — 取得公告列表（公開，不需登入） */
+export function useAnnouncements() {
+  return useQuery({
+    queryKey: queryKeys.announcements.list,
+    queryFn: () => api.get<Announcement[]>("/announcements"),
+  });
 }
 ```
 
-| # | 檔案路徑 | 狀態 |
+#### Step 2：建立 AnnouncementTicker 元件
+
+建議獨立為 `frontend/components/AnnouncementTicker.tsx`，props：
+
+```ts
+interface AnnouncementTickerProps {
+  announcements: Announcement[];
+}
+```
+
+#### Step 3：動畫實作（使用 framer-motion / motion）
+
+使用 `AnimatePresence` + `motion.div` 實現：
+
+```
+狀態機：
+  currentIndex: number        // 目前顯示的公告索引
+  scrollPhase: "enter" | "scrolling" | "paused" | "exit"
+
+時間軸（每則公告）：
+  [enter]     → translateY 從 100% 到 0%（翻上來），duration ~0.4s
+  [scrolling] → translateX 從 0 到 -(overflowWidth)px（往右捲），duration 依文字長度而定
+  [paused]    → 停留 2 秒
+  [exit]      → translateY 從 0% 到 -100%（往下翻出），duration ~0.4s
+  → next index, 回到 [enter]
+```
+
+**關鍵細節：**
+- 訊息框需要 `overflow: hidden` 來裁切動畫內容
+- 水平捲動速度建議固定（例如 50px/s），讓長短文字的捲動時間自然不同
+- 如果文字沒有溢出（短公告），跳過水平捲動，直接停留 2 秒
+- 使用 `useRef` 量測文字實際寬度與容器寬度，計算 overflow 量
+- Landing Page 不需要登入，API 也是公開的，可直接 fetch
+
+#### Step 4：整合到 Landing Page
+
+- 替換 `page.tsx` 中第 50-53 行的靜態文字區塊
+- 保留外層訊息框圖片（`message.png`）不變
+- API 載入中時顯示 skeleton pulse（遵循核心原則）
+- API 失敗或無公告時，fallback 為原本的靜態文字
+
+### Fallback 策略
+
+| 情境 | 行為 |
+|---|---|
+| API 載入中 | 訊息框內顯示 skeleton 色塊 + `animate-pulse` |
+| API 回傳空陣列 | 顯示預設文字「歡迎來到 SITCON 2026 大地遊戲！」 |
+| API 錯誤 | 顯示預設文字「歡迎來到 SITCON 2026 大地遊戲！」 |
+| 僅一則公告 | 不需要翻動，僅做水平捲動 + 停留，循環播放 |
+
+### 實作紀錄
+
+#### 訊息框改為 CSS background
+
+原本用 `<Image>` 元素作底圖 + `absolute` 定位疊文字，導致文字與底圖容易錯位。改為：
+
+- 容器使用 `bg-[url('/assets/landing/message.png')] bg-contain bg-no-repeat bg-center`
+- 文字直接是容器的 flow content，用 `pl-38 md:pl-44 pr-25 md:pr-30 pt-1 pb-5` 控制內距
+- 用 `aspectRatio: "500 / 90"` 維持底圖比例
+- 容器加 `overflow-hidden` 裁切超出的跑馬燈文字
+
+#### 動畫時間參數（UX 優化）
+
+| 參數 | 值 | 說明 |
 |---|---|---|
-| 1-1 | `frontend/app/(player)/play/(listed-page)/booths/page.tsx` | ✅ |
-| 1-2 | `frontend/app/(player)/play/(listed-page)/challenges/page.tsx` | ✅ |
-| 1-3 | `frontend/app/(player)/play/(listed-page)/checkins/page.tsx` | ✅ |
-| 1-4 | `frontend/app/(player)/game/page.tsx` | ✅ |
-| 1-5 | `frontend/app/(player)/leaderboard/page.tsx` | ✅ |
-| 1-6 | `frontend/app/(player)/game/(game)/[level]/page.tsx` | ✅ |
-| 1-7 | `frontend/app/(player)/coupon/page.tsx` | ✅ |
+| `SCROLL_SPEED` | 40px/s | 較慢的捲動速度，方便閱讀 |
+| `READ_DURATION` | 1200ms | enter 後先靜止讓使用者閱讀可見文字 |
+| `PAUSE_DURATION` | 2000ms | 捲動到末端後停留時間 |
+| `FLIP_DURATION` | 0.5s | 翻動動畫時長，easeInOut |
+| scroll easing | `cubic-bezier(0.25, 0, 0.35, 1)` | 起步漸加速、結尾漸減速 |
 
----
+完整流程：enter（0.5s 翻入）→ reading（1.2s 靜止閱讀）→ scrolling（如有溢出）→ paused（2s 停在末端）→ exit（0.5s 翻出）→ 下一則
 
-### 2. Header — 排名與關卡數改為 skeleton 色塊
+#### 關鍵修正：捲動後保持末端位置
 
-**檔案**：`frontend/components/layout/(player)/Header.tsx`
+`x` 的 animate 需在 `scrolling`、`paused`、`exit` 三個 phase 都維持 `-overflowWidth`，避免進入 paused 時文字跳回起始位置。
 
-| # | 欄位 | 做法 | 狀態 |
-|---|---|---|---|
-| 2-1 | 排名 | 當 `rank == null` 時，渲染 `h-5 w-20 animate-pulse rounded bg-white/20` skeleton 色塊（不顯示 "—"） | ✅ |
-| 2-2 | 關卡進度 `{current}/{unlock} 關` | 當 `!user` 時，渲染 `h-5 w-16 animate-pulse rounded bg-white/20` skeleton 色塊（不顯示 "0/0 關"） | ✅ |
-| 2-3 | 進度條 | 當 `!user` 時，進度條容器加 `animate-pulse` | ✅ |
+### 狀態
 
----
-
-### 3. play/page.tsx — UnlockMethodCard skeleton 色塊
-
-**檔案**：`frontend/app/(player)/play/page.tsx` + `frontend/components/unlock/UnlockMethodCard.tsx`
-
-`UnlockMethodCard` 元件內，當 `total === 0`（`isLoading`）時：
-- 進度條：`animate-pulse bg-white/20`，隱藏內部 bar
-- 進度文字：渲染 `h-6 w-12 animate-pulse rounded bg-white/20` skeleton 色塊（不顯示 "0/0"）
-
-| # | 欄位 | 做法 | 狀態 |
-|---|---|---|---|
-| 3-1 | `UnlockMethodCard` 進度條 | 當 `isLoading` 時改為 `animate-pulse bg-white/20`，隱藏內部 bar | ✅ |
-| 3-2 | `UnlockMethodCard` `{current}/{total}` 文字 | 當 `isLoading` 時渲染 skeleton 色塊（不顯示文字） | ✅ |
-| 3-3 | 「認識新朋友」card fallback | `friendData?.max ?? 20` 改為 `?? 0`，確保未載入時 `total=0` 能觸發 skeleton | ✅ |
-
----
-
-### 4. scan/page.tsx — QR Code placeholder 與好友數 skeleton
-
-**檔案**：`frontend/app/(player)/scan/page.tsx`
-
-| # | 欄位 | 做法 | 狀態 |
-|---|---|---|---|
-| 4-1 | QR Code placeholder | 灰色方塊加 `animate-pulse` | ✅ |
-| 4-2 | 好友剩餘數 `{remaining}` | 當 `!friendData` 時渲染 `inline-block h-4 w-6 animate-pulse rounded bg-current opacity-20` skeleton（不顯示數字） | ✅ |
-| 4-3 | 進度條 | 當 `!friendData` 時進度條容器加 `animate-pulse` | ✅ |
-
----
-
-### 5. game/page.tsx — 排名 skeleton
-
-**檔案**：`frontend/app/(player)/game/page.tsx`
-
-| # | 欄位 | 做法 | 狀態 |
-|---|---|---|---|
-| 5-1 | 排名文字 `第 X 名` | 當 `rank == null` 時渲染 `h-7 w-24 animate-pulse rounded bg-current opacity-20` skeleton（不顯示 "—"） | ✅ |
-
----
-
-### 6. game/[level]/page.tsx — 提交中文字加 `animate-pulse`
-
-**檔案**：`frontend/app/(player)/game/(game)/[level]/page.tsx`
-
-| # | 欄位 | 做法 | 狀態 |
-|---|---|---|---|
-| 6-1 | `提交中...` 文字 | 加 `animate-pulse`（此為狀態提示文字，保留文字顯示） | ✅ |
-
----
-
-## 完成狀態
-
-全部完成 ✅
-
-核心原則：**任何需要 fetch API 才能顯示的資訊，以 text 為單位，都應渲染 skeleton 色塊搭配 `animate-pulse`（不顯示 fallback 文字）；整頁無法渲染時則用 `animate-spin` spinner。**
+| # | 項目 | 狀態 |
+|---|---|---|
+| 7-1 | 新增 `Announcement` 型別到 `types/api.ts` | ✅ |
+| 7-2 | 新增 announcements query key 到 `queryKeys.ts` | ✅ |
+| 7-3 | 新增 `useAnnouncements.ts` hook 到 `hooks/api/` 並從 `index.ts` re-export | ✅ |
+| 7-4 | 建立 `AnnouncementTicker.tsx` 元件（含動畫邏輯） | ✅ |
+| 7-5 | 在 `page.tsx` 整合 `useAnnouncements` + AnnouncementTicker | ✅ |
+| 7-6 | Fallback 處理（loading skeleton / 空陣列 / 錯誤） | ✅ |
+| 7-7 | 訊息框改為 CSS background + overflow-hidden 裁切 | ✅ |

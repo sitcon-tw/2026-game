@@ -21,4 +21,7 @@ export const queryKeys = {
     list: ["coupons"] as const,
     definitions: ["coupons", "definitions"] as const,
   },
+  announcements: {
+    list: ["announcements"] as const,
+  },
 } as const;
