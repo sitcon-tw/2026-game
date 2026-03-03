@@ -11,15 +11,15 @@ export default function CouponTicket({
   zIndex,
   status,
   passLevel,
+  description,
   price: priceProp,
-  onClick,
 }: {
   coupon?: DiscountCoupon;
   zIndex: number;
   status: CouponStatus;
   passLevel?: number;
+  description?: string;
   price?: number;
-  onClick?: () => void;
 }) {
   const price = priceProp ?? coupon?.price ?? 0;
 
@@ -32,14 +32,10 @@ export default function CouponTicket({
 
   const textColor = status === "locked" ? "text-gray-500" : "text-white";
 
-  const isClickable = status !== "locked";
-
   return (
     <motion.div
-      className={`relative h-32 w-full max-w-md drop-shadow-lg ${isClickable ? "cursor-pointer" : "cursor-default"}`}
+      className={`relative h-32 w-full max-w-md drop-shadow-lg cursor-default`}
       style={{ zIndex }}
-      onClick={isClickable ? onClick : undefined}
-      whileTap={isClickable ? { scale: 0.97 } : undefined}
     >
       <div className="relative h-full w-full">
         <CouponShapeSVG fillColor={ticketFillColor} />
@@ -80,11 +76,15 @@ export default function CouponTicket({
           <div className="absolute inset-0 z-20 flex items-center justify-center">
             <div className="flex flex-col items-center gap-1">
               <span className="text-3xl">🔒</span>
-              {passLevel !== undefined && (
+              {description ? (
+                <p className="text-xs font-bold text-gray-400">
+                  {description}
+                </p>
+              ) : passLevel !== undefined ? (
                 <p className="text-xs font-bold text-gray-400">
                   通過第 {passLevel} 關解鎖
                 </p>
-              )}
+              ) : null}
             </div>
           </div>
         )}
