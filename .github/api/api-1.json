@@ -56,6 +56,39 @@
       },
       "type": "object"
     },
+    "admin.assignCouponRequest": {
+      "properties": {
+        "discount_id": {
+          "type": "string"
+        },
+        "price": {
+          "type": "integer"
+        },
+        "user_id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "admin.createGiftCouponRequest": {
+      "properties": {
+        "discount_id": {
+          "type": "string"
+        },
+        "price": {
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "admin.loginResponse": {
+      "properties": {
+        "authenticated": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
     "discount.couponItem": {
       "properties": {
         "discount_id": {
@@ -208,6 +241,23 @@
       },
       "type": "object"
     },
+    "friend.friendPublicProfile": {
+      "properties": {
+        "avatar": {
+          "type": "string"
+        },
+        "current_level": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nickname": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "game.CouponResponse": {
       "properties": {
         "discount_id": {
@@ -244,6 +294,9 @@
     },
     "game.RankEntry": {
       "properties": {
+        "avatar": {
+          "type": "string"
+        },
         "level": {
           "type": "integer"
         },
@@ -338,6 +391,20 @@
         "ActivitiesTypeChallenge"
       ]
     },
+    "models.Announcement": {
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "models.DiscountCoupon": {
       "properties": {
         "created_at": {
@@ -362,6 +429,23 @@
           "type": "string"
         },
         "user_id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "models.DiscountCouponGift": {
+      "properties": {
+        "discount_id": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "price": {
+          "type": "integer"
+        },
+        "token": {
           "type": "string"
         }
       },
@@ -410,9 +494,6 @@
         "nickname": {
           "type": "string"
         },
-        "qrcode_token": {
-          "type": "string"
-        },
         "unlock_level": {
           "type": "integer"
         },
@@ -426,6 +507,20 @@
       "properties": {
         "message": {
           "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users.oneTimeQRResponse": {
+      "properties": {
+        "expires_at": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "ttl_seconds": {
+          "type": "integer"
         }
       },
       "type": "object"
@@ -660,6 +755,331 @@
         ]
       }
     },
+    "/admin/discount-coupons/assignments": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "需要 admin_token cookie。透過 user_id 直接建立 discount coupon 給該使用者。",
+        "parameters": [
+          {
+            "description": "Assign coupon payload",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/admin.assignCouponRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/models.DiscountCoupon"
+            }
+          },
+          "400": {
+            "description": "invalid payload",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "user not found",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "直接發放折扣券給使用者",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/gift-coupons": {
+      "get": {
+        "description": "需要 admin_token cookie。列出所有 gift coupons。",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/models.DiscountCouponGift"
+              },
+              "type": "array"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "列出 gift coupons",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "需要 admin_token cookie。建立一張 gift coupon（token 可讓使用者兌換折扣券）。",
+        "parameters": [
+          {
+            "description": "Gift coupon payload",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/admin.createGiftCouponRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/models.DiscountCouponGift"
+            }
+          },
+          "400": {
+            "description": "invalid payload",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "建立 gift coupon",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/gift-coupons/{id}": {
+      "delete": {
+        "description": "需要 admin_token cookie。依 gift coupon id 刪除。",
+        "parameters": [
+          {
+            "description": "Gift coupon ID (UUID)",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "missing id",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "gift coupon not found",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "刪除 gift coupon",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/session": {
+      "post": {
+        "description": "使用 Authorization Bearer ADMIN_KEY 登入，成功後會設定 admin_token cookie 供後續 admin API 使用。",
+        "parameters": [
+          {
+            "description": "Bearer {admin_key}",
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/admin.loginResponse"
+            }
+          },
+          "400": {
+            "description": "missing token",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "管理員登入",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "description": "需要 admin_token cookie。使用 nickname 做全文/模糊搜尋並回傳使用者列表。",
+        "parameters": [
+          {
+            "description": "Search keyword",
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Result limit (default 20, max 100)",
+            "in": "query",
+            "name": "limit",
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/models.User"
+              },
+              "type": "array"
+            }
+          },
+          "400": {
+            "description": "missing q | invalid limit",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "搜尋使用者",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/announcements": {
+      "get": {
+        "description": "取得最新公告，依 created_at 由新到舊排序。不需要登入。",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/models.Announcement"
+              },
+              "type": "array"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "取得公告列表",
+        "tags": [
+          "announcements"
+        ]
+      }
+    },
     "/discount-coupons": {
       "get": {
         "description": "需要登入 cookie，回傳自己名下的折扣券清單與使用狀態",
@@ -690,6 +1110,35 @@
           }
         },
         "summary": "取得自己的折扣券",
+        "tags": [
+          "discount"
+        ]
+      }
+    },
+    "/discount-coupons/coupons": {
+      "get": {
+        "description": "公開回傳所有折扣券規則、目前發放數量，以及是否已達 MaxQty。",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/discount.couponRuleWithStatus"
+              },
+              "type": "array"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "取得所有折扣券規則與發放狀態",
         "tags": [
           "discount"
         ]
@@ -768,12 +1217,6 @@
             "schema": {
               "$ref": "#/definitions/discount.getUserCouponsRequest"
             }
-          },
-          {
-            "description": "Bearer {token} (deprecated; use staff_token cookie)",
-            "in": "header",
-            "name": "Authorization",
-            "type": "string"
           }
         ],
         "produces": [
@@ -811,52 +1254,9 @@
         ]
       }
     },
-    "/discount-coupons/staff/coupons": {
-      "get": {
-        "description": "需要 staff_token cookie，回傳所有折扣券規則、目前發放數量，以及是否已達 MaxQty。",
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/discount.couponRuleWithStatus"
-              },
-              "type": "array"
-            }
-          },
-          "401": {
-            "description": "unauthorized staff",
-            "schema": {
-              "$ref": "#/definitions/res.ErrorResponse"
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "$ref": "#/definitions/res.ErrorResponse"
-            }
-          }
-        },
-        "summary": "取得所有折扣券規則與發放狀態",
-        "tags": [
-          "discount"
-        ]
-      }
-    },
     "/discount-coupons/staff/current/redemptions": {
       "get": {
         "description": "需要 staff_token cookie，回傳該 staff 操作的折扣券使用紀錄",
-        "parameters": [
-          {
-            "description": "Bearer {token} (deprecated; use staff_token cookie)",
-            "in": "header",
-            "name": "Authorization",
-            "type": "string"
-          }
-        ],
         "produces": [
           "application/json"
         ],
@@ -910,12 +1310,6 @@
             "schema": {
               "$ref": "#/definitions/discount.discountUsedRequest"
             }
-          },
-          {
-            "description": "Bearer {token} (deprecated; use staff_token cookie)",
-            "in": "header",
-            "name": "Authorization",
-            "type": "string"
           }
         ],
         "produces": [
@@ -1001,6 +1395,39 @@
       }
     },
     "/friendships": {
+      "get": {
+        "description": "取得目前使用者所有好友的公開資料，不包含任何私密欄位。",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/friend.friendPublicProfile"
+              },
+              "type": "array"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "取得好友列表",
+        "tags": [
+          "friends"
+        ]
+      },
       "post": {
         "consumes": [
           "application/json"
@@ -1086,7 +1513,7 @@
     },
     "/games/leaderboards": {
       "get": {
-        "description": "排行資料會包含三個部分：1. 全站的分頁排行 (每頁30名) 2. 以目前使用者為中心，前後各5名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。",
+        "description": "排行資料會包含三個部分：1. 全站的分頁排行 (每頁30名) 2. 以目前使用者為中心，前後各10名玩家的暱稱、等級與排名 3. 目前使用者的暱稱、等級與排名。需要登入後才能取得排行資料。支援 page 查詢參數來分頁瀏覽全站排行，每頁30名玩家，預設為第1頁。",
         "produces": [
           "application/json"
         ],
@@ -1146,6 +1573,12 @@
           },
           "401": {
             "description": "unauthorized (when using current without login)",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "requested level exceeds current level",
             "schema": {
               "$ref": "#/definitions/res.ErrorResponse"
             }
@@ -1215,7 +1648,7 @@
     },
     "/users/me": {
       "get": {
-        "description": "取得目前登入使用者的資料，需要登入後才能取得。會取得包括目前的 level、解鎖多少 level、QR code token 等等資訊。備註：要取得 QR code token 就是用這邊。",
+        "description": "取得目前登入使用者的資料，需要登入後才能取得。回傳基本資料與遊戲進度，不包含 QR secret。",
         "produces": [
           "application/json"
         ],
@@ -1240,6 +1673,32 @@
           }
         },
         "summary": "取得使用者資料",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/me/one-time-qr": {
+      "get": {
+        "description": "取得可供掃描使用的一次性 QR token。每 20 秒輪替，後端驗證時允許極小時間誤差。",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/users.oneTimeQRResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "取得一次性 QR token",
         "tags": [
           "users"
         ]
