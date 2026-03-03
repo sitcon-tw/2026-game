@@ -11,7 +11,7 @@ export default function CheckinsPage() {
     const [selectedItem, setSelectedItem] = useState<ActivityWithStatus | null>(null);
 
     const checkins = useMemo(
-        () => (activities ?? []).filter((a) => a.type === 'checkin'),
+        () => (activities ?? []).filter((a) => a.type === 'check'),
         [activities]
     );
 

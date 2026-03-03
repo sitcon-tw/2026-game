@@ -11,9 +11,9 @@ export default function PlayPage() {
     const { data: friendData } = useFriendCount();
 
     const counts = useMemo(() => {
-        if (!activities) return { booth: { current: 0, total: 0 }, challenge: { current: 0, total: 0 }, checkin: { current: 0, total: 0 } };
+        if (!activities) return { booth: { current: 0, total: 0 }, challenge: { current: 0, total: 0 }, check: { current: 0, total: 0 } };
         const result: Record<string, { current: number; total: number }> = {};
-        for (const type of ['booth', 'challenge', 'checkin']) {
+        for (const type of ['booth', 'challenge', 'check']) {
             const items = activities.filter((a) => a.type === type);
             result[type] = {
                 current: items.filter((a) => a.visited).length,
@@ -38,8 +38,8 @@ export default function PlayPage() {
         },
         {
             title: '打卡',
-            current: counts.checkin?.current ?? 0,
-            total: counts.checkin?.total ?? 0,
+            current: counts.check?.current ?? 0,
+            total: counts.check?.total ?? 0,
             route: '/play/checkins',
         },
         {
