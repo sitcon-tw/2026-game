@@ -27,7 +27,10 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-[url('/assets/landing/background.png')] bg-top bg-cover text-[var(--text-primary)] max-w-lg mx-auto overflow-hidden">
+    <div
+      className="bg-[url('/assets/landing/background.png')] bg-top bg-cover text-[var(--text-primary)] max-w-lg mx-auto overflow-hidden cursor-pointer"
+      onClick={handleEnter}
+    >
       <main className="mx-auto grid min-h-dvh grid-rows-[auto_1fr_auto_auto] px-6 py-6 relative">
         {/* Message box */}
         <motion.div
@@ -46,7 +49,7 @@ export default function LandingPage() {
             />
             <div className="pointer-events-none absolute inset-y-0 left-20 md:left-26 right-6 flex items-center translate-y-[-4px] md:translate-y-[-8px]">
               <div className="h-8 w-full whitespace-nowrap text-[clamp(0.875rem,2.8vw,1.125rem)]">
-                點選「開始」進入遊戲👇👇
+                歡迎來到 SITCON 2026 大地遊戲！
               </div>
             </div>
           </div>
@@ -95,10 +98,10 @@ export default function LandingPage() {
                   transition={
                     isAnimating
                       ? {
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }
                       : { duration: 0 }
                   }
                 >
@@ -121,10 +124,10 @@ export default function LandingPage() {
               animate={
                 isAnimating
                   ? {
-                      x: "120%",
-                      rotate: 6,
-                      opacity: phase === "expanding" || phase === "done" ? 0 : 1,
-                    }
+                    x: "120%",
+                    rotate: 6,
+                    opacity: phase === "expanding" || phase === "done" ? 0 : 1,
+                  }
                   : { x: 0, rotate: 0, opacity: 1 }
               }
               transition={{
@@ -137,7 +140,7 @@ export default function LandingPage() {
                 if (phase === "sliding") {
                   setPhase("spinning");
                   // Let CD spin for ~1.2s then expand
-                  setTimeout(() => setPhase("expanding"), 1200);
+                  setTimeout(() => setPhase("expanding"), 800);
                 }
               }}
             >
@@ -147,6 +150,7 @@ export default function LandingPage() {
                 width={320}
                 height={460}
                 priority
+                className="max-h-[calc(100dvh-12rem)] w-auto"
               />
             </motion.div>
           </div>
@@ -176,14 +180,12 @@ export default function LandingPage() {
           className="mt-8 flex items-center justify-center"
           {...fadeOut}
         >
-          <button onClick={handleEnter} className="block cursor-pointer">
-            <Image
-              src="/assets/landing/enter.png"
-              alt="進入遊戲"
-              width={180}
-              height={64}
-            />
-          </button>
+          <Image
+            src="/assets/landing/enter.png"
+            alt="進入遊戲"
+            width={180}
+            height={64}
+          />
         </motion.div>
 
         {/* Bottom decorations */}
