@@ -110,7 +110,66 @@ stores/
 ├── gameStore.ts      # 遊戲進度與狀態
 ├── boothStore.ts     # 攤位 session
 ├── staffStore.ts     # 工作人員狀態
+├── popupStore.ts     # 全域 popup 佇列（不 persist）
 └── index.ts          # Barrel export
+```
+
+### Global Popup（全域蓋板通知）
+
+任何元件皆可透過 `usePopupStore` 觸發全域 popup，掛載於 Root layout（`app/layout.tsx`），所有頁面（玩家、工作人員）共用。
+
+**元件位置：** `components/ui/GlobalPopup.tsx` / **Store 位置：** `stores/popupStore.ts`
+
+**PopupData 欄位：**
+
+| 欄位 | 必填 | 說明 |
+|------|------|------|
+| `title` | ✅ | 標題文字（font-serif, text-2xl） |
+| `description` | ❌ | 說明文字 |
+| `image` | ❌ | 圖片 URL，以 aspect-[4/3] 顯示 |
+| `cta` | ❌ | `{ name, link }` — 行動按鈕，`/` 開頭內部導航，否則開新分頁 |
+| `doneText` | ❌ | 關閉按鈕文字，預設「關閉」 |
+
+**Store API：**
+- `showPopup(popup)` — 加入佇列，id 自動產生
+- `dismissPopup(id)` — 關閉指定 popup
+- `clearAll()` — 清空所有 popup
+
+**行為：**
+- 佇列機制 — `popups` 為陣列，UI 只顯示 `popups[0]`，dismiss 後自動顯示下一個
+- backdrop 點擊不會自動關閉，使用者必須點按鈕操作
+- 不使用 persist，重整後不保留
+
+**範例 1 — 完整通知（圖片 + CTA + 自訂按鈕文字）：**
+
+```typescript
+import { usePopupStore } from "@/stores";
+
+const showPopup = usePopupStore((s) => s.showPopup);
+
+showPopup({
+  title: "獲得新優惠券！",
+  description: "恭喜你獲得 50 元折價券",
+  image: "/assets/coupon-reward.png",
+  cta: { name: "查看優惠券", link: "/coupon" },
+  doneText: "知道了",
+});
+```
+
+**範例 2 — 純文字提示（無圖片、無 CTA）：**
+
+```typescript
+showPopup({
+  title: "交朋友已滿！",
+  description: "你已經收集到所有朋友了，快去領取獎勵吧。",
+});
+```
+
+**範例 3 — 連續觸發多個（佇列）：**
+
+```typescript
+showPopup({ title: "第一個通知", description: "這是佇列中的第一個" });
+showPopup({ title: "第二個通知", description: "關掉第一個後會看到我" });
 ```
 
 ---
