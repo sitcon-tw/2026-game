@@ -23,6 +23,7 @@ type Activities struct {
 	Type        ActivitiesTypes `db:"type" json:"type"`
 	QRCodeToken string          `db:"qrcode_token" json:"qrcode_token"`
 	Name        string          `db:"name" json:"name"`
+	Floor       *string         `db:"floor" json:"floor,omitempty"`
 	Link        *string         `db:"link" json:"link,omitempty"`
 	Description *string         `db:"description" json:"description,omitempty"`
 	CreatedAt   time.Time       `db:"created_at" json:"created_at"`

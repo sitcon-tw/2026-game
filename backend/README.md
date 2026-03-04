@@ -13,7 +13,7 @@ docker compose -f compose.dev.yml up -d
 ## 再啟動 backend:
 
 ```bash
-make run
+just run
 ```
 
 啟動前請先設定 Google Sheet 的 CSV URL：
