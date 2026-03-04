@@ -14,6 +14,7 @@ type activityWithStatus struct {
 	ID          string  `json:"id"`
 	Type        string  `json:"type"`
 	Name        string  `json:"name"`
+	Floor       *string `json:"floor,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Link        *string `json:"link,omitempty"`
 	Visited     bool    `json:"visited"`
@@ -71,6 +72,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 			ID:          a.ID,
 			Type:        string(a.Type),
 			Name:        a.Name,
+			Floor:       a.Floor,
 			Description: a.Description,
 			Link:        a.Link,
 			Visited:     visited,

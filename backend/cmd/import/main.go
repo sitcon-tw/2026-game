@@ -118,6 +118,7 @@ func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, 
 		Type        models.ActivitiesTypes `json:"type"`
 		QRCodeToken string                 `json:"qrcode_token"`
 		Name        string                 `json:"name"`
+		Floor       *string                `json:"floor"`
 		Link        *string                `json:"link"`
 		Description *string                `json:"description"`
 		CreatedAt   time.Time              `json:"created_at"`
@@ -145,13 +146,14 @@ func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, 
 	}()
 
 	const stmt = `
-INSERT INTO activities (id, token, type, qrcode_token, name, link, description, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO activities (id, token, type, qrcode_token, name, floor, link, description, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 ON CONFLICT (id) DO UPDATE
 SET token = EXCLUDED.token,
     type = EXCLUDED.type,
     qrcode_token = EXCLUDED.qrcode_token,
     name = EXCLUDED.name,
+    floor = EXCLUDED.floor,
     link = EXCLUDED.link,
     description = EXCLUDED.description,
     updated_at = EXCLUDED.updated_at`
@@ -171,6 +173,7 @@ SET token = EXCLUDED.token,
 			items[i].Type,
 			items[i].QRCodeToken,
 			items[i].Name,
+			items[i].Floor,
 			items[i].Link,
 			items[i].Description,
 			items[i].CreatedAt,

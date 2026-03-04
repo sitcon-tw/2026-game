@@ -10,7 +10,7 @@ import (
 // ListActivities returns all activities ordered by created_at then id.
 func (r *PGRepository) ListActivities(ctx context.Context, tx pgx.Tx) ([]models.Activities, error) {
 	const query = `
-SELECT id, token, type, qrcode_token, name, link, description, created_at, updated_at
+SELECT id, token, type, qrcode_token, name, floor, link, description, created_at, updated_at
 FROM activities
 ORDER BY created_at ASC, id ASC`
 
@@ -29,6 +29,7 @@ ORDER BY created_at ASC, id ASC`
 			&a.Type,
 			&a.QRCodeToken,
 			&a.Name,
+			&a.Floor,
 			&a.Link,
 			&a.Description,
 			&a.CreatedAt,
