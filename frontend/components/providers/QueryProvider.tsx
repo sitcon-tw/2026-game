@@ -17,13 +17,14 @@ export default function QueryProvider({
             staleTime: 30 * 1000,
             retry: (failureCount, error) => {
               // Never retry 401 — session is invalid
-              if (error instanceof ApiError && error.status === 401) return false;
+              if (error instanceof ApiError && error.status === 401)
+                return false;
               return failureCount < 2;
             },
             refetchOnWindowFocus: false,
           },
         },
-      })
+      }),
   );
 
   return (

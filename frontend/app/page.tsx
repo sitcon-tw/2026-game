@@ -25,9 +25,7 @@ export default function LandingPage() {
 
   // Shared fade-out transition
   const fadeOut = {
-    animate: isAnimating
-      ? { opacity: 0, y: 20 }
-      : { opacity: 1, y: 0 },
+    animate: isAnimating ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 },
     transition: { duration: 0.4, ease: "easeOut" as const },
   };
 
@@ -68,7 +66,9 @@ export default function LandingPage() {
               animate={{
                 opacity: isAnimating ? 1 : 0,
                 zIndex:
-                  phase === "spinning" || phase === "expanding" || phase === "done"
+                  phase === "spinning" ||
+                  phase === "expanding" ||
+                  phase === "done"
                     ? 60
                     : 1,
               }}
@@ -78,8 +78,7 @@ export default function LandingPage() {
               {/* Outer wrapper: handles scale */}
               <motion.div
                 animate={{
-                  scale:
-                    phase === "expanding" || phase === "done" ? 20 : 1,
+                  scale: phase === "expanding" || phase === "done" ? 20 : 1,
                 }}
                 transition={{
                   duration: 2.5,
@@ -94,11 +93,7 @@ export default function LandingPage() {
               >
                 {/* Inner wrapper: handles spin */}
                 <motion.div
-                  animate={
-                    isAnimating
-                      ? { rotate: 360 }
-                      : { rotate: 0 }
-                  }
+                  animate={isAnimating ? { rotate: 360 } : { rotate: 0 }}
                   transition={
                     isAnimating
                       ? {
@@ -128,10 +123,11 @@ export default function LandingPage() {
               animate={
                 isAnimating
                   ? {
-                    x: "120%",
-                    rotate: 6,
-                    opacity: phase === "expanding" || phase === "done" ? 0 : 1,
-                  }
+                      x: "120%",
+                      rotate: 6,
+                      opacity:
+                        phase === "expanding" || phase === "done" ? 0 : 1,
+                    }
                   : { x: 0, rotate: 0, opacity: 1 }
               }
               transition={{
@@ -160,10 +156,7 @@ export default function LandingPage() {
           </div>
 
           {/* Player controls — fade out */}
-          <motion.div
-            className="flex flex-col items-center gap-4"
-            {...fadeOut}
-          >
+          <motion.div className="flex flex-col items-center gap-4" {...fadeOut}>
             <Image
               src="/assets/landing/player-controller.png"
               alt="Player controller"
