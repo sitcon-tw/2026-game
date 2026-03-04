@@ -157,5 +157,6 @@ components/
 |------|------|
 | `.github/copilot-instructions.md` | 完整技術規格、設計系統、頁面 layout 詳述 |
 | `.claude/animate/AGENT.md` | Loading 動畫原則與實作指引 |
+| `.github/api/api-1.json` | 後端 API Swagger 規格（調用 API 時務必參考） |
 | `frontend/next.config.ts` | API proxy 設定、standalone output |
 | `frontend/globals.css` | CSS 變數定義（顏色、間距、字體） |

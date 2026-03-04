@@ -7,10 +7,10 @@ import {
   useCouponDefinitions,
   useRedeemGiftCoupon,
 } from "@/hooks/api";
+import { useUserStore } from "@/stores/userStore";
 import type { DiscountCoupon, CouponDefinition } from "@/types/api";
 import CouponTicket from "@/components/coupon/CouponTicket";
 import type { CouponStatus } from "@/components/coupon/CouponTicket";
-import CouponDetailModal from "@/components/coupon/CouponDetailModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface DisplayCoupon {
@@ -18,6 +18,7 @@ interface DisplayCoupon {
   coupon?: DiscountCoupon;
   price: number;
   passLevel?: number;
+  description?: string;
   definitionId: string;
 }
 
@@ -55,6 +56,7 @@ function buildDisplayList(
           status: "locked",
           price: def.amount,
           passLevel: def.pass_level,
+          description: def.description,
           definitionId: def.id,
         });
       }
@@ -65,6 +67,7 @@ function buildDisplayList(
           status: "locked",
           price: def.amount,
           passLevel: def.pass_level,
+          description: def.description,
           definitionId: def.id,
         });
       }
@@ -72,7 +75,11 @@ function buildDisplayList(
   }
 
   // Sort: unused first, then used, then locked
-  const order: Record<CouponStatus, number> = { unused: 0, used: 1, locked: 2 };
+  const order: Record<CouponStatus, number> = {
+    unused: 0,
+    used: 1,
+    locked: 2,
+  };
   items.sort((a, b) => order[a.status] - order[b.status]);
 
   return items;
@@ -161,12 +168,90 @@ function RedeemSection() {
   );
 }
 
+function RedeemReceiptModal({
+  totalAmount,
+  couponToken,
+  onClose,
+}: {
+  totalAmount: number;
+  couponToken: string;
+  onClose: () => void;
+}) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center px-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* Modal */}
+      <motion.div
+        className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-[var(--bg-primary)] shadow-2xl"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-center bg-[var(--accent-gold)] py-8">
+          <span className="font-serif text-6xl italic text-white">
+            {totalAmount}
+          </span>
+          <span className="mt-4 ml-2 text-xl font-bold text-white">元</span>
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-col items-center gap-4 p-6">
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">
+            折價券兌換明細
+          </h3>
+          <p className="text-sm text-[var(--text-secondary)]">
+            可折抵總額共 {totalAmount} 元
+          </p>
+
+          {/* QR Code */}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-xs font-semibold text-[var(--text-secondary)]">
+              出示 QR Code 供工作人員掃描
+            </p>
+            <div className="rounded-2xl bg-white p-3">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(couponToken)}`}
+                alt="Coupon QR Code"
+                className="h-44 w-44"
+              />
+            </div>
+          </div>
+
+          {/* Location info */}
+          <p className="text-sm font-medium text-[var(--text-secondary)]">
+            請至 2F 紀念品攤位使用
+          </p>
+        </div>
+
+        {/* Close button */}
+        <div className="px-6 pb-6">
+          <button
+            onClick={onClose}
+            className="w-full rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95"
+          >
+            關閉
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function CouponPage() {
   const { data: coupons, isLoading: couponsLoading } = useCoupons();
   const { data: definitions, isLoading: defsLoading } = useCouponDefinitions();
-  const [selectedCoupon, setSelectedCoupon] = useState<DiscountCoupon | null>(
-    null,
-  );
+  const user = useUserStore((state) => state.user);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   if (couponsLoading || defsLoading) {
     return <LoadingSpinner />;
@@ -175,12 +260,15 @@ export default function CouponPage() {
   const displayList = buildDisplayList(definitions ?? [], coupons ?? []);
 
   const unusedCount = displayList.filter((d) => d.status === "unused").length;
+  const totalUnusedAmount = displayList
+    .filter((d) => d.status === "unused")
+    .reduce((sum, d) => sum + d.price, 0);
 
   return (
     <div className="px-6 py-8">
       <div className="text-center">
         {/* Header */}
-        <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center">
+        <h1 className="text-center font-serif text-3xl font-bold text-[var(--text-primary)]">
           折價券
         </h1>
         <p className="my-3 text-sm font-medium text-[var(--text-primary)]">
@@ -206,7 +294,7 @@ export default function CouponPage() {
         </div>
 
         {/* Coupon Stack */}
-        <div className="relative flex flex-col items-center space-y-[-2rem] my-8">
+        <div className="relative my-8 flex flex-col items-center space-y-[-2rem]">
           {displayList.map((item, index) => (
             <CouponTicket
               key={item.coupon?.id ?? `${item.definitionId}-locked-${index}`}
@@ -214,26 +302,40 @@ export default function CouponPage() {
               status={item.status}
               price={item.price}
               passLevel={item.passLevel}
+              description={item.description}
               zIndex={displayList.length - index}
-              onClick={
-                item.coupon ? () => setSelectedCoupon(item.coupon!) : undefined
-              }
             />
           ))}
         </div>
 
-        {/* Redeem Section */}
+        {/* Redeem Button */}
+        {unusedCount > 0 && user?.coupon_token && (
+          <div className="my-4 flex flex-col items-center gap-2">
+            <button
+              onClick={() => setShowReceipt(true)}
+              className="rounded-full bg-[var(--accent-gold)] px-12 py-3 text-lg font-bold tracking-widest text-white shadow-lg transition-transform active:scale-95"
+            >
+              兌換折價券
+            </button>
+            <p className="text-xs text-[var(--text-secondary)]">
+              請至 2F 紀念品攤位使用
+            </p>
+          </div>
+        )}
+
+        {/* Redeem Code Section */}
         <div className="my-2">
           <RedeemSection />
         </div>
       </div>
 
-      {/* Coupon Detail Modal */}
+      {/* Receipt Modal */}
       <AnimatePresence>
-        {selectedCoupon && (
-          <CouponDetailModal
-            coupon={selectedCoupon}
-            onClose={() => setSelectedCoupon(null)}
+        {showReceipt && user?.coupon_token && (
+          <RedeemReceiptModal
+            totalAmount={totalUnusedAmount}
+            couponToken={user.coupon_token}
+            onClose={() => setShowReceipt(false)}
           />
         )}
       </AnimatePresence>
