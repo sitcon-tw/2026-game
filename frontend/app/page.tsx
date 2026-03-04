@@ -4,12 +4,17 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { motion } from "motion/react";
+import { useAnnouncements } from "@/hooks/api";
+import AnnouncementTicker from "@/components/AnnouncementTicker";
 
 type AnimationPhase = "idle" | "sliding" | "spinning" | "expanding" | "done";
+
+const DEFAULT_MESSAGE = "歡迎來到 SITCON 2026 大地遊戲！";
 
 export default function LandingPage() {
   const router = useRouter();
   const [phase, setPhase] = useState<AnimationPhase>("idle");
+  const { data: announcements, isLoading: announcementsLoading } = useAnnouncements();
 
   const handleEnter = useCallback(() => {
     if (phase !== "idle") return;
@@ -25,7 +30,10 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-[url('/assets/landing/background.png')] bg-top bg-cover text-[var(--text-primary)] max-w-lg mx-auto overflow-hidden">
+    <div
+      className="bg-[url('/assets/landing/background.png')] bg-top bg-cover text-[var(--text-primary)] max-w-lg mx-auto overflow-hidden cursor-pointer"
+      onClick={handleEnter}
+    >
       <main className="mx-auto grid min-h-dvh grid-rows-[auto_1fr_auto_auto] px-6 py-6 relative">
         {/* Message box */}
         <motion.div
@@ -33,20 +41,19 @@ export default function LandingPage() {
           animate={isAnimating ? { opacity: 0, y: -40 } : { opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div className="relative w-full max-w-[500px]">
-            <Image
-              src="/assets/landing/message.png"
-              alt="訊息框"
-              width={500}
-              height={90}
-              priority
-              className="h-auto w-full"
-            />
-            <div className="pointer-events-none absolute inset-y-0 left-20 md:left-26 right-6 flex items-center translate-y-[-4px] md:translate-y-[-8px]">
+          <div
+            className="w-full max-w-[500px] bg-[url('/assets/landing/message.png')] bg-contain bg-no-repeat bg-center pl-38 md:pl-44 pr-25 md:pr-30 pt-1 pb-5 flex items-center overflow-hidden"
+            style={{ aspectRatio: "500 / 90" }}
+          >
+            {announcementsLoading ? (
+              <div className="h-5 w-32 animate-pulse rounded bg-current opacity-20" />
+            ) : announcements && announcements.length > 0 ? (
+              <AnnouncementTicker announcements={announcements} />
+            ) : (
               <div className="h-8 w-full whitespace-nowrap text-[clamp(0.875rem,2.8vw,1.125rem)]">
-                點選「開始」進入遊戲👇👇
+                {DEFAULT_MESSAGE}
               </div>
-            </div>
+            )}
           </div>
         </motion.div>
 
@@ -90,10 +97,10 @@ export default function LandingPage() {
                   transition={
                     isAnimating
                       ? {
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }
                       : { duration: 0 }
                   }
                 >
@@ -133,7 +140,7 @@ export default function LandingPage() {
                 if (phase === "sliding") {
                   setPhase("spinning");
                   // Let CD spin for ~1.2s then expand
-                  setTimeout(() => setPhase("expanding"), 1200);
+                  setTimeout(() => setPhase("expanding"), 800);
                 }
               }}
             >
@@ -143,6 +150,7 @@ export default function LandingPage() {
                 width={320}
                 height={460}
                 priority
+                className="max-h-[calc(100dvh-12rem)] w-auto"
               />
             </motion.div>
           </div>
@@ -169,14 +177,12 @@ export default function LandingPage() {
           className="mt-8 flex items-center justify-center"
           {...fadeOut}
         >
-          <button onClick={handleEnter} className="block cursor-pointer">
-            <Image
-              src="/assets/landing/enter.png"
-              alt="進入遊戲"
-              width={180}
-              height={64}
-            />
-          </button>
+          <Image
+            src="/assets/landing/enter.png"
+            alt="進入遊戲"
+            width={180}
+            height={64}
+          />
         </motion.div>
 
         {/* Bottom decorations */}

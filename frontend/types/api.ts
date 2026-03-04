@@ -141,6 +141,14 @@ export interface Staff {
   updated_at: string;
 }
 
+/* ── Announcements ── */
+
+export interface Announcement {
+  id: string;
+  content: string;
+  created_at: string;
+}
+
 /* ── Common ── */
 
 export interface ErrorResponse {
