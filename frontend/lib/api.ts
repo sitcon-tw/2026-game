@@ -3,7 +3,7 @@ const API_BASE_URL = "/api";
 export class ApiError extends Error {
   constructor(
     public status: number,
-    public data: { message?: string }
+    public data: { message?: string },
   ) {
     super(data.message ?? `API error ${status}`);
     this.name = "ApiError";

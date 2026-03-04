@@ -5,7 +5,10 @@ interface RedemptionHistoryListProps {
   isLoading: boolean;
 }
 
-export function RedemptionHistoryList({ history, isLoading }: RedemptionHistoryListProps) {
+export function RedemptionHistoryList({
+  history,
+  isLoading,
+}: RedemptionHistoryListProps) {
   if (isLoading) {
     return (
       <div className="mt-8 w-full max-w-[300px] text-center text-[var(--text-secondary)]">
@@ -24,7 +27,10 @@ export function RedemptionHistoryList({ history, isLoading }: RedemptionHistoryL
       ) : (
         <ul>
           {history.map((item) => (
-            <li key={item.id} className="border-b border-gray-200 py-2 text-[var(--text-primary)] text-sm">
+            <li
+              key={item.id}
+              className="border-b border-gray-200 py-2 text-[var(--text-primary)] text-sm"
+            >
               <div className="flex justify-between">
                 <span>{item.nickname}</span>
                 <span>-{item.total} 元</span>

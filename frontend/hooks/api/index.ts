@@ -7,7 +7,11 @@ export {
   useBoothLogin,
   useBoothCheckin,
 } from "@/hooks/api/useActivities";
-export { useLeaderboard, useLevelInfo, useSubmitLevel } from "@/hooks/api/useGames";
+export {
+  useLeaderboard,
+  useLevelInfo,
+  useSubmitLevel,
+} from "@/hooks/api/useGames";
 export { useFriendCount, useAddFriend } from "@/hooks/api/useFriendships";
 export {
   useCoupons,

@@ -5,14 +5,27 @@
  * and plays short sine/triangle tones.
  */
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTE_NAMES = [
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+];
 
 // Map enharmonic equivalents: E# → F, B# → C, Cb → B, Fb → E
 const ENHARMONIC_MAP: Record<string, string> = {
-  'E#': 'F',
-  'B#': 'C',
-  'Cb': 'B',
-  'Fb': 'E',
+  "E#": "F",
+  "B#": "C",
+  Cb: "B",
+  Fb: "E",
 };
 
 /** Parse a note string like "G4", "C#5", "E#5" into a MIDI number. */
@@ -27,7 +40,7 @@ function noteToMidi(note: string): number {
   if (ENHARMONIC_MAP[name]) {
     name = ENHARMONIC_MAP[name];
     // E# in octave 5 → F5, but B# in octave 4 → C5 (octave bumps)
-    if (match[1] === 'B#') {
+    if (match[1] === "B#") {
       return noteToMidi(`${name}${octave + 1}`);
     }
   }
@@ -55,7 +68,7 @@ function getAudioContext(): AudioContext {
     audioCtx = new AudioContext();
   }
   // Resume if suspended (browser autoplay policy)
-  if (audioCtx.state === 'suspended') {
+  if (audioCtx.state === "suspended") {
     audioCtx.resume();
   }
   return audioCtx;
@@ -74,7 +87,7 @@ export function playNote(note: string, durationMs: number = 200): void {
 
   // Oscillator
   const osc = ctx.createOscillator();
-  osc.type = 'triangle';
+  osc.type = "triangle";
   osc.frequency.setValueAtTime(freq, now);
 
   // Gain envelope: quick attack, sustain, exponential release

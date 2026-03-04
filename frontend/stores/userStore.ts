@@ -28,6 +28,6 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: "sitcon-user-storage",
-    }
-  )
+    },
+  ),
 );
