@@ -116,7 +116,7 @@ export default function ScanPage() {
                     />
                   </div>
                 ) : (
-                  <div className="h-48 w-48 animate-pulse rounded-2xl bg-[#6b6b6b]" />
+                  <div className="h-48 w-48 animate-pulse rounded- bg-[#6b6b6b]" />
                 )}
                 <span className="text-sm text-[var(--text-secondary)]">
                   讓朋友掃描你的 QR Code
@@ -129,17 +129,29 @@ export default function ScanPage() {
 
       {/* Friend remaining info */}
       <p className="mt-6 text-center font-serif text-base text-[var(--text-secondary)] leading-relaxed">
-        在你逛更多攤位以前
-        <br />
-        還可認識{" "}
-        {friendData ? (
+        {!friendData ? (
+          <>
+            在你逛更多攤位以前
+            <br />
+            還可認識{" "}
+            <span className="inline-block h-4 w-6 animate-pulse rounded bg-current opacity-20 align-middle" />{" "}
+            位朋友
+          </>
+        ) : remaining <= 0 ? (
           <span className="font-semibold text-[var(--text-primary)]">
-            {remaining}
+            你太 E 了，好友解鎖完了！
           </span>
         ) : (
-          <span className="inline-block h-4 w-6 animate-pulse rounded bg-current opacity-20 align-middle" />
-        )}{" "}
-        位朋友
+          <>
+            在你逛更多攤位以前
+            <br />
+            還可認識{" "}
+            <span className="font-semibold text-[var(--text-primary)]">
+              {remaining}
+            </span>{" "}
+            位朋友
+          </>
+        )}
       </p>
 
       {/* Progress bar */}
