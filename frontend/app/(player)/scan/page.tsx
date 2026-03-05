@@ -2,10 +2,10 @@
 
 import { useState, useCallback } from "react";
 import {
-  useCurrentUser,
   useFriendCount,
   useAddFriend,
   useCheckinActivity,
+  useOneTimeQR,
 } from "@/hooks/api";
 import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
@@ -15,7 +15,7 @@ export default function ScanPage() {
   const [showMyQR, setShowMyQR] = useState(false);
   const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
 
-  const { data: user } = useCurrentUser();
+  const { data: oneTimeQR } = useOneTimeQR();
   const { data: friendData } = useFriendCount();
   const addFriend = useAddFriend();
   const checkinActivity = useCheckinActivity();
@@ -107,14 +107,16 @@ export default function ScanPage() {
           alternateContent={
             <div className="flex h-full w-full items-center justify-center bg-[var(--bg-secondary)]">
               <div className="flex flex-col items-center gap-3 p-10">
-                {user?.qrcode_token ? (
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(user.qrcode_token)}`}
-                    alt="我的 QR Code"
-                    className="h-48 w-48 rounded-md"
-                  />
+                {oneTimeQR?.token ? (
+                  <div className="rounded-2xl bg-white p-3 shadow-md">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(oneTimeQR.token)}`}
+                      alt="我的 QR Code"
+                      className="h-48 w-48 rounded-md"
+                    />
+                  </div>
                 ) : (
-                  <div className="h-48 w-48 animate-pulse rounded-md bg-[#6b6b6b]" />
+                  <div className="h-48 w-48 animate-pulse rounded-2xl bg-[#6b6b6b]" />
                 )}
                 <span className="text-sm text-[var(--text-secondary)]">
                   讓朋友掃描你的 QR Code
