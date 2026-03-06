@@ -1,5 +1,5 @@
 // Player
-export { useCurrentUser, useLoginWithToken } from "@/hooks/api/useUser";
+export { useCurrentUser, useLoginWithToken, useOneTimeQR } from "@/hooks/api/useUser";
 export {
   useActivityStats,
   useCheckinActivity,
@@ -12,7 +12,7 @@ export {
   useLevelInfo,
   useSubmitLevel,
 } from "@/hooks/api/useGames";
-export { useFriendCount, useAddFriend } from "@/hooks/api/useFriendships";
+export { useFriendCount, useAddFriend, useFriendList } from "@/hooks/api/useFriendships";
 export { useAnnouncements } from "@/hooks/api/useAnnouncements";
 export {
   useCoupons,

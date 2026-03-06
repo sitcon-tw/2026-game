@@ -74,7 +74,22 @@ export interface LevelInfoResponse {
   speed: number;
 }
 
+/* ── One-Time QR ── */
+
+export interface OneTimeQRResponse {
+  token: string;
+  expires_at: string;
+  ttl_seconds: number;
+}
+
 /* ── Friendships ── */
+
+export interface FriendPublicProfile {
+  id: string;
+  nickname: string;
+  avatar: string;
+  current_level: number;
+}
 
 export interface FriendCountResponse {
   count: number;

@@ -2,6 +2,7 @@ export const queryKeys = {
   user: {
     me: ["user", "me"] as const,
     session: ["user", "session"] as const,
+    oneTimeQr: ["user", "one-time-qr"] as const,
   },
   activities: {
     stats: ["activities", "stats"] as const,
