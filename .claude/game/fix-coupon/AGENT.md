@@ -84,12 +84,27 @@ useCouponPolling();
 
 ---
 
+### 4. 顯示非定義綁定的折價券
+
+**修改檔案**：`frontend/app/(player)/coupon/page.tsx`
+
+原本 `buildDisplayList` 只顯示與 `/discount-coupons/coupons` 定義匹配的券。透過禮物兌換等方式獲得的折價券（`discount_id` 不在定義清單中）不會顯示。
+
+修改 `buildDisplayList`，在處理完所有定義後，額外遍歷 `userCoupons`，將 `discount_id` 不在定義清單中的券也加入顯示列表（status 為 unused/used），並透過既有排序邏輯（unused → used → locked）確保持有的券排在前面。
+
+| # | 子任務 | 狀態 |
+|---|--------|------|
+| 4-1 | 在 `buildDisplayList` 加入非定義綁定券的顯示邏輯 | ✅ |
+
+---
+
 ## 影響範圍
 
 | 檔案 | 變更類型 |
 |------|----------|
 | `frontend/hooks/useCouponPolling.ts` | 新增 |
 | `frontend/app/(player)/layout.tsx` | 修改（引入 hook） |
+| `frontend/app/(player)/coupon/page.tsx` | 修改（`buildDisplayList` 加入非定義綁定券） |
 | `frontend/hooks/api/useCoupons.ts` | 不需修改（已有 `useCoupons()`） |
 | `frontend/stores/popupStore.ts` | 不需修改（已有 `showPopup()`） |
 
