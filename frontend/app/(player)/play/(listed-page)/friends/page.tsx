@@ -9,10 +9,10 @@ const PAGE_SIZE = 5;
 
 export default function FriendsPage() {
   const router = useRouter();
-  const { data: friends, isLoading } = useFriendList();
+  const { data: friends, isFetching } = useFriendList();
   const [page, setPage] = useState(0);
 
-  if (isLoading) {
+  if (isFetching) {
     return <LoadingSpinner />;
   }
 
