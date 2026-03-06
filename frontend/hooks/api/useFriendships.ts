@@ -8,6 +8,9 @@ export function useFriendList() {
   return useQuery({
     queryKey: queryKeys.friendships.list,
     queryFn: () => api.get<FriendPublicProfile[]>("/friendships"),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
   });
 }
 
