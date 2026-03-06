@@ -1,7 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import type { FriendCountResponse } from "@/types/api";
+import type { FriendCountResponse, FriendPublicProfile } from "@/types/api";
+
+/** GET /friendships — 取得好友列表 */
+export function useFriendList() {
+  return useQuery({
+    queryKey: queryKeys.friendships.list,
+    queryFn: () => api.get<FriendPublicProfile[]>("/friendships"),
+  });
+}
 
 /** GET /friendships/stats — 取得好友數量及上限 */
 export function useFriendCount() {
