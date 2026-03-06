@@ -25,4 +25,8 @@ export const queryKeys = {
   announcements: {
     list: ["announcements"] as const,
   },
+  admin: {
+    giftCoupons: ["admin", "gift-coupons"] as const,
+    users: (q: string) => ["admin", "users", q] as const,
+  },
 } as const;

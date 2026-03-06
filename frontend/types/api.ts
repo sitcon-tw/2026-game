@@ -164,6 +164,30 @@ export interface Announcement {
   created_at: string;
 }
 
+/* ── Admin ── */
+
+export interface AdminLoginResponse {
+  authenticated: boolean;
+}
+
+export interface DiscountCouponGift {
+  id: string;
+  discount_id: string;
+  price: number;
+  token: string;
+}
+
+export interface AdminAssignCouponRequest {
+  user_id: string;
+  discount_id: string;
+  price: number;
+}
+
+export interface AdminCreateGiftCouponRequest {
+  discount_id: string;
+  price: number;
+}
+
 /* ── Common ── */
 
 export interface ErrorResponse {

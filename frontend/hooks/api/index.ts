@@ -23,3 +23,13 @@ export {
   useStaffRedeemCoupon,
   useStaffRedemptionHistory,
 } from "@/hooks/api/useCoupons";
+
+// Admin
+export {
+  useAdminLogin,
+  useAdminGiftCoupons,
+  useAdminCreateGiftCoupon,
+  useAdminDeleteGiftCoupon,
+  useAdminSearchUsers,
+  useAdminAssignCoupon,
+} from "@/hooks/api/useAdmin";
