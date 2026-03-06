@@ -84,6 +84,13 @@ export interface OneTimeQRResponse {
 
 /* ── Friendships ── */
 
+export interface FriendPublicProfile {
+  id: string;
+  nickname: string;
+  avatar: string;
+  current_level: number;
+}
+
 export interface FriendCountResponse {
   count: number;
   max: number;

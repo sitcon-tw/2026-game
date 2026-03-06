@@ -116,7 +116,9 @@ export default function ScanPage() {
                     />
                   </div>
                 ) : (
-                  <div className="h-48 w-48 animate-pulse rounded- bg-[#6b6b6b]" />
+                  <div className="rounded-2xl bg-white p-3 shadow-md">
+                    <div className="h-48 w-48 animate-pulse rounded-md bg-[#6b6b6b]" />
+                  </div>
                 )}
                 <span className="text-sm text-[var(--text-secondary)]">
                   讓朋友掃描你的 QR Code
