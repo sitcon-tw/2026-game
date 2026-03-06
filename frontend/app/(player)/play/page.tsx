@@ -51,7 +51,7 @@ export default function PlayPage() {
       title: "認識新朋友",
       current: friendData?.count ?? 0,
       total: friendData?.max ?? 0,
-      route: "/scan",
+      route: "/play/friends",
     },
   ];
 
@@ -59,6 +59,7 @@ export default function PlayPage() {
     <div className="bg-[var(--bg-primary)] px-6 py-8">
       {/* Title */}
       <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center mb-8">
+        {" "}
         解鎖關卡的方式
       </h1>
 
