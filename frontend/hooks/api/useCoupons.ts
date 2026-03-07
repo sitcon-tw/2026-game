@@ -77,10 +77,10 @@ export function useStaffRedeemCoupon() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["coupons", "staff", "lookup"],
+        queryKey: queryKeys.staff.lookup,
       });
       queryClient.invalidateQueries({
-        queryKey: ["coupons", "staff", "history"],
+        queryKey: queryKeys.staff.history,
       });
     },
   });
@@ -89,7 +89,7 @@ export function useStaffRedeemCoupon() {
 /** GET /discount-coupons/staff/current/redemptions — 工作人員折扣紀錄 */
 export function useStaffRedemptionHistory() {
   return useQuery({
-    queryKey: ["coupons", "staff", "history"] as const,
+    queryKey: queryKeys.staff.history,
     queryFn: () =>
       api.get<DiscountHistoryItem[]>(
         "/discount-coupons/staff/current/redemptions",

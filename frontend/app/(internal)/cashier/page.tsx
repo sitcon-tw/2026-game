@@ -8,8 +8,8 @@ import {
   useStaffRedeemCoupon,
   useStaffRedemptionHistory,
 } from "@/hooks/api";
-import { useStaffStore } from "@/stores";
-import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
+import { useStaffStore, usePopupStore } from "@/stores";
+import { translateWithContext } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
 import QrScanner from "@/components/QrScanner";
 import { RedemptionCard } from "@/components/staff/RedemptionCard";
@@ -22,9 +22,10 @@ function StaffScanContent() {
     string | null
   >(null);
   const [lookupResult, setLookupResult] =
-    useState<GetUserCouponsResponse | null>(null); // Store lookup result
+    useState<GetUserCouponsResponse | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const showPopup = usePopupStore((s) => s.showPopup);
 
   // Staff store
   const { staffToken, staffName, setStaffToken, setStaffName, clearStaff } =
@@ -45,8 +46,7 @@ function StaffScanContent() {
       staffLogin.mutate(tokenFromUrl, {
         onSuccess: (data: any) => {
           if (data?.name) setStaffName(data.name);
-          // Note: The staffLogin API might not return `name` directly.
-          // Adjust based on actual API response for staff name.
+          setScanStatus({ type: "idle" });
         },
         onError: (error) => {
           console.error("Staff login failed:", error);
@@ -81,73 +81,85 @@ function StaffScanContent() {
         return;
 
       const userCouponToken = result[0].rawValue;
-      console.log("Scanned user coupon token:", userCouponToken);
       setScannedUserCouponToken(userCouponToken);
       setScanStatus({ type: "scanning" });
 
       staffLookupCoupons.mutate(userCouponToken, {
         onSuccess: (data) => {
           setLookupResult(data);
-          setScanStatus({
-            type: "success",
-            message: `已查詢到 ${data.total} 元折扣`,
-          });
-          // Keep the success message for a bit longer for user to see
-          // setTimeout(() => setScanStatus({ type: "idle" }), 2000);
+          setScanStatus({ type: "idle" });
         },
         onError: (error) => {
-          const msg = translateWithContext(
-            "staff-redeem", // Using redeem context for lookup errors for now
-            error instanceof Error ? error.message : undefined,
-            "查詢折扣券失敗，請重試",
-          );
-          setScanStatus({ type: "error", message: msg });
-          setTimeout(() => setScanStatus({ type: "idle" }), 3000);
+          const apiMessage =
+            error instanceof Error ? error.message : undefined;
+          showPopup({
+            title: "查詢失敗",
+            description: apiMessage || "查詢折扣券失敗。可能的原因：玩家持個人 QR Code，請確認玩家切換至折價券專用兌換 QR Code。",
+          });
+          setScanStatus({ type: "idle" });
         },
       });
     },
-    [scanStatus, staffLookupCoupons, staffRedeemCoupon],
+    [scanStatus, staffLookupCoupons, staffRedeemCoupon, showPopup],
   );
 
-  // ── 3. Handle coupon redemption ──
+  // ── 3. Cancel lookup ──
+  const handleCancelLookup = useCallback(() => {
+    setLookupResult(null);
+    setScannedUserCouponToken(null);
+    setScanStatus({ type: "idle" });
+  }, []);
+
+  // ── 4. Handle coupon redemption ──
   const handleConfirmRedeem = useCallback(() => {
     if (!scannedUserCouponToken || staffRedeemCoupon.isPending) return;
 
-    setScanStatus({ type: "scanning" }); // Indicate redemption is in progress
+    setScanStatus({ type: "scanning" });
 
     staffRedeemCoupon.mutate(scannedUserCouponToken, {
       onSuccess: (data) => {
-        setLookupResult(null); // Clear lookup result after redemption
+        setLookupResult(null);
         setScannedUserCouponToken(null);
-        setScanStatus({
-          type: "success",
-          message: `核銷成功！共折抵 ${data.total} 元`,
+        setScanStatus({ type: "idle" });
+
+        showPopup({
+          title: "核銷成功",
+          description: `${data.user_name ? `玩家：${data.user_name}\n` : ""}共折抵 ${data.total} 元`,
         });
-        setTimeout(() => setScanStatus({ type: "idle" }), 2000);
       },
       onError: (error) => {
-        const msg = translateWithContext(
-          "staff-redeem",
-          error instanceof Error ? error.message : undefined,
-          "核銷失敗，請重試",
-        );
-        setScanStatus({ type: "error", message: msg });
-        setTimeout(() => setScanStatus({ type: "idle" }), 3000);
+        const apiMessage =
+          error instanceof Error ? error.message : undefined;
+        setScanStatus({ type: "idle" });
+        showPopup({
+          title: "核銷失敗",
+          description: apiMessage || "核銷失敗，請重試",
+        });
       },
     });
-  }, [scannedUserCouponToken, staffRedeemCoupon]);
+  }, [scannedUserCouponToken, staffRedeemCoupon, showPopup]);
 
   return (
     <div className="flex flex-1 flex-col items-center px-6 py-8">
       {/* Title */}
-      <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">
-        {staffName ?? "折價券掃描器"}
+      <h1 className="text-center font-serif text-3xl font-bold leading-snug text-[var(--text-primary)]">
+        折價券掃描器
       </h1>
 
       {/* Login error */}
       {staffLogin.isError && (
-        <div className="mt-4 rounded-lg bg-red-100 px-4 py-3 text-red-700 text-sm w-full max-w-[300px] text-center">
-          {scanStatus.type === "error" && scanStatus.message}
+        <div className="mt-4 w-full max-w-[340px] rounded-2xl bg-red-50 px-5 py-4 ring-1 ring-red-200">
+          <div className="flex items-start gap-3">
+            <span className="text-xl">⚠️</span>
+            <div>
+              <p className="font-serif font-bold text-red-800">登入失敗</p>
+              <p className="mt-1 text-sm text-red-600">
+                {scanStatus.type === "error"
+                  ? scanStatus.message
+                  : "工作人員登入失敗，請確認連結是否正確"}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -161,12 +173,13 @@ function StaffScanContent() {
         <RedemptionCard
           lookupResult={lookupResult}
           onConfirmRedeem={handleConfirmRedeem}
+          onCancel={handleCancelLookup}
           isRedeeming={staffRedeemCoupon.isPending}
         />
       )}
 
       {/* Redemption History */}
-      {!lookupResult && ( // Only show history if no lookup result is displayed
+      {!lookupResult && (
         <RedemptionHistoryList
           history={redemptionHistory ?? []}
           isLoading={historyLoading}
@@ -178,7 +191,7 @@ function StaffScanContent() {
         type="button"
         onClick={() => {
           router.push("/play");
-          clearStaff(); // Clear staff token when switching to player mode
+          clearStaff();
         }}
         className="fixed bottom-20 right-6 z-50 flex flex-col items-center gap-1 transition-transform active:scale-95"
         aria-label="切換身份"
@@ -186,7 +199,7 @@ function StaffScanContent() {
         <div className="grid h-14 w-14 place-items-center rounded-full bg-[#59360B] shadow-lg">
           <Image src="/assets/switch.svg" alt="Switch" width={32} height={32} />
         </div>
-        <span className="font-serif text-lg font-bold text-[var(--text-primary)] whitespace-nowrap">
+        <span className="whitespace-nowrap font-serif text-lg font-bold text-[var(--text-primary)]">
           玩家 / 工作人員
         </span>
       </button>
