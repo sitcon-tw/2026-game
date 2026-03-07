@@ -8,7 +8,7 @@ import { usePopupStore } from "@/stores";
 import type { DiscountCoupon } from "@/types/api";
 
 const STORAGE_KEY = "known-coupon-ids";
-const POLL_INTERVAL = 3 * 60 * 1000; // 3 minutes
+const POLL_INTERVAL = 30 * 1000; // 30 seconds
 
 function getKnownIds(): string[] | null {
   try {
