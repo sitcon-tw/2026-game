@@ -33,24 +33,28 @@ export default function PlayPage() {
       title: "攤位",
       current: counts.booth?.current ?? 0,
       total: counts.booth?.total ?? 0,
+      loaded: !!activities,
       route: "/play/booths",
     },
     {
       title: "闖關",
       current: counts.challenge?.current ?? 0,
       total: counts.challenge?.total ?? 0,
+      loaded: !!activities,
       route: "/play/challenges",
     },
     {
       title: "打卡",
       current: counts.checkin?.current ?? 0,
       total: counts.checkin?.total ?? 0,
+      loaded: !!activities,
       route: "/play/checkins",
     },
     {
       title: "認識新朋友",
       current: friendData?.count ?? 0,
       total: friendData?.max ?? 0,
+      loaded: !!friendData,
       route: "/play/friends",
     },
   ];
@@ -71,6 +75,7 @@ export default function PlayPage() {
             title={method.title}
             current={method.current}
             total={method.total}
+            loaded={method.loaded}
             onClick={() => router.push(method.route)}
           />
         ))}
