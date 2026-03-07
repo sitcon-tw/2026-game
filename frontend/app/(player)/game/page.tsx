@@ -27,6 +27,7 @@ export default function LevelsPage() {
 
   const currentLevel = user?.current_level ?? 0;
   const unlockLevel = user?.unlock_level ?? 0;
+  const leaderboardLoaded = !!leaderboard;
   const rank = leaderboard?.me?.rank;
 
   const completedSet = new Set(
@@ -50,6 +51,8 @@ export default function LevelsPage() {
           <div className="font-serif text-2xl text-[var(--text-gold)]">
             {rank != null ? (
               `第 ${rank} 名`
+            ) : leaderboardLoaded ? (
+              "尚無排名"
             ) : (
               <div className="h-7 w-24 animate-pulse rounded bg-current opacity-20" />
             )}

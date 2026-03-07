@@ -6,6 +6,7 @@ interface UnlockMethodCardProps {
   title: string;
   current: number;
   total: number;
+  loaded?: boolean;
   onClick: () => void;
 }
 
@@ -13,9 +14,10 @@ export default function UnlockMethodCard({
   title,
   current,
   total,
+  loaded = false,
   onClick,
 }: UnlockMethodCardProps) {
-  const isLoading = total === 0;
+  const isLoading = !loaded;
   const progress = isLoading ? 0 : (current / total) * 100;
 
   return (
