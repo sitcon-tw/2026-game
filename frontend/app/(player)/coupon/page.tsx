@@ -36,6 +36,8 @@ function buildDisplayList(
     couponsByDefId.set(c.discount_id, list);
   }
 
+  const defIds = new Set(definitions.map((d) => d.id));
+
   for (const def of definitions) {
     const owned = couponsByDefId.get(def.id) ?? [];
 
@@ -71,6 +73,18 @@ function buildDisplayList(
           definitionId: def.id,
         });
       }
+    }
+  }
+
+  // Include coupons not tied to any definition (e.g. gift coupons)
+  for (const c of userCoupons) {
+    if (!defIds.has(c.discount_id)) {
+      items.push({
+        status: c.used_at ? "used" : "unused",
+        coupon: c,
+        price: c.price,
+        definitionId: c.discount_id,
+      });
     }
   }
 
