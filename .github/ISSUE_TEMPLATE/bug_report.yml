@@ -2,6 +2,7 @@ name: Bug Report
 description: 回報前端或後端的 Bug
 title: "[Bug] "
 labels: ["bug"]
+projects: ["sitcon-tw/13"]
 body:
   - type: markdown
     attributes:

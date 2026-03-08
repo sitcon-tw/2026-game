@@ -2,6 +2,7 @@ name: Feature Request
 description: 提出新功能或功能補強需求
 title: "[Feature] "
 labels: ["enhancement"]
+projects: ["sitcon-tw/13"]
 body:
   - type: markdown
     attributes:
