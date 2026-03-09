@@ -9,7 +9,13 @@ type DiscountRule struct {
 	Description string
 }
 
-const DiscountIDCheckInAllBoothAndCheck = "check-in-all-booth-and-check"
+const (
+	DiscountIDCheckInAllBoothAndCheck = "check-in-all-booth-and-check"
+	DiscountIDTourGroupChallenge      = "tour-group-challenge"
+
+	// Real activity ID for tour-group challenge activity.
+	TourGroupChallengeActivityID = "8f1a4209-c8fc-4e21-94a2-38eaad028110"
+)
 
 //nolint:mnd // config-style rule table
 func couponRules() []DiscountRule {
@@ -18,12 +24,17 @@ func couponRules() []DiscountRule {
 			ID:          DiscountIDCheckInAllBoothAndCheck,
 			PassLevel:   0,
 			Amount:      50,
-			MaxQty:      1,
+			MaxQty:      999999999,
 			Description: "打卡完所有攤位和活動場地（不含闖關）",
 		},
-		{ID: "level-10", PassLevel: 10, Amount: 100, MaxQty: 1, Description: "完成 10 關"},
-		{ID: "level-35", PassLevel: 35, Amount: 200, MaxQty: 1, Description: "完成 35 關"},
-		{ID: "level-70", PassLevel: 70, Amount: 300, MaxQty: 1, Description: "完成 70 關"},
+		{
+			ID:          DiscountIDTourGroupChallenge,
+			PassLevel:   0,
+			Amount:      1,
+			MaxQty:      999999999,
+			Description: "導遊團闖關",
+		},
+		{ID: "level-50", PassLevel: 50, Amount: 200, MaxQty: 999999999, Description: "完成 50 關"},
 	}
 }
 
@@ -49,6 +60,17 @@ func GetCouponRulesByLevel(level int) []DiscountRule {
 func GetCheckInCompletionCouponRule() (DiscountRule, bool) {
 	for _, rule := range couponRules() {
 		if rule.ID == DiscountIDCheckInAllBoothAndCheck {
+			return rule, true
+		}
+	}
+
+	return DiscountRule{}, false
+}
+
+// GetTourGroupChallengeCouponRule returns the tour-group challenge coupon rule.
+func GetTourGroupChallengeCouponRule() (DiscountRule, bool) {
+	for _, rule := range couponRules() {
+		if rule.ID == DiscountIDTourGroupChallenge {
 			return rule, true
 		}
 	}

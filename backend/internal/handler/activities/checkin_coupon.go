@@ -47,6 +47,13 @@ func (h *Handler) issueCheckInCoupon(ctx context.Context, tx pgx.Tx, userID stri
 		return nil
 	}
 
-	_, _, err = h.Repo.CreateDiscountCoupon(ctx, tx, userID, rule.Amount, rule.ID, rule.MaxQty)
-	return err
+	_, created, err := h.Repo.CreateDiscountCoupon(ctx, tx, userID, rule.Amount, rule.ID, rule.MaxQty)
+	if err != nil {
+		return err
+	}
+	if !created {
+		return nil
+	}
+
+	return nil
 }

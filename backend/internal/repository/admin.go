@@ -158,3 +158,24 @@ LIMIT $2`
 
 	return users, nil
 }
+
+// TryMarkAdminScanCouponIssued marks scan issuance once per user+discount.
+// Returns true when marked, false when already marked before.
+func (r *PGRepository) TryMarkAdminScanCouponIssued(
+	ctx context.Context,
+	tx pgx.Tx,
+	userID string,
+	discountID string,
+) (bool, error) {
+	const stmt = `
+INSERT INTO admin_qr_coupon_grants (user_id, discount_id, created_at)
+VALUES ($1, $2, NOW())
+ON CONFLICT (user_id, discount_id) DO NOTHING`
+
+	tag, err := tx.Exec(ctx, stmt, userID, discountID)
+	if err != nil {
+		return false, err
+	}
+
+	return tag.RowsAffected() == 1, nil
+}
