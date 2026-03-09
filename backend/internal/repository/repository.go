@@ -101,12 +101,6 @@ type Repository interface {
 	DeleteDiscountCouponGiftByID(ctx context.Context, tx pgx.Tx, id string) error
 	ListDiscountCouponGifts(ctx context.Context, tx pgx.Tx) ([]models.DiscountCouponGift, error)
 	SearchUsersByNickname(ctx context.Context, tx pgx.Tx, query string, limit int) ([]models.User, error)
-	TryMarkAdminScanCouponIssued(
-		ctx context.Context,
-		tx pgx.Tx,
-		userID string,
-		discountID string,
-	) (bool, error)
 	TryMarkStaffScanCouponIssued(
 		ctx context.Context,
 		tx pgx.Tx,

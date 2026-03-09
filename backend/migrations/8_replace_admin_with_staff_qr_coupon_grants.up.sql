@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS "public"."admin_qr_coupon_grants";
+
 CREATE TABLE "public"."staff_qr_coupon_grants" (
     "user_id"     uuid NOT NULL,
     "discount_id" text NOT NULL,
