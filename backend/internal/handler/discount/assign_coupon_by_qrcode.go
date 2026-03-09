@@ -1,4 +1,4 @@
-package admin
+package discount
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
+	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
@@ -25,10 +26,10 @@ var (
 	errScanLookupFailed       = errors.New("scan target lookup failed")
 )
 
-// AssignCouponByQRCode handles POST /admin/discount-coupons/scan-assignments.
-// @Summary      掃描使用者 QR code 發放折扣券
-// @Description  需要 admin_token cookie。透過使用者的一次性 QR code 發放折扣券，並防止同一 user+discount 重複發放。
-// @Tags         admin
+// AssignCouponByQRCode handles POST /discount-coupons/staff/scan-assignments.
+// @Summary      掃描使用者 QR code 發放折扣券（工作人員）
+// @Description  需要 staff_token cookie。透過使用者的一次性 QR code 發放折扣券，並防止同一 user+discount 重複發放。
+// @Tags         discount
 // @Accept       json
 // @Produce      json
 // @Param        request      body      assignCouponByQRCodeRequest  true  "Assign coupon by QR payload"
@@ -38,8 +39,14 @@ var (
 // @Failure      404          {object}  res.ErrorResponse "user not found"
 // @Failure      409          {object}  res.ErrorResponse "already issued by qr scan"
 // @Failure      500          {object}  res.ErrorResponse
-// @Router       /admin/discount-coupons/scan-assignments [post]
+// @Router       /discount-coupons/staff/scan-assignments [post]
 func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
+	staff, ok := middleware.StaffFromContext(r.Context())
+	if !ok || staff == nil {
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
+		return
+	}
+
 	var req assignCouponByQRCodeRequest
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -72,9 +79,9 @@ func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	marked, err := h.Repo.TryMarkAdminScanCouponIssued(r.Context(), tx, userID, req.DiscountID)
+	marked, err := h.Repo.TryMarkStaffScanCouponIssued(r.Context(), tx, userID, req.DiscountID, staff.ID)
 	if err != nil {
-		res.Fail(w, r, http.StatusInternalServerError, err, "failed to mark admin scan issuance")
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to mark staff scan issuance")
 		return
 	}
 	if !marked {
@@ -96,6 +103,64 @@ func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(coupon)
+}
+
+// ListStaffScanHistory handles GET /discount-coupons/staff/current/scan-assignments.
+// @Summary      取得工作人員掃碼發券紀錄
+// @Description  需要 staff_token cookie，回傳該 staff 透過掃碼發放折扣券的紀錄
+// @Tags         discount
+// @Produce      json
+// @Success      200  {array}   models.StaffQRCouponGrant
+// @Failure      401  {object}  res.ErrorResponse "unauthorized"
+// @Failure      500  {object}  res.ErrorResponse
+// @Router       /discount-coupons/staff/current/scan-assignments [get]
+func (h *Handler) ListStaffScanHistory(w http.ResponseWriter, r *http.Request) {
+	staff, ok := middleware.StaffFromContext(r.Context())
+	if !ok || staff == nil {
+		res.Fail(w, r, http.StatusUnauthorized, errors.New("unauthorized"), "unauthorized staff")
+		return
+	}
+
+	tx, err := h.Repo.StartTransaction(r.Context())
+	if err != nil {
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to start transaction")
+		return
+	}
+	defer h.Repo.DeferRollback(r.Context(), tx)
+
+	grants, err := h.Repo.ListStaffScanCouponGrants(r.Context(), tx, staff.ID)
+	if err != nil {
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to list scan history")
+		return
+	}
+
+	if err = h.Repo.CommitTransaction(r.Context(), tx); err != nil {
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
+		return
+	}
+
+	type scanGrantItem struct {
+		UserID     string    `json:"user_id"`
+		Nickname   string    `json:"nickname"`
+		DiscountID string    `json:"discount_id"`
+		StaffID    string    `json:"staff_id"`
+		CreatedAt  time.Time `json:"created_at"`
+	}
+
+	resp := make([]scanGrantItem, 0, len(grants))
+	for _, g := range grants {
+		resp = append(resp, scanGrantItem{
+			UserID:     g.UserID,
+			Nickname:   g.Nickname,
+			DiscountID: g.DiscountID,
+			StaffID:    g.StaffID,
+			CreatedAt:  g.CreatedAt,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func (h *Handler) resolveUserIDFromOneTimeQRCode(ctx context.Context, tx pgx.Tx, token string) (string, error) {

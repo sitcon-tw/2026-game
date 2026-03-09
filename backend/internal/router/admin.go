@@ -26,7 +26,6 @@ func AdminRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 		// Legacy alias: kept for backward compatibility.
 		r.Post("/gift-coupons/assignments", h.AssignCouponToUser)
 		r.Post("/discount-coupons/assignments", h.AssignCouponToUser)
-		r.Post("/discount-coupons/scan-assignments", h.AssignCouponByQRCode)
 		r.Get("/users", h.SearchUsers)
 	})
 
