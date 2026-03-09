@@ -134,8 +134,13 @@ WHERE qrcode_token = $1`
 
 // IncrementUnlockLevel increases unlock_level by 1.
 func (r *PGRepository) IncrementUnlockLevel(ctx context.Context, tx pgx.Tx, userID string) error {
-	const stmt = `UPDATE users SET unlock_level = unlock_level + 1, updated_at = NOW() WHERE id = $1`
-	_, err := tx.Exec(ctx, stmt, userID)
+	return r.IncrementUnlockLevelBy(ctx, tx, userID, 1)
+}
+
+// IncrementUnlockLevelBy increases unlock_level by the given amount.
+func (r *PGRepository) IncrementUnlockLevelBy(ctx context.Context, tx pgx.Tx, userID string, amount int) error {
+	const stmt = `UPDATE users SET unlock_level = unlock_level + $2, updated_at = NOW() WHERE id = $1`
+	_, err := tx.Exec(ctx, stmt, userID, amount)
 	return err
 }
 

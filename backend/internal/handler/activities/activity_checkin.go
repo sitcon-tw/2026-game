@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
@@ -16,7 +17,7 @@ type activityCheckInRequest struct {
 
 // ActivityCheckIn handles POST /activities/check-ins.
 // @Summary      使用者掃描活動 QR code 打卡
-// @Description  使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在活動打卡。需要已登入的使用者 cookie。
+// @Description  使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在 check 類型活動打卡。首次打卡成功 unlock_level +1。需要已登入的使用者 cookie。
 // @Tags         activities
 // @Accept       json
 // @Produce      json
@@ -62,6 +63,11 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if activity.Type != models.ActivitiesTypeCheck {
+		res.Fail(w, r, http.StatusBadRequest, nil, "activity does not support user self check-in")
+		return
+	}
+
 	inserted, err := h.Repo.AddVisited(r.Context(), tx, user.ID, activity.ID)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to record visit")
@@ -69,7 +75,8 @@ func (h *Handler) ActivityCheckIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inserted {
-		err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
+		increment, _ := unlockIncrementByActivityType(activity.Type)
+		err = h.Repo.IncrementUnlockLevelBy(r.Context(), tx, user.ID, increment)
 		if err != nil {
 			res.Fail(w, r, http.StatusInternalServerError, err, "failed to update user unlock level")
 			return

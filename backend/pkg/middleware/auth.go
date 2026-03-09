@@ -149,7 +149,7 @@ func StaffAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 	}
 }
 
-// BoothAuth verifies the booth_token cookie against activities of type booth.
+// BoothAuth verifies the booth_token cookie against activities that can scan users.
 //
 //nolint:gocognit // multiple early exits keep middleware readable
 func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler) http.Handler {
@@ -190,7 +190,13 @@ func BoothAuth(repo repository.Repository, logger *zap.Logger) func(http.Handler
 				res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 				return
 			}
-			if booth == nil || booth.Type != models.ActivitiesTypeBooth {
+			if booth == nil {
+				span.SetAttributes(attribute.Bool("auth.authenticated", false))
+				res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
+				return
+			}
+
+			if booth.Type != models.ActivitiesTypeBooth && booth.Type != models.ActivitiesTypeChallenge {
 				span.SetAttributes(attribute.Bool("auth.authenticated", false))
 				res.Fail(w, r, http.StatusUnauthorized, nil, "unauthorized")
 				return

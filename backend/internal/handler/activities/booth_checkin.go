@@ -18,7 +18,7 @@ type boothCheckInRequest struct {
 
 // BoothCheckIn handles POST /activities/booth/user/check-ins.
 // @Summary      攤位掃描使用者 QR code 打卡
-// @Description  攤位工作人員使用攤位專用的 QR code 掃描器掃描使用者的 QR code，幫使用者在該攤位打卡。需要攤位的 token cookie。使用者每到一個攤位打卡，自己的 unlock_level 就會增加 1。
+// @Description  可掃描使用者的活動工作人員（攤位/闖關）使用活動專用登入後掃描使用者 QR code。首次打卡成功會依活動類型增加 unlock_level：booth +2、challenge +3。
 // @Tags         activities
 // @Accept       json
 // @Produce      json
@@ -97,7 +97,13 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
+	increment, ok := unlockIncrementByActivityType(booth.Type)
+	if !ok {
+		res.Fail(w, r, http.StatusBadRequest, nil, "unsupported activity type")
+		return
+	}
+
+	err = h.Repo.IncrementUnlockLevelBy(r.Context(), tx, user.ID, increment)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to update user unlock level")
 		return

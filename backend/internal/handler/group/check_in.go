@@ -26,9 +26,11 @@ var (
 	errAlreadyCheckedIn   = errors.New("already checked in with this member")
 )
 
+const unlockIncrementGroupCheckIn = 4
+
 // CheckIn handles POST /group/check-ins.
 // @Summary      group 互相簽到
-// @Description  掃描同 group 成員的 one-time QR code，雙方各增加一次 unlock_level。每對只能簽到一次。
+// @Description  掃描同 group 成員的 one-time QR code，雙方各增加 4 次 unlock_level。每對只能簽到一次。
 // @Tags         group
 // @Accept       json
 // @Produce      json
@@ -126,11 +128,11 @@ func (h *Handler) checkIn(ctx context.Context, currentUser *models.User, userQRC
 		return errAlreadyCheckedIn
 	}
 
-	// Both parties get unlock_level +1.
-	if err = h.Repo.IncrementUnlockLevel(ctx, tx, currentUser.ID); err != nil {
+	// Both parties get unlock_level +4.
+	if err = h.Repo.IncrementUnlockLevelBy(ctx, tx, currentUser.ID, unlockIncrementGroupCheckIn); err != nil {
 		return err
 	}
-	if err = h.Repo.IncrementUnlockLevel(ctx, tx, targetUser.ID); err != nil {
+	if err = h.Repo.IncrementUnlockLevelBy(ctx, tx, targetUser.ID, unlockIncrementGroupCheckIn); err != nil {
 		return err
 	}
 

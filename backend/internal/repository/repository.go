@@ -35,6 +35,7 @@ type Repository interface {
 
 	// Game operations
 	IncrementUnlockLevel(ctx context.Context, tx pgx.Tx, userID string) error
+	IncrementUnlockLevelBy(ctx context.Context, tx pgx.Tx, userID string, amount int) error
 	GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]RankedUser, error)
 	UpdateCurrentLevel(ctx context.Context, tx pgx.Tx, userID string, newLevel int) error
 	GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error)
