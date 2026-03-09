@@ -88,7 +88,9 @@ func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coupon, err := h.Repo.InsertDiscountCouponForUser(r.Context(), tx, userID, config.SitconSNSCouponPrice, config.DiscountIDSitconSNSCoupon)
+	coupon, err := h.Repo.InsertDiscountCouponForUser(
+		r.Context(), tx, userID, config.SitconSNSCouponPrice, config.DiscountIDSitconSNSCoupon,
+	)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to assign coupon")
 		return
