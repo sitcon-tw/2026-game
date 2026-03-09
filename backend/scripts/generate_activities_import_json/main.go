@@ -30,16 +30,16 @@ type inputActivity struct {
 }
 
 type outputActivity struct {
-	ID          string      `json:"id"`
-	Token       string      `json:"token"`
-	Type        string      `json:"type"`
-	QRCodeToken string      `json:"qrcode_token"`
-	Name        string      `json:"name"`
-	Floor       interface{} `json:"floor"`
-	Link        interface{} `json:"link"`
-	Description interface{} `json:"description"`
-	CreatedAt   string      `json:"created_at"`
-	UpdatedAt   string      `json:"updated_at"`
+	ID          string `json:"id"`
+	Token       string `json:"token"`
+	Type        string `json:"type"`
+	QRCodeToken string `json:"qrcode_token"`
+	Name        string `json:"name"`
+	Floor       any    `json:"floor"`
+	Link        any    `json:"link"`
+	Description any    `json:"description"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 func main() {

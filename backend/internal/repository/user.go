@@ -11,7 +11,7 @@ import (
 // GetUserByID fetches a user by id. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE id = $1`
 
@@ -23,6 +23,7 @@ WHERE id = $1`
 		&u.Avatar,
 		&u.QRCodeToken,
 		&u.CouponToken,
+		&u.Group,
 		&u.UnlockLevel,
 		&u.CurrentLevel,
 		&u.LastPassTime,
@@ -41,7 +42,7 @@ WHERE id = $1`
 // GetUserByIDForUpdate fetches a user row with FOR UPDATE lock to avoid concurrent updates.
 func (r *PGRepository) GetUserByIDForUpdate(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE id = $1
 FOR UPDATE`
@@ -54,6 +55,7 @@ FOR UPDATE`
 		&u.Avatar,
 		&u.QRCodeToken,
 		&u.CouponToken,
+		&u.Group,
 		&u.UnlockLevel,
 		&u.CurrentLevel,
 		&u.LastPassTime,
@@ -72,7 +74,7 @@ FOR UPDATE`
 // GetUserByToken fetches a user by auth token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByToken(ctx context.Context, tx pgx.Tx, token string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE auth_token = $1`
 
@@ -84,6 +86,7 @@ WHERE auth_token = $1`
 		&u.Avatar,
 		&u.QRCodeToken,
 		&u.CouponToken,
+		&u.Group,
 		&u.UnlockLevel,
 		&u.CurrentLevel,
 		&u.LastPassTime,
@@ -102,7 +105,7 @@ WHERE auth_token = $1`
 // GetUserByQRCode fetches a user by their QR code token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE qrcode_token = $1`
 
@@ -114,6 +117,7 @@ WHERE qrcode_token = $1`
 		&u.Avatar,
 		&u.QRCodeToken,
 		&u.CouponToken,
+		&u.Group,
 		&u.UnlockLevel,
 		&u.CurrentLevel,
 		&u.LastPassTime,
@@ -138,7 +142,7 @@ func (r *PGRepository) IncrementUnlockLevel(ctx context.Context, tx pgx.Tx, user
 // GetUserByCouponToken fetches a user by their coupon token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByCouponToken(ctx context.Context, tx pgx.Tx, couponToken string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE coupon_token = $1`
 
@@ -150,6 +154,7 @@ WHERE coupon_token = $1`
 		&u.Avatar,
 		&u.QRCodeToken,
 		&u.CouponToken,
+		&u.Group,
 		&u.UnlockLevel,
 		&u.CurrentLevel,
 		&u.LastPassTime,

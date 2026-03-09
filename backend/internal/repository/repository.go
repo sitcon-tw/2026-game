@@ -103,6 +103,12 @@ type Repository interface {
 
 	// Staff operations
 	GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error)
+
+	// Group operations
+	ListGroupMembers(ctx context.Context, tx pgx.Tx, userID string, groupName string) ([]models.User, error)
+	GetGroupCheckIn(ctx context.Context, tx pgx.Tx, userIDA, userIDB string) (*models.GroupCheckIn, error)
+	InsertGroupCheckIn(ctx context.Context, tx pgx.Tx, userIDA, userIDB string) (bool, error)
+	ListGroupCheckInsByUser(ctx context.Context, tx pgx.Tx, userID string) ([]models.GroupCheckIn, error)
 }
 
 // PGRepository is the production repository backed by pgx.
