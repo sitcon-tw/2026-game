@@ -13,7 +13,7 @@ const (
 	DiscountIDCheckInAllBoothAndCheck = "check-in-all-booth-and-check"
 	DiscountIDTourGroupChallenge      = "tour-group-challenge"
 
-	// Real activity ID for tour-group challenge activity.
+	// TourGroupChallengeActivityID is the real activity ID for the tour-group challenge activity.
 	TourGroupChallengeActivityID = "8f1a4209-c8fc-4e21-94a2-38eaad028110"
 )
 

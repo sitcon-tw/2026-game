@@ -108,7 +108,7 @@ func (h *Handler) resolveUserIDFromOneTimeQRCode(ctx context.Context, tx pgx.Tx,
 				if errors.Is(lookupErr, repository.ErrNotFound) {
 					return "", errScanTargetUserNotFound
 				}
-				return "", fmt.Errorf("%w: %v", errScanLookupFailed, lookupErr)
+				return "", fmt.Errorf("%w: %w", errScanLookupFailed, lookupErr)
 			}
 			return targetUser.QRCodeToken, nil
 		},
