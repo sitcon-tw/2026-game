@@ -1,11 +1,14 @@
 package activities
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
@@ -18,7 +21,7 @@ type boothCheckInRequest struct {
 
 // BoothCheckIn handles POST /activities/booth/user/check-ins.
 // @Summary      攤位掃描使用者 QR code 打卡
-// @Description  攤位工作人員使用攤位專用的 QR code 掃描器掃描使用者的 QR code，幫使用者在該攤位打卡。需要攤位的 token cookie。使用者每到一個攤位打卡，自己的 unlock_level 就會增加 1。
+// @Description  可掃描使用者的活動工作人員（攤位/闖關）使用活動專用登入後掃描使用者 QR code。首次打卡成功會依活動類型增加 unlock_level：booth +2、challenge +3。
 // @Tags         activities
 // @Accept       json
 // @Produce      json
@@ -54,57 +57,28 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	targetUserID, err := helpers.VerifyAndExtractUserIDFromOneTimeQRToken(
-		req.UserQRCode,
-		time.Now().UTC(),
-		func(userID string) (string, error) {
-			targetUser, lookupErr := h.Repo.GetUserByID(r.Context(), tx, userID)
-			if lookupErr != nil {
-				if errors.Is(lookupErr, repository.ErrNotFound) {
-					return "", repository.ErrNotFound
-				}
-				return "", lookupErr
-			}
-			return targetUser.QRCodeToken, nil
-		},
-	)
+	targetUserID, err := h.resolveUserIDFromQRCode(r, tx, req.UserQRCode)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			res.Fail(w, r, http.StatusBadRequest, nil, "user not found")
-			return
+		var ce *checkinError
+		if errors.As(err, &ce) {
+			res.Fail(w, r, ce.status, ce.cause, ce.message)
+		} else {
+			res.Fail(w, r, http.StatusBadRequest, err, "invalid or expired user qr code")
 		}
-		res.Fail(w, r, http.StatusBadRequest, err, "invalid or expired user qr code")
 		return
 	}
 
-	user, err := h.Repo.GetUserByID(r.Context(), tx, targetUserID)
-	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			res.Fail(w, r, http.StatusBadRequest, nil, "user not found")
-			return
+	if err = h.processBoothVisit(r.Context(), tx, targetUserID, booth.ID, booth.Type); err != nil {
+		var ce *checkinError
+		if errors.As(err, &ce) {
+			res.Fail(w, r, ce.status, ce.cause, ce.message)
+		} else {
+			res.Fail(w, r, http.StatusInternalServerError, err, "internal error")
 		}
-		res.Fail(w, r, http.StatusInternalServerError, err, "failed to fetch user")
 		return
 	}
 
-	inserted, err := h.Repo.AddVisited(r.Context(), tx, user.ID, booth.ID)
-	if err != nil {
-		res.Fail(w, r, http.StatusInternalServerError, err, "failed to record visit")
-		return
-	}
-	if !inserted {
-		res.Fail(w, r, http.StatusBadRequest, nil, "already visited")
-		return
-	}
-
-	err = h.Repo.IncrementUnlockLevel(r.Context(), tx, user.ID)
-	if err != nil {
-		res.Fail(w, r, http.StatusInternalServerError, err, "failed to update user unlock level")
-		return
-	}
-
-	err = h.Repo.CommitTransaction(r.Context(), tx)
-	if err != nil {
+	if err = h.Repo.CommitTransaction(r.Context(), tx); err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
 		return
 	}
@@ -112,4 +86,63 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(checkinResponse{Status: "visit recorded"})
+}
+
+func (h *Handler) resolveUserIDFromQRCode(r *http.Request, tx pgx.Tx, qrCode string) (string, error) {
+	userID, err := helpers.VerifyAndExtractUserIDFromOneTimeQRToken(
+		qrCode,
+		time.Now().UTC(),
+		func(uid string) (string, error) {
+			u, lookupErr := h.Repo.GetUserByID(r.Context(), tx, uid)
+			if lookupErr != nil {
+				if errors.Is(lookupErr, repository.ErrNotFound) {
+					return "", repository.ErrNotFound
+				}
+				return "", lookupErr
+			}
+			return u.QRCodeToken, nil
+		},
+	)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return "", newCheckinErr(http.StatusBadRequest, nil, "user not found")
+		}
+		return "", err
+	}
+
+	if _, err = h.Repo.GetUserByID(r.Context(), tx, userID); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return "", newCheckinErr(http.StatusBadRequest, nil, "user not found")
+		}
+		return "", newCheckinErr(http.StatusInternalServerError, err, "failed to fetch user")
+	}
+
+	return userID, nil
+}
+
+func (h *Handler) processBoothVisit(ctx context.Context, tx pgx.Tx, userID, boothID string, boothType models.ActivitiesTypes) error {
+	inserted, err := h.Repo.AddVisited(ctx, tx, userID, boothID)
+	if err != nil {
+		return newCheckinErr(http.StatusInternalServerError, err, "failed to record visit")
+	}
+	if !inserted {
+		return newCheckinErr(http.StatusBadRequest, nil, "already visited")
+	}
+
+	increment, ok := unlockIncrementByActivityType(boothType)
+	if !ok {
+		return newCheckinErr(http.StatusBadRequest, nil, "unsupported activity type")
+	}
+
+	if err = h.Repo.IncrementUnlockLevelBy(ctx, tx, userID, increment); err != nil {
+		return newCheckinErr(http.StatusInternalServerError, err, "failed to update user unlock level")
+	}
+	if err = h.issueCheckInCoupon(ctx, tx, userID); err != nil {
+		return newCheckinErr(http.StatusInternalServerError, err, "failed to issue coupon")
+	}
+	if err = h.issueTourGroupChallengeCoupon(ctx, tx, userID, boothID, boothType); err != nil {
+		return newCheckinErr(http.StatusInternalServerError, err, "failed to issue coupon")
+	}
+
+	return nil
 }

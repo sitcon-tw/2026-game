@@ -276,7 +276,9 @@ ORDER BY ch.used_at DESC`
 	return histories, nil
 }
 
-// CreateDiscountCoupon inserts a new discount coupon row for a user if global MaxQty not exceeded.
+// CreateDiscountCoupon inserts a new discount coupon row for a user when:
+// 1) global issued quantity for this discount is below MaxQty, and
+// 2) the user does not already own a coupon with this discount_id.
 // Returns (coupon, true, nil) when created; (nil, false, nil) when quota reached.
 func (r *PGRepository) CreateDiscountCoupon(
 	ctx context.Context,
@@ -297,6 +299,15 @@ func (r *PGRepository) CreateDiscountCoupon(
 		return nil, false, err
 	}
 	if cnt >= maxQty {
+		return nil, false, nil
+	}
+
+	const userCountQuery = `SELECT COUNT(*) FROM discount_coupons WHERE discount_id = $1 AND user_id = $2`
+	var userCnt int
+	if err := tx.QueryRow(ctx, userCountQuery, discountID, userID).Scan(&userCnt); err != nil {
+		return nil, false, err
+	}
+	if userCnt > 0 {
 		return nil, false, nil
 	}
 

@@ -16,7 +16,7 @@ import (
 
 // BoothLogin handles POST /activities/booth/session.
 // @Summary      攤位登入
-// @Description  攤位使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後攤位就可以使用此 cookie 來辨識自己身份。來使用 /activities/booth/ 底下的功能。
+// @Description  可掃描使用者的活動（攤位/闖關）使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後即可使用 /activities/booth/ 底下的功能。
 // @Tags         activities
 // @Produce      json
 // @Success      200  {object}  models.Activities
@@ -39,7 +39,7 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	booth, err := h.requireBoothByToken(r.Context(), tx, token)
+	booth, err := h.requireScannerActivityByToken(r.Context(), tx, token)
 	if err != nil {
 		res.Fail(w, r, http.StatusUnauthorized, err, "unauthorized booth")
 		return
@@ -58,8 +58,8 @@ func (h *Handler) BoothLogin(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(booth)
 }
 
-// requireBooth loads the activity by login token and ensures type=booth.
-func (h *Handler) requireBoothByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Activities, error) {
+// requireScannerActivityByToken loads an activity by login token and ensures it can scan users.
+func (h *Handler) requireScannerActivityByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Activities, error) {
 	booth, err := h.Repo.GetActivityByToken(ctx, tx, token)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -67,7 +67,11 @@ func (h *Handler) requireBoothByToken(ctx context.Context, tx pgx.Tx, token stri
 		}
 		return nil, err
 	}
-	if booth == nil || booth.Type != models.ActivitiesTypeBooth {
+	if booth == nil {
+		return nil, errors.New("booth not found")
+	}
+
+	if booth.Type != models.ActivitiesTypeBooth && booth.Type != models.ActivitiesTypeChallenge {
 		return nil, errors.New("booth not found")
 	}
 	return booth, nil

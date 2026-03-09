@@ -35,6 +35,7 @@ type Repository interface {
 
 	// Game operations
 	IncrementUnlockLevel(ctx context.Context, tx pgx.Tx, userID string) error
+	IncrementUnlockLevelBy(ctx context.Context, tx pgx.Tx, userID string, amount int) error
 	GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]RankedUser, error)
 	UpdateCurrentLevel(ctx context.Context, tx pgx.Tx, userID string, newLevel int) error
 	GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error)
@@ -100,6 +101,12 @@ type Repository interface {
 	DeleteDiscountCouponGiftByID(ctx context.Context, tx pgx.Tx, id string) error
 	ListDiscountCouponGifts(ctx context.Context, tx pgx.Tx) ([]models.DiscountCouponGift, error)
 	SearchUsersByNickname(ctx context.Context, tx pgx.Tx, query string, limit int) ([]models.User, error)
+	TryMarkAdminScanCouponIssued(
+		ctx context.Context,
+		tx pgx.Tx,
+		userID string,
+		discountID string,
+	) (bool, error)
 
 	// Staff operations
 	GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error)
