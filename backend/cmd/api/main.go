@@ -153,6 +153,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 
 		r.Mount("/friendships", router.FriendRoutes(repo, logger))
 		r.Mount("/games", router.GameRoutes(repo, logger))
+		r.Mount("/group", router.GroupRoutes(repo, logger))
 	})
 
 	// Swagger API docs

@@ -12,6 +12,7 @@ type User struct {
 	Avatar       *string   `db:"avatar" json:"avatar,omitempty"`
 	QRCodeToken  string    `db:"qrcode_token" json:"-"`
 	CouponToken  string    `db:"coupon_token" json:"coupon_token"`
+	Group        *string   `db:"group" json:"group,omitempty"`
 	UnlockLevel  int       `db:"unlock_level" json:"unlock_level"`
 	CurrentLevel int       `db:"current_level" json:"current_level"`
 	LastPassTime time.Time `db:"last_pass_time" json:"last_pass_time"`
