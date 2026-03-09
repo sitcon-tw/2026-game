@@ -9,13 +9,21 @@ type DiscountRule struct {
 	Description string
 }
 
+const DiscountIDCheckInAllBoothAndCheck = "check-in-all-booth-and-check"
+
 //nolint:mnd // config-style rule table
 func couponRules() []DiscountRule {
 	return []DiscountRule{
-		{ID: "level-5", PassLevel: 5, Amount: 50, MaxQty: 2, Description: "dsadsadsadsadsa"},
-		{ID: "level-10", PassLevel: 10, Amount: 100, MaxQty: 1, Description: "dsadsadsadsadsa"},
-		{ID: "level-20", PassLevel: 20, Amount: 200, MaxQty: 1, Description: "dsadsadsadsadsa"},
-		{ID: "level-40", PassLevel: 40, Amount: 300, MaxQty: 1, Description: "dsadsadsadsadsa"},
+		{
+			ID:          DiscountIDCheckInAllBoothAndCheck,
+			PassLevel:   0,
+			Amount:      50,
+			MaxQty:      1,
+			Description: "打卡完所有攤位和活動場地（不含闖關）",
+		},
+		{ID: "level-10", PassLevel: 10, Amount: 100, MaxQty: 1, Description: "完成 10 關"},
+		{ID: "level-35", PassLevel: 35, Amount: 200, MaxQty: 1, Description: "完成 35 關"},
+		{ID: "level-70", PassLevel: 70, Amount: 300, MaxQty: 1, Description: "完成 70 關"},
 	}
 }
 
@@ -29,10 +37,21 @@ func GetCouponRulesByLevel(level int) []DiscountRule {
 	res := []DiscountRule{}
 
 	for _, rule := range couponRules() {
-		if rule.PassLevel <= level {
+		if rule.PassLevel > 0 && rule.PassLevel <= level {
 			res = append(res, rule)
 		}
 	}
 
 	return res
+}
+
+// GetCheckInCompletionCouponRule returns the check-in completion coupon rule.
+func GetCheckInCompletionCouponRule() (DiscountRule, bool) {
+	for _, rule := range couponRules() {
+		if rule.ID == DiscountIDCheckInAllBoothAndCheck {
+			return rule, true
+		}
+	}
+
+	return DiscountRule{}, false
 }

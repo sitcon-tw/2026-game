@@ -109,6 +109,12 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = h.issueCheckInCoupon(r.Context(), tx, user.ID)
+	if err != nil {
+		res.Fail(w, r, http.StatusInternalServerError, err, "failed to issue coupon")
+		return
+	}
+
 	err = h.Repo.CommitTransaction(r.Context(), tx)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to commit transaction")
