@@ -107,6 +107,18 @@ type Repository interface {
 		userID string,
 		discountID string,
 	) (bool, error)
+	TryMarkStaffScanCouponIssued(
+		ctx context.Context,
+		tx pgx.Tx,
+		userID string,
+		discountID string,
+		staffID string,
+	) (bool, error)
+	ListStaffScanCouponGrants(
+		ctx context.Context,
+		tx pgx.Tx,
+		staffID string,
+	) ([]models.StaffQRCouponGrant, error)
 
 	// Staff operations
 	GetStaffByToken(ctx context.Context, tx pgx.Tx, token string) (*models.Staff, error)

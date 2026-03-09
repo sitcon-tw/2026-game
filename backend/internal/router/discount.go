@@ -28,6 +28,10 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 			r.Post("/coupon-tokens/query", h.GetUserCoupons)
 			// Staff sees their own redemption history
 			r.Get("/current/redemptions", h.ListStaffHistory)
+			// Staff scans attendee's one-time QR code to issue a coupon
+			r.Post("/scan-assignments", h.AssignCouponByQRCode)
+			// Staff sees their own scan-assignment history
+			r.Get("/current/scan-assignments", h.ListStaffScanHistory)
 		})
 	})
 	// Publicly lists all coupon rules with issuance status
