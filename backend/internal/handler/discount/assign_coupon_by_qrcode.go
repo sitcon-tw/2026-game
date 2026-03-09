@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/helpers"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
@@ -17,8 +18,6 @@ import (
 
 type assignCouponByQRCodeRequest struct {
 	UserQRCode string `json:"user_qr_code"`
-	Price      int    `json:"price"`
-	DiscountID string `json:"discount_id"`
 }
 
 var (
@@ -28,7 +27,7 @@ var (
 
 // AssignCouponByQRCode handles POST /discount-coupons/staff/scan-assignments.
 // @Summary      掃描使用者 QR code 發放折扣券（工作人員）
-// @Description  需要 staff_token cookie。透過使用者的一次性 QR code 發放折扣券，並防止同一 user+discount 重複發放。
+// @Description  需要 staff_token cookie。透過使用者的一次性 QR code 發放固定折扣券（SITCON 限時動態折價券，discount_id 與金額由後端固定，不接受外部傳入），並防止同一 user 重複發放。
 // @Tags         discount
 // @Accept       json
 // @Produce      json
@@ -54,8 +53,8 @@ func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
 		res.Fail(w, r, http.StatusBadRequest, err, "invalid request body")
 		return
 	}
-	if req.UserQRCode == "" || req.Price <= 0 || req.DiscountID == "" {
-		res.Fail(w, r, http.StatusBadRequest, errors.New("invalid user_qr_code, price or discount_id"), "invalid payload")
+	if req.UserQRCode == "" {
+		res.Fail(w, r, http.StatusBadRequest, errors.New("invalid user_qr_code"), "invalid payload")
 		return
 	}
 
@@ -79,7 +78,7 @@ func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	marked, err := h.Repo.TryMarkStaffScanCouponIssued(r.Context(), tx, userID, req.DiscountID, staff.ID)
+	marked, err := h.Repo.TryMarkStaffScanCouponIssued(r.Context(), tx, userID, config.DiscountIDSitconSNSCoupon, staff.ID)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to mark staff scan issuance")
 		return
@@ -89,7 +88,7 @@ func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coupon, err := h.Repo.InsertDiscountCouponForUser(r.Context(), tx, userID, req.Price, req.DiscountID)
+	coupon, err := h.Repo.InsertDiscountCouponForUser(r.Context(), tx, userID, config.SitconSNSCouponPrice, config.DiscountIDSitconSNSCoupon)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to assign coupon")
 		return
