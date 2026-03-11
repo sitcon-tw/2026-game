@@ -110,27 +110,57 @@ function withTieTestEntry(entries: RankEntry[]) {
   return [first, tieEntry, ...entries.slice(1)];
 }
 
+function moveMeToFirst(entries: RankEntry[], me: RankEntry | null) {
+  if (!me) return { entries, me };
+
+  const firstRank = entries[0]?.rank ?? 1;
+  const promotedMe: RankEntry = {
+    ...me,
+    rank: firstRank,
+  };
+
+  const withoutOriginalMe = entries.filter((entry) => !isSameEntry(entry, me));
+  return {
+    entries: [promotedMe, ...withoutOriginalMe],
+    me: promotedMe,
+  };
+}
+
 export default function LeaderboardPage() {
   const [mode, setMode] = useState<ViewMode>("top");
   const searchParams = useSearchParams();
   const { data: leaderboard, isLoading, refetch } = useLeaderboard();
 
-  // Frontend-only tie testing: /leaderboard?tieTest=1 or NEXT_PUBLIC_LEADERBOARD_TIE_TEST=1
-  const tieTestEnabled =
-    searchParams.get("tieTest") === "1" ||
-    process.env.NEXT_PUBLIC_LEADERBOARD_TIE_TEST === "1";
+  // Frontend-only tie testing:
+  // - tieTest=1: inject a tied entry at rank 1
+  // - tieTest=2: inject tie and also move current user to rank 1
+  const tieTestMode =
+    searchParams.get("tieTest") ??
+    process.env.NEXT_PUBLIC_LEADERBOARD_TIE_TEST ??
+    "0";
+  const tieTestEnabled = tieTestMode === "1" || tieTestMode === "2";
+  const tieTestPromoteMe = tieTestMode === "2";
+
+  const rawMe = leaderboard?.me ?? null;
 
   const topEntries = useMemo(() => {
     const source = leaderboard?.rank ?? [];
-    return tieTestEnabled ? withTieTestEntry(source) : source;
-  }, [leaderboard?.rank, tieTestEnabled]);
+    const withTie = tieTestEnabled ? withTieTestEntry(source) : source;
+    if (!tieTestPromoteMe) return withTie;
+    return moveMeToFirst(withTie, rawMe).entries;
+  }, [leaderboard?.rank, tieTestEnabled, tieTestPromoteMe, rawMe]);
 
   const nearbyEntries = useMemo(() => {
     const source = leaderboard?.around ?? [];
-    return tieTestEnabled ? withTieTestEntry(source) : source;
-  }, [leaderboard?.around, tieTestEnabled]);
+    const withTie = tieTestEnabled ? withTieTestEntry(source) : source;
+    if (!tieTestPromoteMe) return withTie;
+    return moveMeToFirst(withTie, rawMe).entries;
+  }, [leaderboard?.around, tieTestEnabled, tieTestPromoteMe, rawMe]);
 
-  const me = leaderboard?.me;
+  const me = useMemo(() => {
+    if (!tieTestPromoteMe) return rawMe;
+    return moveMeToFirst(topEntries, rawMe).me;
+  }, [tieTestPromoteMe, topEntries, rawMe]);
 
   const entries = mode === "top" ? topEntries : nearbyEntries;
 
