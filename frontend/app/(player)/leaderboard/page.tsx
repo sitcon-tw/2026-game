@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLeaderboard } from "@/hooks/api";
 import type { RankEntry } from "@/types/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -91,18 +92,50 @@ function YouDivider() {
 
 type ViewMode = "top" | "nearby";
 
+function isSameEntry(a: RankEntry | null | undefined, b: RankEntry) {
+  if (!a) return false;
+  return a.rank === b.rank && a.nickname === b.nickname && a.level === b.level;
+}
+
+function withTieTestEntry(entries: RankEntry[]) {
+  if (entries.length === 0) return entries;
+
+  const first = entries[0];
+  const tieEntry: RankEntry = {
+    rank: first.rank,
+    level: first.level,
+    nickname: `${first.nickname}-TIE-TEST`,
+  };
+
+  return [first, tieEntry, ...entries.slice(1)];
+}
+
 export default function LeaderboardPage() {
   const [mode, setMode] = useState<ViewMode>("top");
+  const searchParams = useSearchParams();
   const { data: leaderboard, isLoading, refetch } = useLeaderboard();
 
-  const topEntries = leaderboard?.rank ?? [];
-  const nearbyEntries = leaderboard?.around ?? [];
+  // Frontend-only tie testing: /leaderboard?tieTest=1 or NEXT_PUBLIC_LEADERBOARD_TIE_TEST=1
+  const tieTestEnabled =
+    searchParams.get("tieTest") === "1" ||
+    process.env.NEXT_PUBLIC_LEADERBOARD_TIE_TEST === "1";
+
+  const topEntries = useMemo(() => {
+    const source = leaderboard?.rank ?? [];
+    return tieTestEnabled ? withTieTestEntry(source) : source;
+  }, [leaderboard?.rank, tieTestEnabled]);
+
+  const nearbyEntries = useMemo(() => {
+    const source = leaderboard?.around ?? [];
+    return tieTestEnabled ? withTieTestEntry(source) : source;
+  }, [leaderboard?.around, tieTestEnabled]);
+
   const me = leaderboard?.me;
 
   const entries = mode === "top" ? topEntries : nearbyEntries;
 
   /* Split nearby into above/below the current user for the "You ▼" divider */
-  const currentIdx = me ? entries.findIndex((e) => e.rank === me.rank) : -1;
+  const currentIdx = me ? entries.findIndex((e) => isSameEntry(me, e)) : -1;
   const showDivider = mode === "nearby" && currentIdx > 0;
   const aboveEntries = showDivider ? entries.slice(0, currentIdx) : [];
   const belowEntries = showDivider ? entries.slice(currentIdx) : entries;
@@ -159,34 +192,34 @@ export default function LeaderboardPage() {
       <div className="flex flex-col gap-3">
         {showDivider ? (
           <>
-            {aboveEntries.map((entry) => (
+            {aboveEntries.map((entry, idx) => (
               <LeaderboardRow
-                key={entry.rank}
+                key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
                 entry={entry}
-                isCurrentUser={me?.rank === entry.rank}
+                isCurrentUser={isSameEntry(me, entry)}
               />
             ))}
             <YouDivider />
-            {belowEntries.map((entry) => (
+            {belowEntries.map((entry, idx) => (
               <LeaderboardRow
-                key={entry.rank}
+                key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
                 entry={entry}
-                isCurrentUser={me?.rank === entry.rank}
+                isCurrentUser={isSameEntry(me, entry)}
               />
             ))}
           </>
         ) : (
           <>
-            {entries.map((entry) => (
+            {entries.map((entry, idx) => (
               <LeaderboardRow
-                key={entry.rank}
+                key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
                 entry={entry}
-                isCurrentUser={me?.rank === entry.rank}
+                isCurrentUser={isSameEntry(me, entry)}
               />
             ))}
             {mode === "top" &&
               me &&
-              !entries.some((e) => e.rank === me.rank) && (
+              !entries.some((e) => isSameEntry(me, e)) && (
                 <>
                   <YouDivider />
                   <LeaderboardRow entry={me} isCurrentUser />
