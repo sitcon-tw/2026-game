@@ -22,6 +22,8 @@ interface DisplayCoupon {
   definitionId: string;
 }
 
+const MAX_LOCKED_DISPLAY = 3;
+
 function buildDisplayList(
   definitions: CouponDefinition[],
   userCoupons: DiscountCoupon[],
@@ -51,8 +53,11 @@ function buildDisplayList(
           definitionId: def.id,
         });
       }
-      // If user hasn't reached max_qty yet, show remaining as locked
-      const remaining = def.max_qty - owned.length;
+      // Show limited locked placeholders for remaining
+      const remaining = Math.min(
+        def.max_qty - owned.length,
+        MAX_LOCKED_DISPLAY,
+      );
       for (let i = 0; i < remaining; i++) {
         items.push({
           status: "locked",
@@ -63,8 +68,9 @@ function buildDisplayList(
         });
       }
     } else {
-      // User has none — show all as locked
-      for (let i = 0; i < def.max_qty; i++) {
+      // User has none — show limited locked placeholders
+      const displayCount = Math.min(def.max_qty, MAX_LOCKED_DISPLAY);
+      for (let i = 0; i < displayCount; i++) {
         items.push({
           status: "locked",
           price: def.amount,
@@ -271,7 +277,9 @@ export default function CouponPage() {
     return <LoadingSpinner />;
   }
 
-  const displayList = buildDisplayList(definitions ?? [], coupons ?? []);
+  const safeDefinitions = Array.isArray(definitions) ? definitions : [];
+  const safeCoupons = Array.isArray(coupons) ? coupons : [];
+  const displayList = buildDisplayList(safeDefinitions, safeCoupons);
 
   const unusedCount = displayList.filter((d) => d.status === "unused").length;
   const totalUnusedAmount = displayList
