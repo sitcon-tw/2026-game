@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { useLeaderboard } from "@/hooks/api";
 import type { RankEntry } from "@/types/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -116,35 +115,6 @@ function isSameEntry(a: RankEntry | null | undefined, b: RankEntry) {
   return a.rank === b.rank && a.nickname === b.nickname && a.level === b.level;
 }
 
-function withTieTestEntry(entries: RankEntry[]) {
-  if (entries.length === 0) return entries;
-
-  const first = entries[0];
-  const tieEntry: RankEntry = {
-    rank: first.rank,
-    level: first.level,
-    nickname: `${first.nickname}-TIE-TEST`,
-  };
-
-  return [first, tieEntry, ...entries.slice(1)];
-}
-
-function moveMeToFirst(entries: RankEntry[], me: RankEntry | null) {
-  if (!me) return { entries, me };
-
-  const firstRank = entries[0]?.rank ?? 1;
-  const promotedMe: RankEntry = {
-    ...me,
-    rank: firstRank,
-  };
-
-  const withoutOriginalMe = entries.filter((entry) => !isSameEntry(entry, me));
-  return {
-    entries: [promotedMe, ...withoutOriginalMe],
-    me: promotedMe,
-  };
-}
-
 function groupEntriesByRank(entries: RankEntry[]): RankGroup[] {
   const groups = new Map<number, RankEntry[]>();
   const orderedRanks: number[] = [];
@@ -165,39 +135,17 @@ function groupEntriesByRank(entries: RankEntry[]): RankGroup[] {
 
 export default function LeaderboardPage() {
   const [mode, setMode] = useState<ViewMode>("top");
-  const searchParams = useSearchParams();
   const { data: leaderboard, isLoading, refetch } = useLeaderboard();
 
-  // Frontend-only tie testing:
-  // - tieTest=1: inject a tied entry at rank 1
-  // - tieTest=2: inject tie and also move current user to rank 1
-  const tieTestMode =
-    searchParams.get("tieTest") ??
-    process.env.NEXT_PUBLIC_LEADERBOARD_TIE_TEST ??
-    "0";
-  const tieTestEnabled = tieTestMode === "1" || tieTestMode === "2";
-  const tieTestPromoteMe = tieTestMode === "2";
-
-  const rawMe = leaderboard?.me ?? null;
-
   const topEntries = useMemo(() => {
-    const source = leaderboard?.rank ?? [];
-    const withTie = tieTestEnabled ? withTieTestEntry(source) : source;
-    if (!tieTestPromoteMe) return withTie;
-    return moveMeToFirst(withTie, rawMe).entries;
-  }, [leaderboard?.rank, tieTestEnabled, tieTestPromoteMe, rawMe]);
+    return leaderboard?.rank ?? [];
+  }, [leaderboard?.rank]);
 
   const nearbyEntries = useMemo(() => {
-    const source = leaderboard?.around ?? [];
-    const withTie = tieTestEnabled ? withTieTestEntry(source) : source;
-    if (!tieTestPromoteMe) return withTie;
-    return moveMeToFirst(withTie, rawMe).entries;
-  }, [leaderboard?.around, tieTestEnabled, tieTestPromoteMe, rawMe]);
+    return leaderboard?.around ?? [];
+  }, [leaderboard?.around]);
 
-  const me = useMemo(() => {
-    if (!tieTestPromoteMe) return rawMe;
-    return moveMeToFirst(topEntries, rawMe).me;
-  }, [tieTestPromoteMe, topEntries, rawMe]);
+  const me = leaderboard?.me ?? null;
 
   const entries = mode === "top" ? topEntries : nearbyEntries;
   const groupedEntries = useMemo(() => groupEntriesByRank(entries), [entries]);
