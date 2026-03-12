@@ -46,34 +46,49 @@ function TriangleDownIcon({ className }: { className?: string }) {
 }
 
 function LeaderboardRow({
-  entry,
-  isCurrentUser,
+  entries,
+  me,
 }: {
-  entry: RankEntry;
-  isCurrentUser?: boolean;
+  entries: RankEntry[];
+  me: RankEntry | null;
 }) {
+  const hasCurrentUser = entries.some((entry) => isSameEntry(me, entry));
+
   return (
     <div
-      className={`relative flex items-center justify-between rounded-xl px-5 py-3.5 transition-colors ${
-        isCurrentUser
+      className={`relative rounded-xl px-5 py-3.5 transition-colors ${
+        hasCurrentUser
           ? "bg-[var(--bg-header)] ring-2 ring-[var(--accent-gold)]"
           : "bg-[var(--bg-header)]/85"
       }`}
     >
-      {/* Left: rank + name */}
-      <div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
-        <span className="tabular-nums">{entry.rank}.</span>
-        <span>{entry.nickname}</span>
-      </div>
+      <div className="flex flex-col divide-y divide-[var(--text-light)]/20">
+      {entries.map((entry, idx) => {
+        const isCurrentUser = isSameEntry(me, entry);
 
-      {/* Right: avatar + badge */}
-      <div className="relative">
-        <div className="h-10 w-10 rounded-full bg-[var(--bg-secondary)]" />
-        {isCurrentUser && (
-          <span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
-            Y
-          </span>
-        )}
+        return (
+          <div
+            key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
+            className="relative flex items-center justify-between py-2 first:pt-0 last:pb-0"
+          >
+            {/* Left: rank + name */}
+            <div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
+              <span className="tabular-nums">{entry.rank}.</span>
+              <span>{entry.nickname}</span>
+            </div>
+
+            {/* Right: avatar + badge */}
+            <div className="relative">
+              <div className="h-10 w-10 rounded-full bg-[var(--bg-secondary)]" />
+              {isCurrentUser && (
+                <span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
+                  Y
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
       </div>
     </div>
   );
@@ -91,6 +106,10 @@ function YouDivider() {
 /* ──────────── Page ──────────── */
 
 type ViewMode = "top" | "nearby";
+type RankGroup = {
+  rank: number;
+  entries: RankEntry[];
+};
 
 function isSameEntry(a: RankEntry | null | undefined, b: RankEntry) {
   if (!a) return false;
@@ -124,6 +143,24 @@ function moveMeToFirst(entries: RankEntry[], me: RankEntry | null) {
     entries: [promotedMe, ...withoutOriginalMe],
     me: promotedMe,
   };
+}
+
+function groupEntriesByRank(entries: RankEntry[]): RankGroup[] {
+  const groups = new Map<number, RankEntry[]>();
+  const orderedRanks: number[] = [];
+
+  entries.forEach((entry) => {
+    if (!groups.has(entry.rank)) {
+      groups.set(entry.rank, []);
+      orderedRanks.push(entry.rank);
+    }
+    groups.get(entry.rank)?.push(entry);
+  });
+
+  return orderedRanks.map((rank) => ({
+    rank,
+    entries: groups.get(rank) ?? [],
+  }));
 }
 
 export default function LeaderboardPage() {
@@ -163,12 +200,23 @@ export default function LeaderboardPage() {
   }, [tieTestPromoteMe, topEntries, rawMe]);
 
   const entries = mode === "top" ? topEntries : nearbyEntries;
+  const groupedEntries = useMemo(() => groupEntriesByRank(entries), [entries]);
+  const topRankCount = useMemo(
+    () => new Set(topEntries.map((entry) => entry.rank)).size,
+    [topEntries],
+  );
 
   /* Split nearby into above/below the current user for the "You ▼" divider */
-  const currentIdx = me ? entries.findIndex((e) => isSameEntry(me, e)) : -1;
-  const showDivider = mode === "nearby" && currentIdx > 0;
-  const aboveEntries = showDivider ? entries.slice(0, currentIdx) : [];
-  const belowEntries = showDivider ? entries.slice(currentIdx) : entries;
+  const currentGroupIdx = me
+    ? groupedEntries.findIndex((group) =>
+        group.entries.some((entry) => isSameEntry(me, entry)),
+      )
+    : -1;
+  const showDivider = mode === "nearby" && currentGroupIdx > 0;
+  const aboveGroups = showDivider ? groupedEntries.slice(0, currentGroupIdx) : [];
+  const belowGroups = showDivider
+    ? groupedEntries.slice(currentGroupIdx)
+    : groupedEntries;
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -202,13 +250,13 @@ export default function LeaderboardPage() {
             {mode === "top" ? (
               <>
                 <span className="font-bold text-[var(--text-primary)]">
-                  前 {topEntries.length || 10}
+                  前 {topRankCount || 10}
                 </span>{" "}
                 / 周圍
               </>
             ) : (
               <>
-                前 {topEntries.length || 10} /{" "}
+                前 {topRankCount || 10} /{" "}
                 <span className="font-bold text-[var(--text-primary)]">
                   周圍
                 </span>
@@ -222,37 +270,39 @@ export default function LeaderboardPage() {
       <div className="flex flex-col gap-3">
         {showDivider ? (
           <>
-            {aboveEntries.map((entry, idx) => (
+            {aboveGroups.map((group, idx) => (
               <LeaderboardRow
-                key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
-                entry={entry}
-                isCurrentUser={isSameEntry(me, entry)}
+                key={`rank-group-${group.rank}-${idx}`}
+                entries={group.entries}
+                me={me}
               />
             ))}
             <YouDivider />
-            {belowEntries.map((entry, idx) => (
+            {belowGroups.map((group, idx) => (
               <LeaderboardRow
-                key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
-                entry={entry}
-                isCurrentUser={isSameEntry(me, entry)}
+                key={`rank-group-${group.rank}-${idx}`}
+                entries={group.entries}
+                me={me}
               />
             ))}
           </>
         ) : (
           <>
-            {entries.map((entry, idx) => (
+            {groupedEntries.map((group, idx) => (
               <LeaderboardRow
-                key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
-                entry={entry}
-                isCurrentUser={isSameEntry(me, entry)}
+                key={`rank-group-${group.rank}-${idx}`}
+                entries={group.entries}
+                me={me}
               />
             ))}
             {mode === "top" &&
               me &&
-              !entries.some((e) => isSameEntry(me, e)) && (
+              !groupedEntries.some((group) =>
+                group.entries.some((entry) => isSameEntry(me, entry)),
+              ) && (
                 <>
                   <YouDivider />
-                  <LeaderboardRow entry={me} isCurrentUser />
+                  <LeaderboardRow entries={[me]} me={me} />
                 </>
               )}
           </>
