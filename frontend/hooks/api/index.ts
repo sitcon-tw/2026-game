@@ -13,6 +13,7 @@ export {
   useSubmitLevel,
 } from "@/hooks/api/useGames";
 export { useFriendCount, useAddFriend, useFriendList } from "@/hooks/api/useFriendships";
+export { useGroupMembers, useGroupCheckIn } from "@/hooks/api/useGroup";
 export { useAnnouncements } from "@/hooks/api/useAnnouncements";
 export {
   useCoupons,

@@ -66,6 +66,16 @@ const boothCheckinMessages: Record<string, string> = {
   "invalid user qr code": "無效的使用者 QR Code",
 };
 
+/** ── 指南針夥伴簽到 (POST /group/check-ins) ── */
+const groupCheckinMessages: Record<string, string> = {
+  "already checked in with this member": "你已經和這位夥伴簽到過囉！",
+  "cannot check in with yourself": "不能和自己簽到喔！",
+  "missing user_qr_code": "缺少夥伴 QR Code，請重新掃描",
+  "not in the same group": "你們不在同一個指南針小組",
+  "user not found": "找不到這位夥伴，請確認對方 QR Code 是否有效",
+  "you are not in any group": "你目前沒有參與指南針計畫",
+};
+
 /** ── 攤位登入 (POST /activities/booth/session) ── */
 const boothLoginMessages: Record<string, string> = {
   "missing token": "缺少攤位 Token",
@@ -120,6 +130,7 @@ const commonMessages: Record<string, string> = {
 export type ScanContext =
   | "friendship"
   | "activity-checkin"
+  | "group-checkin"
   | "booth-checkin"
   | "booth-login"
   | "game-submit"
@@ -130,6 +141,7 @@ export type ScanContext =
 const contextTables: Record<ScanContext, Record<string, string>> = {
   friendship: friendshipMessages,
   "activity-checkin": activityCheckinMessages,
+  "group-checkin": groupCheckinMessages,
   "booth-checkin": boothCheckinMessages,
   "booth-login": boothLoginMessages,
   "game-submit": gameSubmitMessages,

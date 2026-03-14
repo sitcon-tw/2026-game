@@ -3,6 +3,7 @@
 export interface User {
   id: string;
   nickname: string;
+  group?: string;
   current_level: number;
   unlock_level: number;
   qrcode_token: string;
@@ -94,6 +95,16 @@ export interface FriendPublicProfile {
 export interface FriendCountResponse {
   count: number;
   max: number;
+}
+
+/* ── Group / Compass Plan ── */
+
+export interface GroupMember {
+  id: string;
+  nickname: string;
+  avatar?: string;
+  current_level: number;
+  checked_in: boolean;
 }
 
 /* ── Coupon Definitions (from staff API) ── */
@@ -213,6 +224,10 @@ export interface BoothCheckInRequest {
 }
 
 export interface AddFriendRequest {
+  user_qr_code: string;
+}
+
+export interface GroupCheckInRequest {
   user_qr_code: string;
 }
 

@@ -18,6 +18,9 @@ export const queryKeys = {
     list: ["friendships"] as const,
     count: ["friendships", "count"] as const,
   },
+  group: {
+    members: ["group", "members"] as const,
+  },
   coupons: {
     list: ["coupons"] as const,
     definitions: ["coupons", "definitions"] as const,

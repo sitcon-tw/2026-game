@@ -2,13 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import UnlockMethodCard from "@/components/unlock/UnlockMethodCard";
-import { useActivityStats, useFriendCount } from "@/hooks/api";
+import {
+  useActivityStats,
+  useCurrentUser,
+  useFriendCount,
+  useGroupMembers,
+} from "@/hooks/api";
 import { useMemo } from "react";
 
 export default function PlayPage() {
   const router = useRouter();
   const { data: activities } = useActivityStats();
   const { data: friendData } = useFriendCount();
+  const { data: currentUser } = useCurrentUser();
+  const hasCompassPlan = !!currentUser?.group;
+  const { data: groupMembers } = useGroupMembers(hasCompassPlan);
 
   const counts = useMemo(() => {
     if (!activities)
@@ -27,6 +35,14 @@ export default function PlayPage() {
     }
     return result;
   }, [activities]);
+
+  const compassStats = useMemo(() => {
+    const members = groupMembers ?? [];
+    return {
+      current: members.filter((member) => member.checked_in).length,
+      total: members.length,
+    };
+  }, [groupMembers]);
 
   const unlockMethods = [
     {
@@ -58,6 +74,16 @@ export default function PlayPage() {
       route: "/play/friends",
     },
   ];
+
+  if (hasCompassPlan) {
+    unlockMethods.push({
+      title: "指南針計畫",
+      current: compassStats.current,
+      total: compassStats.total,
+      loaded: !!groupMembers,
+      route: "/play/compass",
+    });
+  }
 
   return (
     <div className="bg-[var(--bg-primary)] px-6 py-8">
