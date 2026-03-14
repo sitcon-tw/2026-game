@@ -18,7 +18,7 @@ export interface User {
 export interface ActivityWithStatus {
   id: string;
   name: string;
-  type: string; // "booth" | "checkin" | "challenge"
+  type: "booth" | "checkin" | "check" | "challenge";
   visited: boolean;
 }
 

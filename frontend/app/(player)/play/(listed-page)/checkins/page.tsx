@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
 import { useActivityStats } from "@/hooks/api";
 import type { ActivityWithStatus } from "@/types/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -13,7 +12,10 @@ export default function CheckinsPage() {
   );
 
   const checkins = useMemo(
-    () => (activities ?? []).filter((a) => a.type === "check"),
+    () =>
+      (activities ?? []).filter(
+        (a) => a.type === "checkin" || a.type === "check",
+      ),
     [activities],
   );
 

@@ -26,9 +26,15 @@ export default function PlayPage() {
         checkin: { current: 0, total: 0 },
       };
     const result: Record<string, { current: number; total: number }> = {};
-    for (const type of ["booth", "challenge", "checkin"]) {
-      const items = activities.filter((a) => a.type === type);
-      result[type] = {
+    const typeMap = {
+      booth: ["booth"],
+      challenge: ["challenge"],
+      checkin: ["checkin", "check"],
+    } as const;
+
+    for (const [key, types] of Object.entries(typeMap)) {
+      const items = activities.filter((a) => types.includes(a.type));
+      result[key] = {
         current: items.filter((a) => a.visited).length,
         total: items.length,
       };
