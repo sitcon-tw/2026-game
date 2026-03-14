@@ -85,6 +85,16 @@ const staffRedeemMessages: Record<string, string> = {
   "unauthorized staff": "工作人員尚未登入，請重新開啟連結",
 };
 
+/** ── 工作人員掃碼發券 (POST /discount-coupons/staff/scan-assignments) ── */
+const staffScanAssignMessages: Record<string, string> = {
+  "invalid user_qr_code": "無效的玩家 QR Code",
+  "invalid payload": "缺少玩家 QR Code，請重新掃描",
+  "invalid qr code": "無效或過期的一次性 QR Code，請玩家重新開啟 QR",
+  "user not found": "找不到玩家資料",
+  "already issued by qr scan": "此玩家已領取過本折價券",
+  "unauthorized staff": "工作人員尚未登入，請重新開啟連結",
+};
+
 /** ── 使用者登入 (POST /users/session) ── */
 const userSessionMessages: Record<string, string> = {
   "Missing token": "缺少登入 Token",
@@ -114,7 +124,8 @@ export type ScanContext =
   | "booth-login"
   | "game-submit"
   | "staff-login"
-  | "staff-redeem";
+  | "staff-redeem"
+  | "staff-scan-assign";
 
 const contextTables: Record<ScanContext, Record<string, string>> = {
   friendship: friendshipMessages,
@@ -124,6 +135,7 @@ const contextTables: Record<ScanContext, Record<string, string>> = {
   "game-submit": gameSubmitMessages,
   "staff-login": staffLoginMessages,
   "staff-redeem": staffRedeemMessages,
+  "staff-scan-assign": staffScanAssignMessages,
 };
 
 /**

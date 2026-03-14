@@ -28,6 +28,7 @@ export const queryKeys = {
   staff: {
     lookup: ["coupons", "staff", "lookup"] as const,
     history: ["coupons", "staff", "history"] as const,
+    scanHistory: ["coupons", "staff", "scan-history"] as const,
   },
   admin: {
     giftCoupons: ["admin", "gift-coupons"] as const,

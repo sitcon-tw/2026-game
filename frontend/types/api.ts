@@ -146,6 +146,14 @@ export interface DiscountHistoryItem {
   used_at: string;
 }
 
+export interface StaffScanAssignmentItem {
+  user_id: string;
+  nickname: string;
+  discount_id: string;
+  staff_id: string;
+  created_at: string;
+}
+
 /* ── Staff ── */
 
 export interface Staff {

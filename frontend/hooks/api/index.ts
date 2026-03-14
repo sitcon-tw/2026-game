@@ -22,6 +22,8 @@ export {
   useStaffLookupCoupons,
   useStaffRedeemCoupon,
   useStaffRedemptionHistory,
+  useStaffAssignCouponByQRCode,
+  useStaffScanAssignmentHistory,
 } from "@/hooks/api/useCoupons";
 
 // Admin
