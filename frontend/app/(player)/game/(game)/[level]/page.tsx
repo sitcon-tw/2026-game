@@ -107,9 +107,12 @@ export default function ChallengesPage() {
     useLevelInfo(currentLevel);
   const submitLevel = useSubmitLevel();
 
-  const isReplay = user ? currentLevel < user.current_level : false;
+  const maxPlayableLevel = user
+    ? Math.min(user.unlock_level, user.current_level + 1)
+    : 0;
+  const isReplay = user ? currentLevel <= user.current_level : false;
   const isMaxLevel = user ? currentLevel >= user.unlock_level : false;
-  const isLocked = user ? currentLevel > user.unlock_level : false;
+  const isLocked = user ? currentLevel > maxPlayableLevel : false;
 
   const { phase, setPhase, playRequested, hintRequested, reset } =
     useGameStore();

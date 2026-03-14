@@ -27,6 +27,7 @@ export default function LevelsPage() {
 
   const currentLevel = user?.current_level ?? 0;
   const unlockLevel = user?.unlock_level ?? 0;
+  const maxPlayableLevel = Math.min(unlockLevel, currentLevel + 1);
   const leaderboardLoaded = !!leaderboard;
   const rank = leaderboard?.me?.rank;
 
@@ -84,31 +85,50 @@ export default function LevelsPage() {
         <div className="grid grid-cols-4 gap-4">
           {unlockedLevels.map((level) => {
             const isCompleted = completedSet.has(level);
+            const isPlayable = level <= maxPlayableLevel;
             const iconOpacity = isCompleted ? "opacity-100" : "opacity-55";
 
             return (
-              <Link
-                key={level}
-                href={`/game/${level}`}
-                className="group flex flex-col items-center gap-2"
-                aria-label={`第 ${level} 關${isCompleted ? "，可重新挑戰" : ""}`}
-              >
-                <div className={`relative h-16 w-16 ${iconOpacity}`}>
-                  <LevelNoteIcon className="h-full w-full text-[var(--text-primary)]" />
-                  <span className="absolute -top-1 left-1 text-sm font-semibold text-[var(--text-primary)]">
-                    {level}
-                  </span>
-                </div>
-                <span
-                  className={`text-xs font-medium ${
-                    isCompleted
-                      ? "text-[var(--text-primary)]"
-                      : "text-[var(--text-secondary)]"
-                  }`}
-                >
-                  {isCompleted ? "已遊玩" : "未遊玩"}
-                </span>
-              </Link>
+              <div key={level} className="flex flex-col items-center gap-2">
+                {isPlayable ? (
+                  <Link
+                    href={`/game/${level}`}
+                    className="group flex flex-col items-center gap-2"
+                    aria-label={`第 ${level} 關${isCompleted ? "，可重新挑戰" : "，可挑戰"}`}
+                  >
+                    <div className={`relative h-16 w-16 ${iconOpacity}`}>
+                      <LevelNoteIcon className="h-full w-full text-[var(--text-primary)]" />
+                      <span className="absolute -top-1 left-1 text-sm font-semibold text-[var(--text-primary)]">
+                        {level}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-xs font-medium ${
+                        isCompleted
+                          ? "text-[var(--text-primary)]"
+                          : "text-[var(--text-secondary)]"
+                      }`}
+                    >
+                      {isCompleted ? "已遊玩" : "未遊玩"}
+                    </span>
+                  </Link>
+                ) : (
+                  <div
+                    className="flex flex-col items-center gap-2 cursor-not-allowed"
+                    aria-label={`第 ${level} 關，尚未開放`}
+                  >
+                    <div className="relative h-16 w-16 opacity-30">
+                      <LevelNoteIcon className="h-full w-full text-[var(--text-secondary)]" />
+                      <span className="absolute -top-1 left-1 text-sm font-semibold text-[var(--text-secondary)]">
+                        {level}
+                      </span>
+                    </div>
+                    <span className="text-xs font-medium text-[var(--text-secondary)]/70">
+                      未開放
+                    </span>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
