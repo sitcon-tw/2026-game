@@ -62,32 +62,42 @@ function LeaderboardRow({
       }`}
     >
       <div className="flex flex-col divide-y divide-[var(--text-light)]/20">
-      {entries.map((entry, idx) => {
-        const isCurrentUser = isSameEntry(me, entry);
+        {entries.map((entry, idx) => {
+          const isCurrentUser = isSameEntry(me, entry);
 
-        return (
-          <div
-            key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
-            className="relative flex items-center justify-between py-2 first:pt-0 last:pb-0"
-          >
-            {/* Left: rank + name */}
-            <div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
-              <span className="tabular-nums">{entry.rank}.</span>
-              <span>{entry.nickname}</span>
-            </div>
+          return (
+            <div
+              key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
+              className="relative flex items-center justify-between py-2 first:pt-0 last:pb-0"
+            >
+              {/* Left: rank + name */}
+              <div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
+                <span className="tabular-nums">{entry.rank}.</span>
+                <span>{entry.nickname}</span>
+              </div>
 
-            {/* Right: avatar + badge */}
-            <div className="relative">
-              <div className="h-10 w-10 rounded-full bg-[var(--bg-secondary)]" />
-              {isCurrentUser && (
-                <span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
-                  Y
-                </span>
-              )}
+              {/* Right: avatar + badge */}
+              <div className="relative">
+                {entry.avatar ? (
+                  <img
+                    src={entry.avatar}
+                    alt={entry.nickname}
+                    className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-[var(--accent-bronze)] flex-shrink-0 flex items-center justify-center font-serif text-base font-bold text-white">
+                    {entry.nickname.charAt(0)}
+                  </div>
+                )}
+                {isCurrentUser && (
+                  <span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
+                    Y
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
       </div>
     </div>
   );
@@ -161,7 +171,9 @@ export default function LeaderboardPage() {
       )
     : -1;
   const showDivider = mode === "nearby" && currentGroupIdx > 0;
-  const aboveGroups = showDivider ? groupedEntries.slice(0, currentGroupIdx) : [];
+  const aboveGroups = showDivider
+    ? groupedEntries.slice(0, currentGroupIdx)
+    : [];
   const belowGroups = showDivider
     ? groupedEntries.slice(currentGroupIdx)
     : groupedEntries;

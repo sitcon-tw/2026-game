@@ -45,6 +45,7 @@ export interface BoothActivity {
 
 export interface RankEntry {
   nickname: string;
+  avatar?: string | null;
   level: number;
   rank: number;
 }
