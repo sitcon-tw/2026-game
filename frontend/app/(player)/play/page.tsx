@@ -8,6 +8,7 @@ import {
   useFriendCount,
   useGroupMembers,
 } from "@/hooks/api";
+import type { ActivityWithStatus } from "@/types/api";
 import { useMemo } from "react";
 
 export default function PlayPage() {
@@ -25,14 +26,18 @@ export default function PlayPage() {
         challenge: { current: 0, total: 0 },
         checkin: { current: 0, total: 0 },
       };
-    const result: Record<string, { current: number; total: number }> = {};
-    const typeMap = {
+    const result: Record<"booth" | "challenge" | "checkin", { current: number; total: number }> = {
+      booth: { current: 0, total: 0 },
+      challenge: { current: 0, total: 0 },
+      checkin: { current: 0, total: 0 },
+    };
+    const typeMap: Record<"booth" | "challenge" | "checkin", ActivityWithStatus["type"][]> = {
       booth: ["booth"],
       challenge: ["challenge"],
       checkin: ["checkin", "check"],
-    } as const;
+    };
 
-    for (const [key, types] of Object.entries(typeMap)) {
+    for (const [key, types] of Object.entries(typeMap) as [keyof typeof typeMap, ActivityWithStatus["type"][]][]) {
       const items = activities.filter((a) => types.includes(a.type));
       result[key] = {
         current: items.filter((a) => a.visited).length,
