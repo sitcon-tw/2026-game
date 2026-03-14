@@ -1,0 +1,173 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/internal/router"
+	"github.com/sitcon-tw/2026-game/pkg/config"
+	"github.com/sitcon-tw/2026-game/pkg/db"
+	"github.com/sitcon-tw/2026-game/pkg/logger"
+	"github.com/sitcon-tw/2026-game/pkg/middleware"
+	"github.com/sitcon-tw/2026-game/pkg/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.uber.org/zap"
+)
+
+const (
+	readTimeout         = 15 * time.Second
+	readHeaderTimeout   = 5 * time.Second
+	writeTimeout        = 15 * time.Second
+	idleTimeout         = 60 * time.Second
+	otelShutdownTimeout = 5 * time.Second
+	maxAge              = 300
+)
+
+// @title SITGAME API
+// @version 1.0
+// @description This is the SITGAME API server
+
+// @contact.name API Support
+// @contact.url https://sitcon.org
+// @contact.email contact@sitcon.org
+
+// @BasePath /api
+// @schemes http https
+func main() {
+	cfg, err := config.Init()
+	if err != nil {
+		panic(err)
+	}
+
+	logger := logger.New()
+
+	levels, err := config.Levels()
+	if err != nil {
+		logger.Fatal("Failed to load level CSV from LEVEL_CSV_URL", zap.Error(err))
+	}
+	logger.Info("Level config loaded", zap.Int("level_ranges", len(levels)))
+
+	sheetMusic, err := config.SheetMusic()
+	if err != nil {
+		logger.Fatal("Failed to load sheet music CSV from SHEET_MUSIC_CSV_URL", zap.Error(err))
+	}
+	logger.Info("Sheet music loaded", zap.Int("notes", len(sheetMusic)))
+	logger.Info("Game config preload completed")
+
+	otelShutdown, err := telemetry.Init(context.Background(), logger)
+	if err != nil {
+		logger.Error("Failed to initialize OpenTelemetry; continuing without tracing", zap.Error(err))
+	} else {
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), otelShutdownTimeout)
+			defer cancel()
+
+			if shutdownErr := otelShutdown(ctx); shutdownErr != nil {
+				logger.Error("Failed to shutdown OpenTelemetry", zap.Error(shutdownErr))
+			}
+		}()
+	}
+
+	db, err := db.InitDatabase(logger)
+	if err != nil {
+		logger.Fatal("Failed to initialize database", zap.Error(err))
+	}
+	defer db.Close()
+
+	repo := repository.New(db, logger)
+
+	handler := initRoutes(repo, logger)
+	if config.Env().OTelEnabled {
+		handler = otelhttp.NewHandler(
+			handler,
+			"http.server",
+			otelhttp.WithSpanNameFormatter(func(_ string, r *http.Request) string {
+				return fmt.Sprintf("HTTP %s %s", r.Method, r.URL.Path)
+			}),
+		)
+	}
+
+	logger.Info("Starting server",
+		zap.String("port", cfg.AppPort),
+		zap.String("env", string(cfg.AppEnv)),
+	)
+
+	server := &http.Server{
+		Addr:              fmt.Sprintf(":%s", cfg.AppPort),
+		Handler:           handler,
+		ReadTimeout:       readTimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
+	}
+
+	err = server.ListenAndServe()
+	if err != nil {
+		logger.Fatal("server stopped unexpectedly", zap.Error(err))
+	}
+}
+
+func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+	r := chi.NewRouter()
+
+	// logger
+	r.Use(middleware.Logger(logger))
+	r.Use(middleware.TraceHandler())
+
+	// CORS
+	if config.Env().AppEnv == config.AppEnvDev {
+		//nolint:golines // keep struct aligned
+		corsMiddleware := cors.Handler(cors.Options{
+			AllowedOrigins:   config.Env().CORSAllowedOrigins,
+			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
+			AllowedHeaders:   []string{"Authorization", "Content-Type"},
+			AllowCredentials: true,
+			MaxAge:           maxAge,
+		})
+		r.Use(corsMiddleware)
+	}
+
+	// Rate limit
+	r.Use(httprate.LimitByIP(
+		config.Env().RateLimitRequestsPerWindow,
+		config.Env().RateLimitWindow,
+	))
+
+	// Routes
+	r.Handle("/metrics", promhttp.Handler())
+
+	// Routes
+	r.Route("/api", func(r chi.Router) {
+		r.Mount("/users", router.UserRoutes(repo, logger))
+		r.Mount("/activities", router.ActivityRoutes(repo, logger))
+		r.Mount("/discount-coupons", router.DiscountRoutes(repo, logger))
+		r.Mount("/announcements", router.AnnouncementRoutes(repo, logger))
+		r.Mount("/admin", router.AdminRoutes(repo, logger))
+
+		r.Mount("/friendships", router.FriendRoutes(repo, logger))
+		r.Mount("/games", router.GameRoutes(repo, logger))
+		r.Mount("/group", router.GroupRoutes(repo, logger))
+	})
+
+	// Swagger API docs
+	if config.Env().AppDocs {
+		// Serve raw swagger spec at /docs for quick downloads
+		r.Get("/docs", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "docs/swagger.yaml")
+		})
+
+		// Serve static API docs (index.html + swagger assets) under /docs/
+		r.Get("/docs/*", http.StripPrefix("/docs", http.FileServer(http.Dir("docs"))).ServeHTTP)
+
+		logger.Info("API documentation available at http://localhost:" + config.Env().AppPort + "/docs/")
+	}
+
+	return r
+}

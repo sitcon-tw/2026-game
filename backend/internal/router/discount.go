@@ -1,0 +1,45 @@
+package router
+
+import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/sitcon-tw/2026-game/internal/handler/discount"
+	"github.com/sitcon-tw/2026-game/internal/repository"
+	"github.com/sitcon-tw/2026-game/pkg/middleware"
+	"go.uber.org/zap"
+)
+
+// DiscountRoutes wires discount-related endpoints.
+func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+	r := chi.NewRouter()
+
+	h := discount.New(repo, logger)
+
+	r.Route("/staff", func(r chi.Router) {
+		r.Post("/session", h.StaffLogin)
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.StaffAuth(repo, logger))
+
+			// Staff scans attendee's coupon QR code
+			r.Post("/redemptions", h.DiscountUsed)
+			// Staff previews user's available coupons
+			r.Post("/coupon-tokens/query", h.GetUserCoupons)
+			// Staff sees their own redemption history
+			r.Get("/current/redemptions", h.ListStaffHistory)
+			// Staff scans attendee's one-time QR code to issue a coupon
+			r.Post("/scan-assignments", h.AssignCouponByQRCode)
+			// Staff sees their own scan-assignment history
+			r.Get("/current/scan-assignments", h.ListStaffScanHistory)
+		})
+	})
+	// Publicly lists all coupon rules with issuance status
+	r.Get("/coupons", h.ListAllCoupons)
+
+	// Get the count of discounts used by the user
+	r.With(middleware.Auth(repo, logger)).Get("/", h.GetDiscount)
+	// User consumes a gift coupon by token in request body
+	r.With(middleware.Auth(repo, logger)).Post("/gifts", h.GetGiftCouponByToken)
+	return r
+}
