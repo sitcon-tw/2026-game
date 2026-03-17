@@ -282,8 +282,7 @@ export default function CouponPage() {
         </p>
 
         {/* Rules */}
-        <div className="mx-auto my-4 flex max-w-xs items-center gap-2 rounded-lg border border-[var(--accent-bronze)]/30 bg-[var(--accent-bronze)]/10 px-4 py-3 text-left text-xs text-[var(--text-primary)]">
-          <span className="text-xl">⚠️</span>
+        <div className="mx-auto my-4 flex max-w-xs items-center rounded-lg border border-[var(--accent-bronze)]/30 bg-[var(--accent-bronze)]/10 px-4 py-3 text-left text-xs text-[var(--text-primary)]">
           <div className="flex flex-col gap-1">
             <p>
               <span className="font-bold">限時</span> 獲得期限僅至 16:00
@@ -296,7 +295,7 @@ export default function CouponPage() {
             </p>
             <p>
               <span className="font-bold">單次</span>{" "}
-              每張限用一次，不提供分次折抵
+              每張限用一次，且使用時會折抵當下獲得的所有折價券
             </p>
           </div>
         </div>
