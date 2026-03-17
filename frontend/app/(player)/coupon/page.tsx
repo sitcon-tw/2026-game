@@ -22,8 +22,6 @@ interface DisplayCoupon {
   definitionId: string;
 }
 
-const MAX_LOCKED_DISPLAY = 3;
-
 function buildDisplayList(
   definitions: CouponDefinition[],
   userCoupons: DiscountCoupon[],
@@ -44,7 +42,6 @@ function buildDisplayList(
     const owned = couponsByDefId.get(def.id) ?? [];
 
     if (owned.length > 0) {
-      // Show each owned coupon
       for (const c of owned) {
         items.push({
           status: c.used_at ? "used" : "unused",
@@ -53,33 +50,16 @@ function buildDisplayList(
           definitionId: def.id,
         });
       }
-      // Show limited locked placeholders for remaining
-      const remaining = Math.min(
-        def.max_qty - owned.length,
-        MAX_LOCKED_DISPLAY,
-      );
-      for (let i = 0; i < remaining; i++) {
-        items.push({
-          status: "locked",
-          price: def.amount,
-          passLevel: def.pass_level,
-          description: def.description,
-          definitionId: def.id,
-        });
-      }
-    } else {
-      // User has none — show limited locked placeholders
-      const displayCount = Math.min(def.max_qty, MAX_LOCKED_DISPLAY);
-      for (let i = 0; i < displayCount; i++) {
-        items.push({
-          status: "locked",
-          price: def.amount,
-          passLevel: def.pass_level,
-          description: def.description,
-          definitionId: def.id,
-        });
-      }
+      continue;
     }
+
+    items.push({
+      status: "locked",
+      price: def.amount,
+      passLevel: def.pass_level,
+      description: def.description,
+      definitionId: def.id,
+    });
   }
 
   // Include coupons not tied to any definition (e.g. gift coupons)
@@ -307,6 +287,12 @@ export default function CouponPage() {
           <div className="flex flex-col gap-1">
             <p>
               <span className="font-bold">限時</span> 獲得期限僅至 16:00
+            </p>
+            <p>
+              <span className="font-bold">使用</span> 折價券使用至 16:30 收攤
+            </p>
+            <p>
+              <span className="font-bold">門檻</span> 單筆消費滿 200 元才能折抵
             </p>
             <p>
               <span className="font-bold">單次</span>{" "}
