@@ -190,6 +190,8 @@ export default function ScanPage() {
       <UpdateMyNamecardModal
         open={showUpdateNamecard}
         onClose={() => setShowUpdateNamecard(false)}
+        nickname={currentUser?.nickname}
+        avatar={currentUser?.avatar}
         initialBio={currentUser?.namecard_bio}
         initialLinks={currentUser?.namecard_links}
         initialEmail={currentUser?.namecard_email}
