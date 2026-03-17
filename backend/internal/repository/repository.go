@@ -26,6 +26,7 @@ type Repository interface {
 	GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error)
 	GetUserByCouponToken(ctx context.Context, tx pgx.Tx, couponToken string) (*models.User, error)
 	InsertUser(ctx context.Context, tx pgx.Tx, user *models.User) error
+	UpdateUserNamecard(ctx context.Context, tx pgx.Tx, userID string, bio *string, links []string, email *string) error
 	GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error)
 
 	// Friend operations

@@ -38,7 +38,7 @@ type friendCapacity struct {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      addByQRCodeRequest  true  "User QR code token"
-// @Success      200  {object}  friendPublicProfile
+// @Success      200  {object}  models.PublicUser
 // @Failure      400  {object}  res.ErrorResponse "missing or invalid qr code | already friends"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
@@ -64,12 +64,7 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := friendPublicProfile{
-		ID:           targetUser.ID,
-		Nickname:     targetUser.Nickname,
-		Avatar:       targetUser.Avatar,
-		CurrentLevel: targetUser.CurrentLevel,
-	}
+	resp := models.ToPublicUser(*targetUser)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

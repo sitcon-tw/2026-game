@@ -6,16 +6,19 @@ import "time"
 //
 //nolint:golines // keep struct tags aligned; lines already short
 type User struct {
-	ID           string    `db:"id" json:"id"`
-	AuthToken    string    `db:"auth_token" json:"-"`
-	Nickname     string    `db:"nickname" json:"nickname"`
-	Avatar       *string   `db:"avatar" json:"avatar,omitempty"`
-	QRCodeToken  string    `db:"qrcode_token" json:"-"`
-	CouponToken  string    `db:"coupon_token" json:"coupon_token"`
-	Group        *string   `db:"group" json:"group,omitempty"`
-	UnlockLevel  int       `db:"unlock_level" json:"unlock_level"`
-	CurrentLevel int       `db:"current_level" json:"current_level"`
-	LastPassTime time.Time `db:"last_pass_time" json:"last_pass_time"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+	ID            string    `db:"id" json:"id"`
+	AuthToken     string    `db:"auth_token" json:"-"`
+	Nickname      string    `db:"nickname" json:"nickname"`
+	Avatar        *string   `db:"avatar" json:"avatar,omitempty"`
+	NamecardBio   *string   `db:"namecard_bio" json:"namecard_bio,omitempty"`
+	NamecardLinks []string  `db:"namecard_links" json:"namecard_links,omitempty"`
+	NamecardEmail *string   `db:"namecard_email" json:"namecard_email,omitempty"`
+	QRCodeToken   string    `db:"qrcode_token" json:"-"`
+	CouponToken   string    `db:"coupon_token" json:"coupon_token"`
+	Group         *string   `db:"group" json:"group,omitempty"`
+	UnlockLevel   int       `db:"unlock_level" json:"unlock_level"`
+	CurrentLevel  int       `db:"current_level" json:"current_level"`
+	LastPassTime  time.Time `db:"last_pass_time" json:"last_pass_time"`
+	CreatedAt     time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
 }
