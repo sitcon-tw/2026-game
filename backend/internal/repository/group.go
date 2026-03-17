@@ -12,7 +12,7 @@ import (
 // The current user is excluded from the result.
 func (r *PGRepository) ListGroupMembers(ctx context.Context, tx pgx.Tx, userID string, groupName string) ([]models.User, error) {
 	const query = `
-SELECT id, nickname, avatar, current_level, "group"
+SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, "group"
 FROM users
 WHERE "group" = $1
   AND id != $2
@@ -32,6 +32,9 @@ ORDER BY created_at`
 			&u.Nickname,
 			&u.Avatar,
 			&u.CurrentLevel,
+			&u.NamecardBio,
+			&u.NamecardLinks,
+			&u.NamecardEmail,
 			&u.Group,
 		); scanErr != nil {
 			return nil, scanErr

@@ -11,7 +11,7 @@ import (
 // GetUserByID fetches a user by id. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByID(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE id = $1`
 
@@ -21,6 +21,9 @@ WHERE id = $1`
 		&u.AuthToken,
 		&u.Nickname,
 		&u.Avatar,
+		&u.NamecardBio,
+		&u.NamecardLinks,
+		&u.NamecardEmail,
 		&u.QRCodeToken,
 		&u.CouponToken,
 		&u.Group,
@@ -42,7 +45,7 @@ WHERE id = $1`
 // GetUserByIDForUpdate fetches a user row with FOR UPDATE lock to avoid concurrent updates.
 func (r *PGRepository) GetUserByIDForUpdate(ctx context.Context, tx pgx.Tx, id string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE id = $1
 FOR UPDATE`
@@ -53,6 +56,9 @@ FOR UPDATE`
 		&u.AuthToken,
 		&u.Nickname,
 		&u.Avatar,
+		&u.NamecardBio,
+		&u.NamecardLinks,
+		&u.NamecardEmail,
 		&u.QRCodeToken,
 		&u.CouponToken,
 		&u.Group,
@@ -74,7 +80,7 @@ FOR UPDATE`
 // GetUserByToken fetches a user by auth token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByToken(ctx context.Context, tx pgx.Tx, token string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE auth_token = $1`
 
@@ -84,6 +90,9 @@ WHERE auth_token = $1`
 		&u.AuthToken,
 		&u.Nickname,
 		&u.Avatar,
+		&u.NamecardBio,
+		&u.NamecardLinks,
+		&u.NamecardEmail,
 		&u.QRCodeToken,
 		&u.CouponToken,
 		&u.Group,
@@ -105,7 +114,7 @@ WHERE auth_token = $1`
 // GetUserByQRCode fetches a user by their QR code token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByQRCode(ctx context.Context, tx pgx.Tx, qr string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE qrcode_token = $1`
 
@@ -115,6 +124,9 @@ WHERE qrcode_token = $1`
 		&u.AuthToken,
 		&u.Nickname,
 		&u.Avatar,
+		&u.NamecardBio,
+		&u.NamecardLinks,
+		&u.NamecardEmail,
 		&u.QRCodeToken,
 		&u.CouponToken,
 		&u.Group,
@@ -147,7 +159,7 @@ func (r *PGRepository) IncrementUnlockLevelBy(ctx context.Context, tx pgx.Tx, us
 // GetUserByCouponToken fetches a user by their coupon token. Returns ErrNotFound if missing.
 func (r *PGRepository) GetUserByCouponToken(ctx context.Context, tx pgx.Tx, couponToken string) (*models.User, error) {
 	const query = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE coupon_token = $1`
 
@@ -157,6 +169,9 @@ WHERE coupon_token = $1`
 		&u.AuthToken,
 		&u.Nickname,
 		&u.Avatar,
+		&u.NamecardBio,
+		&u.NamecardLinks,
+		&u.NamecardEmail,
 		&u.QRCodeToken,
 		&u.CouponToken,
 		&u.Group,
@@ -177,14 +192,17 @@ WHERE coupon_token = $1`
 // InsertUser inserts a new user record.
 func (r *PGRepository) InsertUser(ctx context.Context, tx pgx.Tx, user *models.User) error {
 	const stmt = `
-INSERT INTO users (id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+INSERT INTO users (id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`
 
 	_, err := tx.Exec(ctx, stmt,
 		user.ID,
 		user.AuthToken,
 		user.Nickname,
 		user.Avatar,
+		user.NamecardBio,
+		user.NamecardLinks,
+		user.NamecardEmail,
 		user.QRCodeToken,
 		user.CouponToken,
 		user.UnlockLevel,
@@ -193,5 +211,26 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 		user.CreatedAt,
 		user.UpdatedAt,
 	)
+	return err
+}
+
+// UpdateUserNamecard updates the editable public namecard fields for a user.
+func (r *PGRepository) UpdateUserNamecard(
+	ctx context.Context,
+	tx pgx.Tx,
+	userID string,
+	bio *string,
+	links []string,
+	email *string,
+) error {
+	const stmt = `
+UPDATE users
+SET namecard_bio = $2,
+    namecard_links = $3,
+    namecard_email = $4,
+    updated_at = NOW()
+WHERE id = $1`
+
+	_, err := tx.Exec(ctx, stmt, userID, bio, links, email)
 	return err
 }

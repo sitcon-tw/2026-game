@@ -5,23 +5,17 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
-
-type friendPublicProfile struct {
-	ID           string  `json:"id"`
-	Nickname     string  `json:"nickname"`
-	Avatar       *string `json:"avatar,omitempty"`
-	CurrentLevel int     `json:"current_level"`
-}
 
 // List handles GET /friendships.
 // @Summary      取得好友列表
 // @Description  取得目前使用者所有好友的公開資料，不包含任何私密欄位。
 // @Tags         friends
 // @Produce      json
-// @Success      200  {array}   friendPublicProfile
+// @Success      200  {array}   models.PublicUser
 // @Failure      401  {object}  res.ErrorResponse
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /friendships [get]
@@ -51,14 +45,9 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := make([]friendPublicProfile, 0, len(friends))
+	resp := make([]models.PublicUser, 0, len(friends))
 	for _, friend := range friends {
-		resp = append(resp, friendPublicProfile{
-			ID:           friend.ID,
-			Nickname:     friend.Nickname,
-			Avatar:       friend.Avatar,
-			CurrentLevel: friend.CurrentLevel,
-		})
+		resp = append(resp, models.ToPublicUser(friend))
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

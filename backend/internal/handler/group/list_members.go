@@ -5,17 +5,16 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
 // memberResponse is a single group member entry including check-in status.
 type memberResponse struct {
-	ID           string  `json:"id"`
-	Nickname     string  `json:"nickname"`
-	Avatar       *string `json:"avatar,omitempty"`
-	CurrentLevel int     `json:"current_level"`
-	CheckedIn    bool    `json:"checked_in"`
+	models.PublicUser
+
+	CheckedIn bool `json:"checked_in"`
 }
 
 // ListMembers handles GET /group/members.
@@ -76,11 +75,8 @@ func (h *Handler) ListMembers(w http.ResponseWriter, r *http.Request) {
 	result := make([]memberResponse, 0, len(members))
 	for _, m := range members {
 		result = append(result, memberResponse{
-			ID:           m.ID,
-			Nickname:     m.Nickname,
-			Avatar:       m.Avatar,
-			CurrentLevel: m.CurrentLevel,
-			CheckedIn:    checkedInWith[m.ID],
+			PublicUser: models.ToPublicUser(m),
+			CheckedIn:  checkedInWith[m.ID],
 		})
 	}
 

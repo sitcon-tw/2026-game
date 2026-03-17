@@ -242,17 +242,20 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, sourc
 	// user.json contains auth_token, which is omitted from models.User JSON tags.
 	// Use a dedicated struct so tokens are loaded during import.
 	type userImport struct {
-		ID           string    `json:"id"`
-		AuthToken    string    `json:"auth_token"`
-		Nickname     string    `json:"nickname"`
-		Avatar       *string   `json:"avatar"`
-		QRCodeToken  string    `json:"qrcode_token"`
-		CouponToken  string    `json:"coupon_token"`
-		UnlockLevel  int       `json:"unlock_level"`
-		CurrentLevel int       `json:"current_level"`
-		LastPassTime time.Time `json:"last_pass_time"`
-		CreatedAt    time.Time `json:"created_at"`
-		UpdatedAt    time.Time `json:"updated_at"`
+		ID            string    `json:"id"`
+		AuthToken     string    `json:"auth_token"`
+		Nickname      string    `json:"nickname"`
+		Avatar        *string   `json:"avatar"`
+		NamecardBio   *string   `json:"namecard_bio"`
+		NamecardLinks []string  `json:"namecard_links"`
+		NamecardEmail *string   `json:"namecard_email"`
+		QRCodeToken   string    `json:"qrcode_token"`
+		CouponToken   string    `json:"coupon_token"`
+		UnlockLevel   int       `json:"unlock_level"`
+		CurrentLevel  int       `json:"current_level"`
+		LastPassTime  time.Time `json:"last_pass_time"`
+		CreatedAt     time.Time `json:"created_at"`
+		UpdatedAt     time.Time `json:"updated_at"`
 	}
 
 	var items []userImport
@@ -276,12 +279,15 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, sourc
 	}()
 
 	const stmt = `
-INSERT INTO users (id, auth_token, nickname, avatar, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO users (id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 ON CONFLICT (id) DO UPDATE
 SET auth_token = EXCLUDED.auth_token,
     nickname = EXCLUDED.nickname,
     avatar = EXCLUDED.avatar,
+    namecard_bio = EXCLUDED.namecard_bio,
+    namecard_links = EXCLUDED.namecard_links,
+    namecard_email = EXCLUDED.namecard_email,
     qrcode_token = EXCLUDED.qrcode_token,
     coupon_token = EXCLUDED.coupon_token,
     unlock_level = EXCLUDED.unlock_level,
@@ -306,6 +312,9 @@ SET auth_token = EXCLUDED.auth_token,
 			items[i].AuthToken,
 			items[i].Nickname,
 			items[i].Avatar,
+			items[i].NamecardBio,
+			items[i].NamecardLinks,
+			items[i].NamecardEmail,
 			items[i].QRCodeToken,
 			items[i].CouponToken,
 			items[i].UnlockLevel,

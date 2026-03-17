@@ -12,11 +12,11 @@ import (
 func (r *PGRepository) GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]RankedUser, error) {
 	const query = `
 WITH ranked AS (
-    SELECT id, nickname, avatar, current_level, last_pass_time,
+    SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
            RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
     FROM users
 )
-SELECT nickname, avatar, current_level, last_pass_time, rank
+SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank
 FROM ranked
 ORDER BY current_level DESC, last_pass_time ASC, id ASC
 LIMIT $1 OFFSET $2`
@@ -34,6 +34,9 @@ LIMIT $1 OFFSET $2`
 			&ru.User.Nickname,
 			&ru.User.Avatar,
 			&ru.User.CurrentLevel,
+			&ru.User.NamecardBio,
+			&ru.User.NamecardLinks,
+			&ru.User.NamecardEmail,
 			&ru.User.LastPassTime,
 			&ru.Rank,
 		)
@@ -53,8 +56,8 @@ LIMIT $1 OFFSET $2`
 // Ranking rule: higher level first, then earlier last_pass_time.
 func (r *PGRepository) GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error) {
 	const query = `
-SELECT nickname, avatar, current_level, last_pass_time, rank FROM (
-    SELECT id, nickname, avatar, current_level, last_pass_time,
+SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank FROM (
+    SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
            RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
     FROM users
 ) ranked
@@ -66,6 +69,9 @@ WHERE id = $1`
 		&u.Nickname,
 		&u.Avatar,
 		&u.CurrentLevel,
+		&u.NamecardBio,
+		&u.NamecardLinks,
+		&u.NamecardEmail,
 		&u.LastPassTime,
 		&rank,
 	)
@@ -82,14 +88,14 @@ WHERE id = $1`
 func (r *PGRepository) GetAroundUsers(ctx context.Context, tx pgx.Tx, userID string, span int) ([]RankedUser, error) {
 	const query = `
 WITH ranked AS (
-    SELECT id, nickname, avatar, current_level, last_pass_time,
+    SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
            RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank,
            ROW_NUMBER() OVER (ORDER BY current_level DESC, last_pass_time ASC, id ASC) AS rn
     FROM users
 ), my_row AS (
     SELECT rn FROM ranked WHERE id = $1
 )
-SELECT nickname, avatar, current_level, last_pass_time, rank
+SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank
 FROM ranked, my_row
 WHERE ranked.rn BETWEEN my_row.rn - $2 AND my_row.rn + $2
 ORDER BY ranked.rn`
@@ -107,6 +113,9 @@ ORDER BY ranked.rn`
 			&ru.User.Nickname,
 			&ru.User.Avatar,
 			&ru.User.CurrentLevel,
+			&ru.User.NamecardBio,
+			&ru.User.NamecardLinks,
+			&ru.User.NamecardEmail,
 			&ru.User.LastPassTime,
 			&ru.Rank,
 		)
