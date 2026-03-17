@@ -248,8 +248,8 @@ export default function ChallengesPage() {
       if (nextIndex >= sheetButtons.length) {
         // All correct — success!
         setPhase("success");
-        // Only submit if this is the current (uncleared) level, not a replay, and not at max unlock level
-        if (!isReplay && !isMaxLevel) {
+        // Submit whenever this is a first clear (including max unlocked level).
+        if (!isReplay) {
           submitLevel.mutate(undefined, {
             onSuccess: (data) => setSubmitResult(data),
             onError: (err) => setSubmitError((err as Error).message),
@@ -372,7 +372,7 @@ export default function ChallengesPage() {
                   （已達最大解鎖關卡，透過攤位互動解鎖更多關卡）
                 </p>
               )}
-              {!isReplay && !isMaxLevel && submitResult && (
+              {!isReplay && submitResult && (
                 <div className="space-y-2 mb-4">
                   <p className="text-[var(--text-secondary)] text-sm">
                     目前進度：第 {submitResult.current_level} 關
@@ -384,10 +384,10 @@ export default function ChallengesPage() {
                   )}
                 </div>
               )}
-              {!isReplay && !isMaxLevel && submitError && (
+              {!isReplay && submitError && (
                 <p className="text-red-500 text-sm mb-4">{submitError}</p>
               )}
-              {!isReplay && !isMaxLevel && submitLevel.isPending && (
+              {!isReplay && submitLevel.isPending && (
                 <p className="animate-pulse text-[var(--text-secondary)] text-sm mb-4">
                   提交中...
                 </p>
@@ -400,13 +400,15 @@ export default function ChallengesPage() {
                 >
                   返回列表
                 </button>
-                <button
-                  type="button"
-                  onClick={handleNextLevel}
-                  className="px-4 py-2 rounded-lg bg-[var(--accent-gold)] text-white text-sm font-bold cursor-pointer"
-                >
-                  下一關
-                </button>
+                {!isMaxLevel && (
+                  <button
+                    type="button"
+                    onClick={handleNextLevel}
+                    className="px-4 py-2 rounded-lg bg-[var(--accent-gold)] text-white text-sm font-bold cursor-pointer"
+                  >
+                    下一關
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -9,12 +9,15 @@ import AnnouncementTicker from "@/components/AnnouncementTicker";
 
 type AnimationPhase = "idle" | "sliding" | "spinning" | "expanding" | "done";
 
-const DEFAULT_MESSAGE = "歡迎來到 SITCON 2026 大地遊戲！";
+const DEFAULT_MESSAGE = "進入遊戲";
+const SPIN_HOLD_DURATION = 350;
+const CD_EXPAND_DURATION = 1.4;
 
 export default function LandingPage() {
   const router = useRouter();
   const [phase, setPhase] = useState<AnimationPhase>("idle");
-  const { data: announcements, isLoading: announcementsLoading } = useAnnouncements();
+  const { data: announcements, isLoading: announcementsLoading } =
+    useAnnouncements();
 
   const handleEnter = useCallback(() => {
     if (phase !== "idle") return;
@@ -81,7 +84,7 @@ export default function LandingPage() {
                   scale: phase === "expanding" || phase === "done" ? 20 : 1,
                 }}
                 transition={{
-                  duration: 2.5,
+                  duration: CD_EXPAND_DURATION,
                   ease: [0.4, 0, 1, 1], // easeIn curve
                 }}
                 onAnimationComplete={() => {
@@ -97,10 +100,10 @@ export default function LandingPage() {
                   transition={
                     isAnimating
                       ? {
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }
                       : { duration: 0 }
                   }
                 >
@@ -139,8 +142,7 @@ export default function LandingPage() {
               onAnimationComplete={() => {
                 if (phase === "sliding") {
                   setPhase("spinning");
-                  // Let CD spin for ~1.2s then expand
-                  setTimeout(() => setPhase("expanding"), 800);
+                  setTimeout(() => setPhase("expanding"), SPIN_HOLD_DURATION);
                 }
               }}
             >
