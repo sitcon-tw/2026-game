@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  useAdminSearchUsers,
-  useAdminAssignCoupon,
-  useCouponDefinitions,
-} from "@/hooks/api";
+import { useAdminSearchUsers, useAdminAssignCoupon } from "@/hooks/api";
 import type { User } from "@/types/api";
 import { usePopupStore } from "@/stores";
 
@@ -43,32 +39,32 @@ export default function AssignCouponPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [discountId, setDiscountId] = useState("");
+  const [price, setPrice] = useState(0);
 
   const { data: users, isLoading: usersLoading } =
     useAdminSearchUsers(searchQuery);
-  const { data: definitions, isLoading: defsLoading } = useCouponDefinitions();
   const assignCoupon = useAdminAssignCoupon();
   const showPopup = usePopupStore((s) => s.showPopup);
 
-  const selectedDef = definitions?.find((d) => d.id === discountId);
-
   const handleAssign = () => {
-    if (!selectedUser || !discountId || !selectedDef) return;
+    const normalizedDiscountId = discountId.trim();
+    if (!selectedUser || !normalizedDiscountId || price <= 0) return;
 
     assignCoupon.mutate(
       {
         user_id: selectedUser.id,
-        discount_id: discountId,
-        price: selectedDef.amount,
+        discount_id: normalizedDiscountId,
+        price,
       },
       {
         onSuccess: () => {
           showPopup({
             title: "指派成功",
-            description: `已成功發放 $${selectedDef.amount} 折價券給 ${selectedUser.nickname}`,
+            description: `已成功發放 $${price} 折價券給 ${selectedUser.nickname}`,
           });
           setSelectedUser(null);
           setDiscountId("");
+          setPrice(0);
           setSearchQuery("");
         },
         onError: (error) => {
@@ -135,35 +131,33 @@ export default function AssignCouponPage() {
             發放折價券給 {selectedUser.nickname}
           </h2>
 
-          <select
+          <input
+            type="text"
             value={discountId}
             onChange={(e) => setDiscountId(e.target.value)}
+            placeholder="輸入自訂 Discount ID"
             className="rounded-lg border-none bg-[var(--bg-secondary)] p-3 text-sm text-[var(--text-primary)]"
-          >
-            <option value="">
-              {defsLoading ? "載入中..." : "選擇折扣券規則"}
-            </option>
-            {definitions?.map((def) => (
-              <option key={def.id} value={def.id}>
-                {def.description} (${def.amount})
-              </option>
-            ))}
-          </select>
+          />
 
-          {selectedDef && (
-            <p className="text-sm text-[var(--text-secondary)]">
-              金額：${selectedDef.amount}
-            </p>
-          )}
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={price === 0 ? "" : price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            placeholder="輸入折價金額"
+            className="rounded-lg border-none bg-[var(--bg-secondary)] p-3 text-sm text-[var(--text-primary)]"
+          />
 
           <button
             onClick={handleAssign}
-            disabled={assignCoupon.isPending || !discountId}
+            disabled={
+              assignCoupon.isPending || !discountId.trim() || price <= 0
+            }
             className="rounded-full bg-[var(--accent-bronze)] py-3 text-sm font-bold text-[var(--text-light)] transition-transform active:scale-95 disabled:opacity-50"
           >
             {assignCoupon.isPending ? "指派中..." : "指派折價券"}
           </button>
-
         </div>
       )}
     </div>
