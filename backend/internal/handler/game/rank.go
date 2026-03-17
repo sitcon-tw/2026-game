@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sitcon-tw/2026-game/internal/models"
 	"github.com/sitcon-tw/2026-game/pkg/middleware"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
@@ -77,6 +78,7 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 			Nickname: row.User.Nickname,
 			Avatar:   row.User.Avatar,
 			Level:    row.User.CurrentLevel,
+			Namecard: models.ToPublicUser(row.User).Namecard,
 			Rank:     row.Rank,
 		}
 	}
@@ -87,6 +89,7 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 			Nickname: meRow.Nickname,
 			Avatar:   meRow.Avatar,
 			Level:    meRow.CurrentLevel,
+			Namecard: models.ToPublicUser(*meRow).Namecard,
 			Rank:     meRank,
 		}
 	}
@@ -97,6 +100,7 @@ func (h *Handler) Rank(w http.ResponseWriter, r *http.Request) {
 			Nickname: row.User.Nickname,
 			Avatar:   row.User.Avatar,
 			Level:    row.User.CurrentLevel,
+			Namecard: models.ToPublicUser(row.User).Namecard,
 			Rank:     row.Rank,
 		}
 	}

@@ -30,7 +30,7 @@ func (r *PGRepository) AddFriend(ctx context.Context, tx pgx.Tx, userID, friendI
 // ListFriends returns user profiles of all friends for a user.
 func (r *PGRepository) ListFriends(ctx context.Context, tx pgx.Tx, userID string) ([]models.User, error) {
 	const query = `
-SELECT u.id, u.nickname, u.avatar, u.current_level
+SELECT u.id, u.nickname, u.avatar, u.current_level, u.namecard_bio, u.namecard_links, u.namecard_email
 FROM friends f
 JOIN users u ON u.id = f.friend_id
 WHERE f.user_id = $1
@@ -50,6 +50,9 @@ ORDER BY u.created_at`
 			&u.Nickname,
 			&u.Avatar,
 			&u.CurrentLevel,
+			&u.NamecardBio,
+			&u.NamecardLinks,
+			&u.NamecardEmail,
 		)
 		if err != nil {
 			return nil, err

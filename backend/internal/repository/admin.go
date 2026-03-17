@@ -117,7 +117,7 @@ func (r *PGRepository) SearchUsersByNickname(
 	}
 
 	const stmt = `
-SELECT id, auth_token, nickname, avatar, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
+SELECT id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at
 FROM users
 WHERE to_tsvector('simple', COALESCE(nickname, '')) @@ websearch_to_tsquery('simple', $1)
    OR nickname ILIKE '%' || $1 || '%'
@@ -139,6 +139,9 @@ LIMIT $2`
 			&u.AuthToken,
 			&u.Nickname,
 			&u.Avatar,
+			&u.NamecardBio,
+			&u.NamecardLinks,
+			&u.NamecardEmail,
 			&u.QRCodeToken,
 			&u.CouponToken,
 			&u.Group,

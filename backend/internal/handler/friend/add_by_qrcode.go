@@ -38,8 +38,8 @@ type friendCapacity struct {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      addByQRCodeRequest  true  "User QR code token"
-// @Success      200  {string}  string  ""
-// @Failure      400  {object}  res.ErrorResponse "missing or invalid qr code"
+// @Success      200  {object}  models.PublicUser
+// @Failure      400  {object}  res.ErrorResponse "missing or invalid qr code | already friends"
 // @Failure      401  {object}  res.ErrorResponse "unauthorized"
 // @Failure      500  {object}  res.ErrorResponse
 // @Router       /friendships [post]
@@ -58,56 +58,60 @@ func (h *Handler) AddByQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.addByQRCode(ctx, currentUser.ID, req.UserQRCode)
+	targetUser, err := h.addByQRCode(ctx, currentUser.ID, req.UserQRCode)
 	if err != nil {
 		h.respondAddByQRCodeError(w, r, err)
 		return
 	}
 
+	resp := models.ToPublicUser(*targetUser)
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
-func (h *Handler) addByQRCode(ctx context.Context, currentUserID string, userQRCode string) error {
+func (h *Handler) addByQRCode(ctx context.Context, currentUserID string, userQRCode string) (*models.User, error) {
 	tx, err := h.Repo.StartTransaction(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer h.Repo.DeferRollback(ctx, tx)
 
 	targetUser, err := h.loadTargetUser(ctx, tx, userQRCode, currentUserID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	currentCapacity, err := h.checkFriendCapacity(ctx, tx, currentUserID, "friend.capacity_check.current", "friend.current")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	targetCapacity, err := h.checkFriendCapacity(ctx, tx, targetUser.ID, "friend.capacity_check.target", "friend.target")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	insertedA, insertedB, err := h.insertBidirectionalFriend(ctx, tx, currentUserID, targetUser.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = h.incrementUnlockIfNeeded(ctx, tx, insertedA, currentCapacity.canUnlock, currentUserID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = h.incrementUnlockIfNeeded(ctx, tx, insertedB, targetCapacity.canUnlock, targetUser.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = h.Repo.CommitTransaction(ctx, tx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return targetUser, nil
 }
 
 func (h *Handler) respondAddByQRCodeError(w http.ResponseWriter, r *http.Request, err error) {

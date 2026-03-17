@@ -1,11 +1,14 @@
 package game
 
+import "github.com/sitcon-tw/2026-game/internal/models"
+
 // RankEntry is the public representation of a leaderboard row.
 type RankEntry struct {
-	Nickname string  `json:"nickname"`
-	Avatar   *string `json:"avatar,omitempty"`
-	Level    int     `json:"level"`
-	Rank     int     `json:"rank"`
+	Nickname string                `json:"nickname"`
+	Avatar   *string               `json:"avatar,omitempty"`
+	Level    int                   `json:"level"`
+	Namecard models.PublicNamecard `json:"namecard"`
+	Rank     int                   `json:"rank"`
 }
 
 // RankResponse is returned by GET /game/rank.
