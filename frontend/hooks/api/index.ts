@@ -1,5 +1,10 @@
 // Player
-export { useCurrentUser, useLoginWithToken, useOneTimeQR } from "@/hooks/api/useUser";
+export {
+  useCurrentUser,
+  useLoginWithToken,
+  useOneTimeQR,
+  useUpdateNamecard,
+} from "@/hooks/api/useUser";
 export {
   useActivityStats,
   useCheckinActivity,

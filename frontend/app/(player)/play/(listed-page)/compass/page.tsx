@@ -9,8 +9,10 @@ import {
 } from "@/hooks/api";
 import QrScanner from "@/components/QrScanner";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import UserNamecardModal from "@/components/namecard/UserNamecardModal";
 import { translateWithContext } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
+import type { GroupMember } from "@/types/api";
 
 type CompassTab = "scan" | "members";
 
@@ -18,6 +20,7 @@ export default function CompassPage() {
   const [tab, setTab] = useState<CompassTab>("scan");
   const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
   const [showMyQR, setShowMyQR] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
 
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
   const hasGroup = !!currentUser?.group;
@@ -181,9 +184,14 @@ export default function CompassPage() {
             </p>
           ) : (
             (members ?? []).map((member) => (
-              <div
+              <button
                 key={member.id}
-                className="flex items-center gap-4 rounded-2xl bg-[var(--bg-secondary)] px-5 py-4 shadow-sm"
+                type="button"
+                onClick={() => {
+                  if (member.id === currentUser?.id) return;
+                  setSelectedMember(member);
+                }}
+                className="flex w-full items-center gap-4 rounded-2xl bg-[var(--bg-secondary)] px-5 py-4 text-left shadow-sm"
               >
                 {member.avatar ? (
                   <img
@@ -215,7 +223,7 @@ export default function CompassPage() {
                 >
                   {member.checked_in ? "已簽到" : "未簽到"}
                 </span>
-              </div>
+              </button>
             ))
           )}
 
@@ -224,6 +232,21 @@ export default function CompassPage() {
           )}
         </div>
       )}
+
+      <UserNamecardModal
+        open={!!selectedMember}
+        onClose={() => setSelectedMember(null)}
+        user={
+          selectedMember
+            ? {
+                nickname: selectedMember.nickname,
+                avatar: selectedMember.avatar,
+                current_level: selectedMember.current_level,
+                namecard: selectedMember.namecard,
+              }
+            : null
+        }
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { useUserStore } from "@/stores/userStore";
-import type { User, OneTimeQRResponse } from "@/types/api";
+import type { User, OneTimeQRResponse, UpdateNamecardRequest } from "@/types/api";
 
 /** GET /users/me — 取得目前登入使用者的資料
  *  只在有 authToken 時才發送請求，避免未登入時產生 401。
@@ -62,6 +62,22 @@ export function useLoginWithToken() {
       setUser(user);
       queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
       queryClient.invalidateQueries({ queryKey: queryKeys.user.session });
+    },
+  });
+}
+
+/** PATCH /users/me/namecard — 更新自己的公開名牌資料 */
+export function useUpdateNamecard() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: UpdateNamecardRequest) =>
+      api.patch<void>("/users/me/namecard", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
+      queryClient.invalidateQueries({ queryKey: queryKeys.friendships.list });
+      queryClient.invalidateQueries({ queryKey: queryKeys.group.members });
+      queryClient.invalidateQueries({ queryKey: ["games", "leaderboard"] });
     },
   });
 }

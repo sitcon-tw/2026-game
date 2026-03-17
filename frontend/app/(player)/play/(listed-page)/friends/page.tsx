@@ -2,15 +2,23 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFriendList } from "@/hooks/api";
+import { useCurrentUser, useFriendList } from "@/hooks/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import UpdateMyNamecardModal from "@/components/namecard/UpdateMyNamecardModal";
+import UserNamecardModal from "@/components/namecard/UserNamecardModal";
+import type { FriendPublicProfile } from "@/types/api";
 
 const PAGE_SIZE = 5;
 
 export default function FriendsPage() {
   const router = useRouter();
   const { data: friends, isFetching } = useFriendList();
+  const { data: currentUser } = useCurrentUser();
   const [page, setPage] = useState(0);
+  const [showUpdateNamecard, setShowUpdateNamecard] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState<FriendPublicProfile | null>(
+    null,
+  );
 
   if (isFetching) {
     return <LoadingSpinner />;
@@ -41,29 +49,36 @@ export default function FriendsPage() {
             {pageFriends.map((friend) => (
               <li
                 key={friend.id}
-                className="flex items-center gap-4 rounded-2xl bg-[var(--bg-secondary)] px-5 py-4 shadow-sm"
+                className="rounded-2xl bg-[var(--bg-secondary)] shadow-sm"
               >
-                {/* Avatar */}
-                {friend.avatar ? (
-                  <img
-                    src={friend.avatar}
-                    alt={friend.nickname}
-                    className="h-12 w-12 rounded-full object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-[var(--accent-bronze)] flex-shrink-0 flex items-center justify-center font-serif text-xl font-bold text-white">
-                    {friend.nickname.charAt(0)}
+                <button
+                  type="button"
+                  onClick={() => setSelectedFriend(friend)}
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left"
+                >
+                  {friend.avatar ? (
+                    <img
+                      src={friend.avatar}
+                      alt={friend.nickname}
+                      className="h-12 w-12 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-[var(--accent-bronze)] flex-shrink-0 flex items-center justify-center font-serif text-xl font-bold text-white">
+                      {friend.nickname.charAt(0)}
+                    </div>
+                  )}
+                  <div className="flex min-w-0 flex-col">
+                    <span className="font-serif font-semibold text-[var(--text-primary)] truncate">
+                      {friend.nickname}
+                    </span>
+                    <span className="text-sm text-[var(--text-secondary)]">
+                      第 {friend.current_level} 關
+                    </span>
                   </div>
-                )}
-                {/* Info */}
-                <div className="flex flex-col min-w-0">
-                  <span className="font-serif font-semibold text-[var(--text-primary)] truncate">
-                    {friend.nickname}
+                  <span className="ml-auto text-xs font-semibold text-[var(--text-secondary)]">
+                    點擊看名牌
                   </span>
-                  <span className="text-sm text-[var(--text-secondary)]">
-                    第 {friend.current_level} 關
-                  </span>
-                </div>
+                </button>
               </li>
             ))}
           </ul>
@@ -94,7 +109,7 @@ export default function FriendsPage() {
       )}
 
       {/* Scan button */}
-      <div className="mt-8 flex justify-center">
+      <div className="mt-8 flex flex-col items-center gap-3">
         <button
           type="button"
           onClick={() => router.push("/scan")}
@@ -102,7 +117,38 @@ export default function FriendsPage() {
         >
           掃描好友 QRCode
         </button>
+
+        <button
+          type="button"
+          onClick={() => setShowUpdateNamecard(true)}
+          className="rounded-full border border-[var(--bg-header)] bg-transparent px-8 py-3 font-serif text-base font-semibold text-[var(--bg-header)] shadow-sm transition-transform active:scale-95"
+        >
+          更新我的名牌
+        </button>
       </div>
+
+      <UpdateMyNamecardModal
+        open={showUpdateNamecard}
+        onClose={() => setShowUpdateNamecard(false)}
+        initialBio={currentUser?.namecard_bio}
+        initialLinks={currentUser?.namecard_links}
+        initialEmail={currentUser?.namecard_email}
+      />
+
+      <UserNamecardModal
+        open={!!selectedFriend}
+        onClose={() => setSelectedFriend(null)}
+        user={
+          selectedFriend
+            ? {
+                nickname: selectedFriend.nickname,
+                avatar: selectedFriend.avatar,
+                current_level: selectedFriend.current_level,
+                namecard: selectedFriend.namecard,
+              }
+            : null
+        }
+      />
     </div>
   );
 }

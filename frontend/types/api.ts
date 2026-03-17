@@ -3,6 +3,10 @@
 export interface User {
   id: string;
   nickname: string;
+  avatar?: string | null;
+  namecard_bio?: string | null;
+  namecard_links?: string[];
+  namecard_email?: string | null;
   group?: string;
   current_level: number;
   unlock_level: number;
@@ -44,9 +48,11 @@ export interface BoothActivity {
 /* ── Games ── */
 
 export interface RankEntry {
+  id?: string;
   nickname: string;
   avatar?: string | null;
   level: number;
+  namecard: PublicNamecard;
   rank: number;
 }
 
@@ -89,8 +95,9 @@ export interface OneTimeQRResponse {
 export interface FriendPublicProfile {
   id: string;
   nickname: string;
-  avatar: string;
+  avatar?: string | null;
   current_level: number;
+  namecard: PublicNamecard;
 }
 
 export interface FriendCountResponse {
@@ -103,9 +110,22 @@ export interface FriendCountResponse {
 export interface GroupMember {
   id: string;
   nickname: string;
-  avatar?: string;
+  avatar?: string | null;
   current_level: number;
+  namecard: PublicNamecard;
   checked_in: boolean;
+}
+
+export interface PublicNamecard {
+  bio?: string | null;
+  links?: string[];
+  email?: string | null;
+}
+
+export interface UpdateNamecardRequest {
+  bio: string;
+  links: string[];
+  email: string;
 }
 
 /* ── Coupon Definitions (from staff API) ── */

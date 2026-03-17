@@ -5,17 +5,21 @@ import {
   useFriendCount,
   useAddFriend,
   useCheckinActivity,
+  useCurrentUser,
   useOneTimeQR,
 } from "@/hooks/api";
 import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
 import QrScanner from "@/components/QrScanner";
+import UpdateMyNamecardModal from "@/components/namecard/UpdateMyNamecardModal";
 
 export default function ScanPage() {
   const [showMyQR, setShowMyQR] = useState(false);
+  const [showUpdateNamecard, setShowUpdateNamecard] = useState(false);
   const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
 
   const { data: oneTimeQR } = useOneTimeQR();
+  const { data: currentUser } = useCurrentUser();
   const { data: friendData } = useFriendCount();
   const addFriend = useAddFriend();
   const checkinActivity = useCheckinActivity();
@@ -174,6 +178,22 @@ export default function ScanPage() {
       >
         {showMyQR ? "掃描 QR Code" : "我的 QR Code"}
       </button>
+
+      <button
+        type="button"
+        onClick={() => setShowUpdateNamecard(true)}
+        className="mt-3 rounded-full border border-[var(--bg-header)] bg-transparent px-8 py-3 font-serif text-base font-semibold text-[var(--bg-header)] transition-transform active:scale-95"
+      >
+        更新我的名牌
+      </button>
+
+      <UpdateMyNamecardModal
+        open={showUpdateNamecard}
+        onClose={() => setShowUpdateNamecard(false)}
+        initialBio={currentUser?.namecard_bio}
+        initialLinks={currentUser?.namecard_links}
+        initialEmail={currentUser?.namecard_email}
+      />
     </div>
   );
 }

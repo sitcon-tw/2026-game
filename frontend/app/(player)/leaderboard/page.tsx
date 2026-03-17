@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useLeaderboard } from "@/hooks/api";
 import type { RankEntry } from "@/types/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import UserNamecardModal from "@/components/namecard/UserNamecardModal";
 
 /* ──────────── Components ──────────── */
 
@@ -47,9 +48,11 @@ function TriangleDownIcon({ className }: { className?: string }) {
 function LeaderboardRow({
   entries,
   me,
+  onSelectEntry,
 }: {
   entries: RankEntry[];
   me: RankEntry | null;
+  onSelectEntry: (entry: RankEntry) => void;
 }) {
   const hasCurrentUser = entries.some((entry) => isSameEntry(me, entry));
 
@@ -66,9 +69,14 @@ function LeaderboardRow({
           const isCurrentUser = isSameEntry(me, entry);
 
           return (
-            <div
+            <button
               key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
-              className="relative flex items-center justify-between py-2 first:pt-0 last:pb-0"
+              type="button"
+              onClick={() => {
+                if (isCurrentUser) return;
+                onSelectEntry(entry);
+              }}
+              className="relative flex w-full items-center justify-between py-2 text-left first:pt-0 last:pb-0"
             >
               {/* Left: rank + name */}
               <div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
@@ -95,7 +103,7 @@ function LeaderboardRow({
                   </span>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -145,6 +153,7 @@ function groupEntriesByRank(entries: RankEntry[]): RankGroup[] {
 
 export default function LeaderboardPage() {
   const [mode, setMode] = useState<ViewMode>("top");
+  const [selectedEntry, setSelectedEntry] = useState<RankEntry | null>(null);
   const { data: leaderboard, isLoading, refetch } = useLeaderboard();
 
   const topEntries = useMemo(() => {
@@ -235,6 +244,7 @@ export default function LeaderboardPage() {
                 key={`rank-group-${group.rank}-${idx}`}
                 entries={group.entries}
                 me={me}
+                onSelectEntry={setSelectedEntry}
               />
             ))}
             <YouDivider />
@@ -243,6 +253,7 @@ export default function LeaderboardPage() {
                 key={`rank-group-${group.rank}-${idx}`}
                 entries={group.entries}
                 me={me}
+                onSelectEntry={setSelectedEntry}
               />
             ))}
           </>
@@ -253,6 +264,7 @@ export default function LeaderboardPage() {
                 key={`rank-group-${group.rank}-${idx}`}
                 entries={group.entries}
                 me={me}
+                onSelectEntry={setSelectedEntry}
               />
             ))}
             {mode === "top" &&
@@ -262,12 +274,31 @@ export default function LeaderboardPage() {
               ) && (
                 <>
                   <YouDivider />
-                  <LeaderboardRow entries={[me]} me={me} />
+                  <LeaderboardRow
+                    entries={[me]}
+                    me={me}
+                    onSelectEntry={setSelectedEntry}
+                  />
                 </>
               )}
           </>
         )}
       </div>
+
+      <UserNamecardModal
+        open={!!selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+        user={
+          selectedEntry
+            ? {
+                nickname: selectedEntry.nickname,
+                avatar: selectedEntry.avatar,
+                current_level: selectedEntry.level,
+                namecard: selectedEntry.namecard,
+              }
+            : null
+        }
+      />
     </div>
   );
 }
