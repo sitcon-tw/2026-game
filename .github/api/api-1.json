@@ -92,6 +92,14 @@
       },
       "type": "object"
     },
+    "discount.assignCouponByQRCodeRequest": {
+      "properties": {
+        "user_qr_code": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "discount.couponItem": {
       "properties": {
         "discount_id": {
@@ -244,23 +252,6 @@
       },
       "type": "object"
     },
-    "friend.friendPublicProfile": {
-      "properties": {
-        "avatar": {
-          "type": "string"
-        },
-        "current_level": {
-          "type": "integer"
-        },
-        "id": {
-          "type": "string"
-        },
-        "nickname": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "game.CouponResponse": {
       "properties": {
         "discount_id": {
@@ -302,6 +293,9 @@
         },
         "level": {
           "type": "integer"
+        },
+        "namecard": {
+          "$ref": "#/definitions/models.PublicNamecard"
         },
         "nickname": {
           "type": "string"
@@ -348,6 +342,37 @@
         },
         "unlock_level": {
           "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "group.checkInRequest": {
+      "properties": {
+        "user_qr_code": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "group.memberResponse": {
+      "properties": {
+        "avatar": {
+          "type": "string"
+        },
+        "checked_in": {
+          "type": "boolean"
+        },
+        "current_level": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "namecard": {
+          "$ref": "#/definitions/models.PublicNamecard"
+        },
+        "nickname": {
+          "type": "string"
         }
       },
       "type": "object"
@@ -457,6 +482,43 @@
       },
       "type": "object"
     },
+    "models.PublicNamecard": {
+      "properties": {
+        "bio": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "links": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "models.PublicUser": {
+      "properties": {
+        "avatar": {
+          "type": "string"
+        },
+        "current_level": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "namecard": {
+          "$ref": "#/definitions/models.PublicNamecard"
+        },
+        "nickname": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "models.Staff": {
       "properties": {
         "created_at": {
@@ -477,6 +539,26 @@
       },
       "type": "object"
     },
+    "models.StaffQRCouponGrant": {
+      "properties": {
+        "created_at": {
+          "type": "string"
+        },
+        "discount_id": {
+          "type": "string"
+        },
+        "nickname": {
+          "type": "string"
+        },
+        "staff_id": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "models.User": {
       "properties": {
         "avatar": {
@@ -491,11 +573,26 @@
         "current_level": {
           "type": "integer"
         },
+        "group": {
+          "type": "string"
+        },
         "id": {
           "type": "string"
         },
         "last_pass_time": {
           "type": "string"
+        },
+        "namecard_bio": {
+          "type": "string"
+        },
+        "namecard_email": {
+          "type": "string"
+        },
+        "namecard_links": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "nickname": {
           "type": "string"
@@ -530,6 +627,23 @@
         }
       },
       "type": "object"
+    },
+    "users.updateNamecardRequest": {
+      "properties": {
+        "bio": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "links": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
     }
   },
   "info": {
@@ -545,7 +659,7 @@
   "paths": {
     "/activities/booth/session": {
       "post": {
-        "description": "攤位使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後攤位就可以使用此 cookie 來辨識自己身份。來使用 /activities/booth/ 底下的功能。",
+        "description": "可掃描使用者的活動（攤位/闖關）使用此 API 登入系統，成功後會在 cookie 設定 booth_token，之後即可使用 /activities/booth/ 底下的功能。",
         "parameters": [
           {
             "description": "Bearer {token}",
@@ -627,7 +741,7 @@
         "consumes": [
           "application/json"
         ],
-        "description": "攤位工作人員使用攤位專用的 QR code 掃描器掃描使用者的 QR code，幫使用者在該攤位打卡。需要攤位的 token cookie。使用者每到一個攤位打卡，自己的 unlock_level 就會增加 1。",
+        "description": "可掃描使用者的活動工作人員（攤位/闖關）使用活動專用登入後掃描使用者 QR code。首次打卡成功會依活動類型增加 unlock_level：booth +2、challenge +3。",
         "parameters": [
           {
             "description": "User QR code token",
@@ -679,7 +793,7 @@
         "consumes": [
           "application/json"
         ],
-        "description": "使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在活動打卡。需要已登入的使用者 cookie。",
+        "description": "使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在 check 類型活動打卡。首次打卡成功 unlock_level +1。需要已登入的使用者 cookie。",
         "parameters": [
           {
             "description": "Activity QR code token",
@@ -1301,6 +1415,41 @@
         ]
       }
     },
+    "/discount-coupons/staff/current/scan-assignments": {
+      "get": {
+        "description": "需要 staff_token cookie，回傳該 staff 透過掃碼發放折扣券的紀錄",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/models.StaffQRCouponGrant"
+              },
+              "type": "array"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "取得工作人員掃碼發券紀錄",
+        "tags": [
+          "discount"
+        ]
+      }
+    },
     "/discount-coupons/staff/redemptions": {
       "post": {
         "consumes": [
@@ -1348,6 +1497,70 @@
           }
         },
         "summary": "工作人員掃 QR Code 來使用折扣券",
+        "tags": [
+          "discount"
+        ]
+      }
+    },
+    "/discount-coupons/staff/scan-assignments": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "需要 staff_token cookie。透過使用者的一次性 QR code 發放固定折扣券（SITCON 限時動態折價券，discount_id 與金額由後端固定，不接受外部傳入），並防止同一 user 重複發放。",
+        "parameters": [
+          {
+            "description": "Assign coupon by QR payload",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/discount.assignCouponByQRCodeRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/models.DiscountCoupon"
+            }
+          },
+          "400": {
+            "description": "invalid payload | invalid qr code",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "user not found",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "already issued by qr scan",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "掃描使用者 QR code 發放折扣券（工作人員）",
         "tags": [
           "discount"
         ]
@@ -1411,7 +1624,7 @@
             "description": "OK",
             "schema": {
               "items": {
-                "$ref": "#/definitions/friend.friendPublicProfile"
+                "$ref": "#/definitions/models.PublicUser"
               },
               "type": "array"
             }
@@ -1457,11 +1670,11 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/models.PublicUser"
             }
           },
           "400": {
-            "description": "missing or invalid qr code",
+            "description": "missing or invalid qr code | already friends",
             "schema": {
               "$ref": "#/definitions/res.ErrorResponse"
             }
@@ -1652,6 +1865,111 @@
         ]
       }
     },
+    "/group/check-ins": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "掃描同 group 成員的 one-time QR code，雙方各增加 4 次 unlock_level。每對只能簽到一次。",
+        "parameters": [
+          {
+            "description": "對方的 one-time QR code token",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/group.checkInRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "not in group / not same group",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "409": {
+            "description": "already checked in",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "group 互相簽到",
+        "tags": [
+          "group"
+        ]
+      }
+    },
+    "/group/members": {
+      "get": {
+        "description": "取得目前使用者所屬 group 的所有成員，並標示是否已互相簽到過。",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/group.memberResponse"
+              },
+              "type": "array"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "not in any group",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "取得 group 成員列表",
+        "tags": [
+          "group"
+        ]
+      }
+    },
     "/users/me": {
       "get": {
         "description": "取得目前登入使用者的資料，需要登入後才能取得。回傳基本資料與遊戲進度，不包含 QR secret。",
@@ -1679,6 +1997,58 @@
           }
         },
         "summary": "取得使用者資料",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/me/namecard": {
+      "patch": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "更新目前使用者的公開名牌資訊（自我介紹、連結陣列、Email）。需要登入。",
+        "parameters": [
+          {
+            "description": "Namecard payload",
+            "in": "body",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/users.updateNamecardRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/models.PublicUser"
+            }
+          },
+          "400": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/res.ErrorResponse"
+            }
+          }
+        },
+        "summary": "更新使用者名牌",
         "tags": [
           "users"
         ]
