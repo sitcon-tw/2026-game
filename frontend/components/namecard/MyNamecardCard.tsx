@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { Pencil } from "lucide-react";
+import LocalQRCode from "@/components/ui/LocalQRCode";
 
 interface MyNamecardCardProps {
   nickname?: string;
@@ -10,7 +11,7 @@ interface MyNamecardCardProps {
   bio?: string | null;
   email?: string | null;
   links?: string[];
-  qrUrl?: string | null;
+  qrToken?: string | null;
   onEdit: () => void;
   onEnlargeQR: () => void;
 }
@@ -22,7 +23,7 @@ export default function MyNamecardCard({
   bio,
   email,
   links = [],
-  qrUrl,
+  qrToken,
   onEdit,
   onEnlargeQR,
 }: MyNamecardCardProps) {
@@ -55,7 +56,10 @@ export default function MyNamecardCard({
           <div className="min-w-0">
             <p className="font-serif text-lg font-semibold text-[var(--text-primary)] truncate">
               {nickname ?? "載入中..."}
-              <Pencil size={12} className="ml-1 inline align-middle opacity-50" />
+              <Pencil
+                size={12}
+                className="ml-1 inline align-middle opacity-50"
+              />
             </p>
             <p className="text-sm text-[var(--text-secondary)]">
               第 {currentLevel ?? "?"} 關
@@ -70,11 +74,12 @@ export default function MyNamecardCard({
           className="cursor-pointer rounded-xl bg-white p-1.5 shadow-sm"
           whileTap={{ scale: 0.9 }}
         >
-          {qrUrl ? (
-            <img
-              src={qrUrl}
-              alt="我的 QR Code"
-              className="h-16 w-16 rounded-md"
+          {qrToken ? (
+            <LocalQRCode
+              value={qrToken}
+              size={64}
+              ariaLabel="我的 QR Code"
+              className="h-16 w-16 overflow-hidden rounded-md"
             />
           ) : (
             <div className="h-16 w-16 animate-pulse rounded-md bg-[#ccc]" />

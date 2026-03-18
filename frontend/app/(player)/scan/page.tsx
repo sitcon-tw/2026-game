@@ -16,6 +16,7 @@ import QrScanner from "@/components/QrScanner";
 import MyNamecardCard from "@/components/namecard/MyNamecardCard";
 import UpdateMyNamecardModal from "@/components/namecard/UpdateMyNamecardModal";
 import UserNamecardModal from "@/components/namecard/UserNamecardModal";
+import LocalQRCode from "@/components/ui/LocalQRCode";
 
 export default function ScanPage() {
   const [showScanner, setShowScanner] = useState(false);
@@ -99,10 +100,6 @@ export default function ScanPage() {
     },
     [scanStatus, addFriend, checkinActivity],
   );
-
-  const qrUrl = oneTimeQR?.token
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(oneTimeQR.token)}`
-    : null;
 
   const namecardLinks = currentUser?.namecard_links ?? [];
 
@@ -205,7 +202,7 @@ export default function ScanPage() {
               bio={currentUser?.namecard_bio}
               email={currentUser?.namecard_email}
               links={namecardLinks}
-              qrUrl={qrUrl}
+              qrToken={oneTimeQR?.token}
               onEdit={() => setShowEditNamecard(true)}
               onEnlargeQR={() => setQrEnlarged(true)}
             />
@@ -259,13 +256,19 @@ export default function ScanPage() {
               initial={{ opacity: 0, scale: 0.8, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.7, y: 40 }}
-              transition={{ type: "spring", damping: 18, stiffness: 400, mass: 0.8 }}
+              transition={{
+                type: "spring",
+                damping: 18,
+                stiffness: 400,
+                mass: 0.8,
+              }}
             >
-              {qrUrl ? (
-                <img
-                  src={qrUrl}
-                  alt="我的 QR Code"
-                  className="h-64 w-64 rounded-md"
+              {oneTimeQR?.token ? (
+                <LocalQRCode
+                  value={oneTimeQR.token}
+                  size={256}
+                  ariaLabel="我的 QR Code"
+                  className="h-64 w-64 overflow-hidden rounded-md"
                 />
               ) : (
                 <div className="h-64 w-64 animate-pulse rounded-md bg-[#ccc]" />
