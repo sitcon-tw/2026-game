@@ -12,6 +12,7 @@ import type { DiscountCoupon, CouponDefinition } from "@/types/api";
 import CouponTicket from "@/components/coupon/CouponTicket";
 import type { CouponStatus } from "@/components/coupon/CouponTicket";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LocalQRCode from "@/components/ui/LocalQRCode";
 
 interface DisplayCoupon {
   status: CouponStatus;
@@ -219,9 +220,10 @@ function RedeemReceiptModal({
               出示 QR Code 供工作人員掃描
             </p>
             <div className="rounded-2xl bg-white p-3">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(couponToken)}`}
-                alt="Coupon QR Code"
+              <LocalQRCode
+                value={couponToken}
+                size={176}
+                ariaLabel="Coupon QR Code"
                 className="h-44 w-44"
               />
             </div>

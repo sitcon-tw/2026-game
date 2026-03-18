@@ -28,7 +28,7 @@ export function useAddFriend() {
 
   return useMutation({
     mutationFn: (userQRCode: string) =>
-      api.post<string>("/friendships", { user_qr_code: userQRCode }),
+      api.post<FriendPublicProfile>("/friendships", { user_qr_code: userQRCode }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.friendships.list });
       queryClient.invalidateQueries({ queryKey: queryKeys.friendships.count });
