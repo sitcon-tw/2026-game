@@ -54,7 +54,7 @@ export default function FriendsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedFriend(friend)}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left"
+                  className="flex w-full cursor-pointer items-center gap-4 px-5 py-4 text-left"
                 >
                   {friend.avatar ? (
                     <img
@@ -89,7 +89,7 @@ export default function FriendsPage() {
               type="button"
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
-              className="rounded-full bg-[var(--bg-header)] px-5 py-2 font-serif font-semibold text-[var(--text-light)] shadow disabled:opacity-40 transition-transform active:scale-95"
+              className="cursor-pointer rounded-full bg-[var(--bg-header)] px-5 py-2 font-serif font-semibold text-[var(--text-light)] shadow disabled:opacity-40 transition-transform active:scale-95"
             >
               上一頁
             </button>
@@ -100,7 +100,7 @@ export default function FriendsPage() {
               type="button"
               disabled={page >= totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
-              className="rounded-full bg-[var(--bg-header)] px-5 py-2 font-serif font-semibold text-[var(--text-light)] shadow disabled:opacity-40 transition-transform active:scale-95"
+              className="cursor-pointer rounded-full bg-[var(--bg-header)] px-5 py-2 font-serif font-semibold text-[var(--text-light)] shadow disabled:opacity-40 transition-transform active:scale-95"
             >
               下一頁
             </button>
@@ -113,7 +113,7 @@ export default function FriendsPage() {
         <button
           type="button"
           onClick={() => router.push("/scan")}
-          className="rounded-full bg-[var(--bg-header)] px-8 py-3 font-serif text-lg font-semibold text-[var(--text-light)] shadow-md transition-transform active:scale-95"
+          className="cursor-pointer rounded-full bg-[var(--bg-header)] px-8 py-3 font-serif text-lg font-semibold text-[var(--text-light)] shadow-md transition-transform active:scale-95"
         >
           掃描好友 QRCode
         </button>
@@ -121,7 +121,7 @@ export default function FriendsPage() {
         <button
           type="button"
           onClick={() => setShowUpdateNamecard(true)}
-          className="rounded-full border border-[var(--bg-header)] bg-transparent px-8 py-3 font-serif text-base font-semibold text-[var(--bg-header)] shadow-sm transition-transform active:scale-95"
+          className="cursor-pointer rounded-full border border-[var(--bg-header)] bg-transparent px-8 py-3 font-serif text-base font-semibold text-[var(--bg-header)] shadow-sm transition-transform active:scale-95"
         >
           更新我的名牌
         </button>
