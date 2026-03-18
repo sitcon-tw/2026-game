@@ -10,16 +10,19 @@ import {
 } from "@/hooks/api";
 import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
+import type { FriendPublicProfile } from "@/types/api";
 import { AnimatePresence, motion } from "motion/react";
 import QrScanner from "@/components/QrScanner";
 import MyNamecardCard from "@/components/namecard/MyNamecardCard";
 import UpdateMyNamecardModal from "@/components/namecard/UpdateMyNamecardModal";
+import UserNamecardModal from "@/components/namecard/UserNamecardModal";
 
 export default function ScanPage() {
   const [showScanner, setShowScanner] = useState(false);
   const [showEditNamecard, setShowEditNamecard] = useState(false);
   const [qrEnlarged, setQrEnlarged] = useState(false);
   const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
+  const [newFriend, setNewFriend] = useState<FriendPublicProfile | null>(null);
 
   const { data: oneTimeQR } = useOneTimeQR();
   const { data: currentUser } = useCurrentUser();
@@ -72,11 +75,14 @@ export default function ScanPage() {
         });
       } else {
         addFriend.mutate(value, {
-          onSuccess: () => {
+          onSuccess: (data) => {
             setScanStatus({
               type: "success",
               message: translateWithContext("friendship", "friendship created"),
             });
+            if (data && typeof data === "object" && "id" in data) {
+              setNewFriend(data);
+            }
             setTimeout(() => setScanStatus({ type: "idle" }), 2000);
           },
           onError: (err) => {
@@ -288,6 +294,12 @@ export default function ScanPage() {
         initialBio={currentUser?.namecard_bio}
         initialLinks={currentUser?.namecard_links}
         initialEmail={currentUser?.namecard_email}
+      />
+
+      <UserNamecardModal
+        open={!!newFriend}
+        onClose={() => setNewFriend(null)}
+        user={newFriend}
       />
     </div>
   );

@@ -104,11 +104,35 @@ whileTap={{ scale: 0.95 }}
 - [x] Avatar 區域可點擊 → 開啟 `UpdateMyNamecardModal`（附鉛筆 icon 提示）
 - [x] Bio / Email / 連結三個區塊拆成獨立 `motion.button`，各自有 staggered 進場動畫 + 獨立 whileTap 回饋
 
+### 元件抽取
+
+- [x] 將 scan page 的 inline 名片卡片抽成 `MyNamecardCard` 元件（`frontend/components/namecard/MyNamecardCard.tsx`）
+  - Props: `nickname`, `avatar`, `currentLevel`, `bio`, `email`, `links`, `qrUrl`, `onEdit`, `onEnlargeQR`
+
+### UX 改善
+
+- [x] 所有可點擊元素加上 `cursor-pointer`（跨 4 個檔案）
+  - `MyNamecardCard`：avatar、QR、bio/email/links rows
+  - `UpdateMyNamecardModal`：backdrop、Gravatar 連結、刪除/新增連結、取消/儲存按鈕
+  - `scan/page.tsx`：回到名片、加好友、開啟掃描器、QR modal backdrop/關閉
+  - `friends/page.tsx`：好友項目、上/下一頁、掃描好友 QRCode、更新名牌
+
+### 加好友後彈出對方名片
+
+- [x] `useAddFriend` 回傳型別從 `string` 修正為 `FriendPublicProfile`
+- [x] scan page `addFriend.onSuccess` 拿 response data 設定 `newFriend` state
+- [x] scan page 加入 `UserNamecardModal` 顯示新好友名片，關閉時清除 state
+
+## 目前狀態
+
+已 commit：`79dc308` on `feat/namecard-first-scan`（關聯 issue #69）
+
 ## 涉及檔案
 
 | 檔案 | 變更 |
 |------|------|
-| `frontend/components/namecard/UserNamecardModal.tsx` | 加 `qrToken` + `onEdit` props、motion 動畫 |
-| `frontend/components/namecard/UpdateMyNamecardModal.tsx` | motion 動畫 |
-| `frontend/app/(player)/scan/page.tsx` | 重構為名片優先、avatar 開編輯、3 row 獨立動畫、QR popup spring |
-| 其他使用 `UserNamecardModal` 的頁面 | 不受影響（新 props optional） |
+| `frontend/components/namecard/MyNamecardCard.tsx` | **新增**：從 scan page 抽出的名片卡片元件 |
+| `frontend/components/namecard/UserNamecardModal.tsx` | motion 動畫、AnimatePresence 修正、cursor-pointer |
+| `frontend/components/namecard/UpdateMyNamecardModal.tsx` | motion 動畫、AnimatePresence 修正、cursor-pointer |
+| `frontend/app/(player)/scan/page.tsx` | 重構為名片優先、使用 MyNamecardCard、QR popup spring、cursor-pointer |
+| `frontend/app/(player)/play/(listed-page)/friends/page.tsx` | cursor-pointer |
