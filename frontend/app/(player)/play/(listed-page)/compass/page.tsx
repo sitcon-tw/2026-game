@@ -77,7 +77,7 @@ export default function CompassPage() {
 
   if (!hasGroup) {
     return (
-      <div className="bg-[var(--bg-primary)] px-6 pt-8 pb-[calc(var(--navbar-height)+1.5rem)]">
+      <div className="bg-[var(--bg-primary)] px-6 pt-8">
         <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center mb-4">
           指南針計畫
         </h1>
@@ -91,7 +91,7 @@ export default function CompassPage() {
   }
 
   return (
-    <div className="bg-[var(--bg-primary)] px-6 pt-6 pb-[calc(var(--navbar-height)+1.5rem)]">
+    <div className="bg-[var(--bg-primary)] px-6 pt-6">
       <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center">
         指南針計畫
       </h1>
