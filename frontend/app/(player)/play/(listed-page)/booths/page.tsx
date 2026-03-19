@@ -55,7 +55,6 @@ export default function BoothsPage() {
       <Modal
         open={!!selectedBooth}
         onClose={() => setSelectedBooth(null)}
-        className="w-full max-w-[380px] bg-white p-8"
       >
         {selectedBooth && (
           <>

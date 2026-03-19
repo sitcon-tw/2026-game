@@ -55,7 +55,6 @@ export default function ChallengesListPage() {
       <Modal
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        className="w-full max-w-[380px] bg-white p-8"
       >
         {selectedItem && (
           <>
