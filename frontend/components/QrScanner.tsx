@@ -25,19 +25,29 @@ export default function QrScanner({
   );
 
   // ── Camera setup ──
+  // Don't enumerate on mount — iOS Safari returns empty deviceIds before
+  // permission is granted, causing `{ exact: "" }` to fail silently.
+  // Instead, listen for `devicechange` which fires after permission is granted,
+  // then enumerate to populate the camera list for the flip button.
   useEffect(() => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
 
-    navigator.mediaDevices
-      .enumerateDevices()
-      .then((devices) => {
-        const videoDevices = devices.filter((d) => d.kind === "videoinput");
-        setCameras(videoDevices);
-        if (videoDevices.length > 0) {
-          setSelectedDeviceId(videoDevices[videoDevices.length - 1].deviceId);
-        }
-      })
-      .catch(console.error);
+    const enumerate = () => {
+      navigator.mediaDevices
+        .enumerateDevices()
+        .then((devices) => {
+          const videoDevices = devices.filter(
+            (d) => d.kind === "videoinput" && d.deviceId !== "",
+          );
+          setCameras(videoDevices);
+        })
+        .catch(console.error);
+    };
+
+    enumerate();
+    navigator.mediaDevices.addEventListener("devicechange", enumerate);
+    return () =>
+      navigator.mediaDevices.removeEventListener("devicechange", enumerate);
   }, []);
 
   const flipCamera = () => {
@@ -45,14 +55,15 @@ export default function QrScanner({
     const currentIdx = cameras.findIndex(
       (c) => c.deviceId === selectedDeviceId,
     );
-    const nextIdx = (currentIdx + 1) % cameras.length;
+    // If current device not found in list (e.g. using facingMode default), start from 0
+    const nextIdx = currentIdx === -1 ? 0 : (currentIdx + 1) % cameras.length;
     setSelectedDeviceId(cameras[nextIdx].deviceId);
   };
 
   const showScanner = !showAlternate;
 
   return (
-    <div className="relative w-full max-w-[300px] aspect-square rounded-lg overflow-hidden bg-[#6b6b6b]">
+    <div className="relative h-[300px] w-[300px] rounded-lg overflow-hidden bg-[#6b6b6b]">
       {/* Flip camera button */}
       {showScanner && cameras.length > 1 && (
         <button
@@ -84,18 +95,24 @@ export default function QrScanner({
         alternateContent
       ) : (
         <Scanner
-          key={selectedDeviceId}
+          key={selectedDeviceId ?? "default"}
           onScan={scanStatus.type === "idle" ? onScan : () => {}}
-          onError={(error) => console.error(error)}
-          constraints={{
-            deviceId: selectedDeviceId
-              ? { exact: selectedDeviceId }
-              : undefined,
+          onError={(error) => {
+            console.error("Scanner error:", error);
+            // If a specific device failed, clear selection so the browser picks one
+            if (selectedDeviceId) {
+              setSelectedDeviceId(undefined);
+            }
           }}
+          constraints={
+            selectedDeviceId
+              ? { deviceId: { ideal: selectedDeviceId } }
+              : { facingMode: { ideal: "environment" } }
+          }
           styles={{
             container: {
-              width: "100%",
-              height: "100%",
+              width: "300px",
+              height: "300px",
             },
             video: {
               objectFit: "cover",

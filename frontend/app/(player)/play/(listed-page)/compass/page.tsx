@@ -10,6 +10,7 @@ import {
 import QrScanner from "@/components/QrScanner";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import UserNamecardModal from "@/components/namecard/UserNamecardModal";
+import LocalQRCode from "@/components/ui/LocalQRCode";
 import { translateWithContext } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
 import type { GroupMember } from "@/types/api";
@@ -20,7 +21,9 @@ export default function CompassPage() {
   const [tab, setTab] = useState<CompassTab>("scan");
   const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
   const [showMyQR, setShowMyQR] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(
+    null,
+  );
 
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
   const hasGroup = !!currentUser?.group;
@@ -74,7 +77,7 @@ export default function CompassPage() {
 
   if (!hasGroup) {
     return (
-      <div className="bg-[var(--bg-primary)] px-6 pt-8 pb-[calc(var(--navbar-height)+1.5rem)]">
+      <div className="bg-[var(--bg-primary)] px-6 pt-8">
         <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center mb-4">
           指南針計畫
         </h1>
@@ -88,7 +91,7 @@ export default function CompassPage() {
   }
 
   return (
-    <div className="bg-[var(--bg-primary)] px-6 pt-6 pb-[calc(var(--navbar-height)+1.5rem)]">
+    <div className="bg-[var(--bg-primary)] px-6 pt-6">
       <h1 className="text-[var(--text-primary)] text-3xl font-serif font-bold text-center">
         指南針計畫
       </h1>
@@ -132,10 +135,11 @@ export default function CompassPage() {
                 <div className="flex flex-col items-center gap-3 p-10">
                   {oneTimeQR?.token ? (
                     <div className="rounded-2xl bg-white p-3 shadow-md">
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(oneTimeQR.token)}`}
-                        alt="我的 QR Code"
-                        className="h-48 w-48 rounded-md"
+                      <LocalQRCode
+                        value={oneTimeQR.token}
+                        size={192}
+                        ariaLabel="我的 QR Code"
+                        className="h-48 w-48 overflow-hidden rounded-md"
                       />
                     </div>
                   ) : (
@@ -158,7 +162,9 @@ export default function CompassPage() {
           </p>
 
           <div className="mt-5 rounded-xl bg-[var(--bg-secondary)] px-5 py-3 text-center">
-            <span className="font-serif text-[var(--text-secondary)]">目前進度 </span>
+            <span className="font-serif text-[var(--text-secondary)]">
+              目前進度{" "}
+            </span>
             <span className="font-serif font-semibold text-[var(--text-primary)]">
               {checkedInCount}/{members?.length ?? 0}
             </span>
@@ -228,7 +234,9 @@ export default function CompassPage() {
           )}
 
           {membersFetching && (
-            <p className="text-center text-sm text-[var(--text-secondary)]">更新中...</p>
+            <p className="text-center text-sm text-[var(--text-secondary)]">
+              更新中...
+            </p>
           )}
         </div>
       )}

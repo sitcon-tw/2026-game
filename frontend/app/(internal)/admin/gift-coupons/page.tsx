@@ -5,28 +5,27 @@ import {
   useAdminGiftCoupons,
   useAdminCreateGiftCoupon,
   useAdminDeleteGiftCoupon,
-  useCouponDefinitions,
 } from "@/hooks/api";
 import type { DiscountCouponGift } from "@/types/api";
 import { usePopupStore } from "@/stores";
 
 function CreateGiftCouponForm() {
-  const { data: definitions, isLoading: defsLoading } = useCouponDefinitions();
   const createGift = useAdminCreateGiftCoupon();
   const showPopup = usePopupStore((s) => s.showPopup);
   const [discountId, setDiscountId] = useState("");
-
-  const selectedDef = definitions?.find((d) => d.id === discountId);
+  const [price, setPrice] = useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!discountId || !selectedDef) return;
+    const normalizedDiscountId = discountId.trim();
+    if (!normalizedDiscountId || price <= 0) return;
 
     createGift.mutate(
-      { discount_id: discountId, price: selectedDef.amount },
+      { discount_id: normalizedDiscountId, price },
       {
         onSuccess: () => {
           setDiscountId("");
+          setPrice(0);
           showPopup({
             title: "建立成功",
             description: "Gift coupon 已建立",
@@ -48,35 +47,31 @@ function CreateGiftCouponForm() {
         新增 Gift Coupon
       </h2>
 
-      <select
+      <input
+        type="text"
         value={discountId}
         onChange={(e) => setDiscountId(e.target.value)}
+        placeholder="輸入自訂 Discount ID"
         className="rounded-lg border-none bg-[var(--bg-secondary)] p-3 text-sm text-[var(--text-primary)]"
-      >
-        <option value="">
-          {defsLoading ? "載入中..." : "選擇折扣券規則"}
-        </option>
-        {definitions?.map((def) => (
-          <option key={def.id} value={def.id}>
-            {def.description} (${def.amount})
-          </option>
-        ))}
-      </select>
+      />
 
-      {selectedDef && (
-        <p className="text-sm text-[var(--text-secondary)]">
-          金額：${selectedDef.amount}
-        </p>
-      )}
+      <input
+        type="number"
+        min={1}
+        step={1}
+        value={price === 0 ? "" : price}
+        onChange={(e) => setPrice(Number(e.target.value))}
+        placeholder="輸入折價金額"
+        className="rounded-lg border-none bg-[var(--bg-secondary)] p-3 text-sm text-[var(--text-primary)]"
+      />
 
       <button
         type="submit"
-        disabled={createGift.isPending || !discountId}
+        disabled={createGift.isPending || !discountId.trim() || price <= 0}
         className="rounded-full bg-[var(--accent-bronze)] py-3 text-sm font-bold text-[var(--text-light)] transition-transform active:scale-95 disabled:opacity-50"
       >
         {createGift.isPending ? "建立中..." : "建立"}
       </button>
-
     </form>
   );
 }

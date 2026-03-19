@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurrentUser, useLeaderboard } from "@/hooks/api";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export default function Header() {
   const { data: user } = useCurrentUser();
@@ -40,14 +41,12 @@ export default function Header() {
                 <div className="h-5 w-16 animate-pulse rounded bg-white/20" />
               )}
             </div>
-            <div
-              className={`h-2.5 w-full overflow-hidden rounded-full bg-white${!user ? " animate-pulse" : ""}`}
-            >
-              <div
-                className="h-full rounded-full bg-[var(--accent-gold)] transition-all"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
+            <ProgressBar
+              percent={progressPercent}
+              variant="light"
+              loading={!user}
+              className="w-full"
+            />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 interface UnlockMethodCardProps {
   title: string;
@@ -36,16 +37,13 @@ export default function UnlockMethodCard({
         </div>
 
         {/* Progress Bar */}
-        <div
-          className={`relative w-40 h-3 rounded-full overflow-hidden${isLoading ? " animate-pulse bg-white/20" : " bg-[#D7994A]"}`}
-        >
-          {!isLoading && (
-            <div
-              className="absolute left-0 top-0 h-full bg-[#945B17] transition-all duration-300"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            />
-          )}
-        </div>
+        <ProgressBar
+          percent={progress}
+          variant="bronze"
+          height="h-3"
+          loading={isLoading}
+          className="w-40"
+        />
 
         {/* Progress Text */}
         <div className="text-[var(--text-light)] text-xl font-serif text-center">

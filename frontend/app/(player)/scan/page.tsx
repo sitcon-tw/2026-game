@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { usePopupStore } from "@/stores";
 import {
   useFriendCount,
   useAddFriend,
@@ -10,14 +11,24 @@ import {
 } from "@/hooks/api";
 import { translateWithContext, isSuccessStatus } from "@/lib/scanMessages";
 import type { ScanStatus } from "@/lib/scanMessages";
+import type { FriendPublicProfile } from "@/types/api";
+import { AnimatePresence, motion } from "motion/react";
 import QrScanner from "@/components/QrScanner";
+import MyNamecardCard from "@/components/namecard/MyNamecardCard";
 import UpdateMyNamecardModal from "@/components/namecard/UpdateMyNamecardModal";
+import UserNamecardModal from "@/components/namecard/UserNamecardModal";
+import LocalQRCode from "@/components/ui/LocalQRCode";
+import Modal from "@/components/ui/Modal";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export default function ScanPage() {
-  const [showMyQR, setShowMyQR] = useState(false);
-  const [showUpdateNamecard, setShowUpdateNamecard] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [showEditNamecard, setShowEditNamecard] = useState(false);
+  const [qrEnlarged, setQrEnlarged] = useState(false);
   const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
+  const [newFriend, setNewFriend] = useState<FriendPublicProfile | null>(null);
 
+  const showPopup = usePopupStore((s) => s.showPopup);
   const { data: oneTimeQR } = useOneTimeQR();
   const { data: currentUser } = useCurrentUser();
   const { data: friendData } = useFriendCount();
@@ -32,7 +43,6 @@ export default function ScanPage() {
   const handleScan = useCallback(
     (result: { rawValue: string }[]) => {
       if (!result.length) return;
-      // Prevent duplicate scans while processing
       if (
         scanStatus.type === "scanning" ||
         addFriend.isPending ||
@@ -44,8 +54,29 @@ export default function ScanPage() {
       console.log("Scanned QR:", value);
       setScanStatus({ type: "scanning" });
 
-      // Try adding as friend first; if the QR looks like an activity code, use checkin
-      if (value.startsWith("activity:")) {
+      if (value.startsWith("qru1.")) {
+        addFriend.mutate(value, {
+          onSuccess: (data) => {
+            setScanStatus({
+              type: "success",
+              message: translateWithContext("friendship", "friendship created"),
+            });
+            if (data && typeof data === "object" && "id" in data) {
+              setNewFriend(data);
+            }
+            setTimeout(() => setScanStatus({ type: "idle" }), 2000);
+          },
+          onError: (err) => {
+            const msg = translateWithContext(
+              "friendship",
+              err instanceof Error ? err.message : undefined,
+              "加朋友失敗，請重試",
+            );
+            setScanStatus({ type: "error", message: msg });
+            setTimeout(() => setScanStatus({ type: "idle" }), 3000);
+          },
+        });
+      } else {
         checkinActivity.mutate(value, {
           onSuccess: (data) => {
             const msg = translateWithContext(
@@ -69,71 +100,15 @@ export default function ScanPage() {
             setTimeout(() => setScanStatus({ type: "idle" }), 3000);
           },
         });
-      } else {
-        addFriend.mutate(value, {
-          onSuccess: () => {
-            setScanStatus({
-              type: "success",
-              message: translateWithContext("friendship", "friendship created"),
-            });
-            setTimeout(() => setScanStatus({ type: "idle" }), 2000);
-          },
-          onError: (err) => {
-            const msg = translateWithContext(
-              "friendship",
-              err instanceof Error ? err.message : undefined,
-              "加朋友失敗，請重試",
-            );
-            setScanStatus({ type: "error", message: msg });
-            setTimeout(() => setScanStatus({ type: "idle" }), 3000);
-          },
-        });
       }
     },
     [scanStatus, addFriend, checkinActivity],
   );
 
-  return (
-    <div className="flex flex-1 flex-col items-center px-6 py-8">
-      {/* Title */}
-      <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">
-        掃描 QR Code
-        <br />
-        獲得碎片
-      </h1>
+  const namecardLinks = currentUser?.namecard_links ?? [];
 
-      {/* Scanner / My QR toggle area */}
-      <div className="mt-8">
-        <QrScanner
-          onScan={handleScan}
-          scanStatus={scanStatus}
-          showAlternate={showMyQR}
-          alternateContent={
-            <div className="flex h-full w-full items-center justify-center bg-[var(--bg-secondary)]">
-              <div className="flex flex-col items-center gap-3 p-10">
-                {oneTimeQR?.token ? (
-                  <div className="rounded-2xl bg-white p-3 shadow-md">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(oneTimeQR.token)}`}
-                      alt="我的 QR Code"
-                      className="h-48 w-48 rounded-md"
-                    />
-                  </div>
-                ) : (
-                  <div className="rounded-2xl bg-white p-3 shadow-md">
-                    <div className="h-48 w-48 animate-pulse rounded-md bg-[#6b6b6b]" />
-                  </div>
-                )}
-                <span className="text-sm text-[var(--text-secondary)]">
-                  讓朋友掃描你的 QR Code
-                </span>
-              </div>
-            </div>
-          }
-        />
-      </div>
-
-      {/* Friend remaining info */}
+  const friendInfo = (
+    <>
       <p className="mt-6 text-center font-serif text-base text-[var(--text-secondary)] leading-relaxed">
         {!friendData ? (
           <>
@@ -145,7 +120,7 @@ export default function ScanPage() {
           </>
         ) : remaining <= 0 ? (
           <span className="font-semibold text-[var(--text-primary)]">
-            你太 E 了，好友解鎖完了！
+            你太 E 了，已達加好友上限。
           </span>
         ) : (
           <>
@@ -160,39 +135,161 @@ export default function ScanPage() {
         )}
       </p>
 
-      {/* Progress bar */}
-      <div
-        className={`mt-3 h-2.5 w-40 overflow-hidden rounded-full bg-[rgba(93,64,55,0.2)]${!friendData ? " animate-pulse" : ""}`}
-      >
-        <div
-          className="h-full rounded-full bg-[var(--text-primary)] transition-all"
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
+      <ProgressBar
+        percent={progress * 100}
+        variant="subtle"
+        loading={!friendData}
+        className="mt-3 w-40"
+      />
 
-      {/* My QR Code toggle button */}
-      <button
-        type="button"
-        onClick={() => setShowMyQR((prev) => !prev)}
-        className="mt-8 rounded-full bg-[var(--bg-header)] px-8 py-3 font-serif text-lg font-semibold text-[var(--text-light)] shadow-md transition-transform active:scale-95"
-      >
-        {showMyQR ? "掃描 QR Code" : "我的 QR Code"}
-      </button>
+      {friendData && remaining <= 0 && (
+        <button
+          type="button"
+          className="mt-2 cursor-pointer font-serif text-sm underline text-[var(--text-secondary)]"
+          onClick={() =>
+            showPopup({
+              title: "解鎖更多好友額度",
+              description: "打卡更多攤位，解鎖加朋友額度。",
+            })
+          }
+        >
+          了解更多
+        </button>
+      )}
+    </>
+  );
 
-      <button
-        type="button"
-        onClick={() => setShowUpdateNamecard(true)}
-        className="mt-3 rounded-full border border-[var(--bg-header)] bg-transparent px-8 py-3 font-serif text-base font-semibold text-[var(--bg-header)] transition-transform active:scale-95"
+  return (
+    <div className="flex flex-1 flex-col items-center px-6 py-8">
+      <AnimatePresence mode="wait">
+        {showScanner ? (
+          /* ── Scanner mode ── */
+          <motion.div
+            key="scanner"
+            className="flex w-full flex-col items-center"
+            initial={{ x: 60 }}
+            animate={{ x: 0 }}
+            exit={{ x: 60 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">
+              掃描 QR Code
+              <br />
+              獲得碎片
+            </h1>
+
+            <div className="mt-8">
+              <QrScanner onScan={handleScan} scanStatus={scanStatus} />
+            </div>
+
+            {friendInfo}
+
+            <motion.button
+              type="button"
+              onClick={() => setShowScanner(false)}
+              className="mt-8 cursor-pointer rounded-full bg-[var(--bg-header)] px-8 py-3 font-serif text-lg font-semibold text-[var(--text-light)] shadow-md"
+              whileTap={{ scale: 0.95 }}
+            >
+              回到我的名片
+            </motion.button>
+          </motion.div>
+        ) : (
+          /* ── Namecard-first view ── */
+          <motion.div
+            key="namecard"
+            className="flex w-full flex-col items-center"
+            initial={{ opacity: 0, x: -60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -60 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">
+              我的名片
+            </h1>
+
+            <MyNamecardCard
+              nickname={currentUser?.nickname}
+              avatar={currentUser?.avatar}
+              currentLevel={currentUser?.current_level}
+              bio={currentUser?.namecard_bio}
+              email={currentUser?.namecard_email}
+              links={namecardLinks}
+              qrToken={oneTimeQR?.token}
+              onEdit={() => setShowEditNamecard(true)}
+              onEnlargeQR={() => setQrEnlarged(true)}
+            />
+
+            {/* Action buttons */}
+            <motion.div
+              className="mt-6 flex w-full max-w-md flex-wrap gap-3"
+              initial={{ y: 15, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.35 }}
+            >
+              <motion.button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="flex-1 min-w-[140px] cursor-pointer rounded-full bg-[var(--bg-header)] px-6 py-3 font-serif text-base font-semibold text-[var(--text-light)] shadow-md"
+                whileTap={{ scale: 0.95 }}
+              >
+                加好友
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="flex-1 min-w-[140px] cursor-pointer rounded-full bg-[var(--bg-header)] px-6 py-3 font-serif text-base font-semibold text-[var(--text-light)] shadow-md"
+                whileTap={{ scale: 0.95 }}
+              >
+                開啟掃描器
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Enlarged QR modal */}
+      <Modal
+        open={qrEnlarged}
+        onClose={() => setQrEnlarged(false)}
+        className="flex flex-col items-center gap-4 bg-white p-6"
       >
-        更新我的名牌
-      </button>
+        {oneTimeQR?.token ? (
+          <LocalQRCode
+            value={oneTimeQR.token}
+            size={256}
+            ariaLabel="我的 QR Code"
+            className="h-64 w-64 overflow-hidden rounded-md"
+          />
+        ) : (
+          <div className="h-64 w-64 animate-pulse rounded-md bg-[#ccc]" />
+        )}
+        <p className="text-sm text-[var(--text-secondary)]">
+          讓朋友掃描你的 QR Code
+        </p>
+        <motion.button
+          type="button"
+          onClick={() => setQrEnlarged(false)}
+          className="cursor-pointer rounded-full bg-[var(--bg-header)] px-6 py-2 text-sm font-semibold text-[var(--text-light)]"
+          whileTap={{ scale: 0.95 }}
+        >
+          關閉
+        </motion.button>
+      </Modal>
 
       <UpdateMyNamecardModal
-        open={showUpdateNamecard}
-        onClose={() => setShowUpdateNamecard(false)}
+        open={showEditNamecard}
+        onClose={() => setShowEditNamecard(false)}
+        nickname={currentUser?.nickname}
+        avatar={currentUser?.avatar}
         initialBio={currentUser?.namecard_bio}
         initialLinks={currentUser?.namecard_links}
         initialEmail={currentUser?.namecard_email}
+      />
+
+      <UserNamecardModal
+        open={!!newFriend}
+        onClose={() => setNewFriend(null)}
+        user={newFriend}
       />
     </div>
   );

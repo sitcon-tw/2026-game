@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
 import QueryProvider from "@/components/providers/QueryProvider";
 import GlobalPopup from "@/components/ui/GlobalPopup";
@@ -15,6 +15,11 @@ const notoSerif = Noto_Serif_TC({
   subsets: ["latin"],
   weight: ["500", "700"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "SITCON 大地遊戲",

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import Modal from "@/components/ui/Modal";
 import {
   useCoupons,
   useCouponDefinitions,
@@ -12,6 +13,7 @@ import type { DiscountCoupon, CouponDefinition } from "@/types/api";
 import CouponTicket from "@/components/coupon/CouponTicket";
 import type { CouponStatus } from "@/components/coupon/CouponTicket";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LocalQRCode from "@/components/ui/LocalQRCode";
 
 interface DisplayCoupon {
   status: CouponStatus;
@@ -21,8 +23,6 @@ interface DisplayCoupon {
   description?: string;
   definitionId: string;
 }
-
-const MAX_LOCKED_DISPLAY = 3;
 
 function buildDisplayList(
   definitions: CouponDefinition[],
@@ -44,7 +44,6 @@ function buildDisplayList(
     const owned = couponsByDefId.get(def.id) ?? [];
 
     if (owned.length > 0) {
-      // Show each owned coupon
       for (const c of owned) {
         items.push({
           status: c.used_at ? "used" : "unused",
@@ -53,33 +52,16 @@ function buildDisplayList(
           definitionId: def.id,
         });
       }
-      // Show limited locked placeholders for remaining
-      const remaining = Math.min(
-        def.max_qty - owned.length,
-        MAX_LOCKED_DISPLAY,
-      );
-      for (let i = 0; i < remaining; i++) {
-        items.push({
-          status: "locked",
-          price: def.amount,
-          passLevel: def.pass_level,
-          description: def.description,
-          definitionId: def.id,
-        });
-      }
-    } else {
-      // User has none — show limited locked placeholders
-      const displayCount = Math.min(def.max_qty, MAX_LOCKED_DISPLAY);
-      for (let i = 0; i < displayCount; i++) {
-        items.push({
-          status: "locked",
-          price: def.amount,
-          passLevel: def.pass_level,
-          description: def.description,
-          definitionId: def.id,
-        });
-      }
+      continue;
     }
+
+    items.push({
+      status: "locked",
+      price: def.amount,
+      passLevel: def.pass_level,
+      description: def.description,
+      definitionId: def.id,
+    });
   }
 
   // Include coupons not tied to any definition (e.g. gift coupons)
@@ -189,81 +171,70 @@ function RedeemSection() {
 }
 
 function RedeemReceiptModal({
+  open,
   totalAmount,
   couponToken,
   onClose,
 }: {
+  open: boolean;
   totalAmount: number;
   couponToken: string;
   onClose: () => void;
 }) {
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center px-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
+    <Modal
+      open={open}
+      onClose={onClose}
+      className="w-full max-w-sm overflow-hidden p-0"
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" />
+      {/* Header */}
+      <div className="flex items-center justify-center bg-[var(--accent-gold)] py-8">
+        <span className="font-serif text-6xl italic text-white">
+          {totalAmount}
+        </span>
+        <span className="mt-4 ml-2 text-xl font-bold text-white">元</span>
+      </div>
 
-      {/* Modal */}
-      <motion.div
-        className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-[var(--bg-primary)] shadow-2xl"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-center bg-[var(--accent-gold)] py-8">
-          <span className="font-serif text-6xl italic text-white">
-            {totalAmount}
-          </span>
-          <span className="mt-4 ml-2 text-xl font-bold text-white">元</span>
-        </div>
+      {/* Content */}
+      <div className="flex flex-col items-center gap-4 p-6">
+        <h3 className="text-lg font-bold text-[var(--text-primary)]">
+          折價券兌換明細
+        </h3>
+        <p className="text-sm text-[var(--text-secondary)]">
+          可折抵總額共 {totalAmount} 元
+        </p>
 
-        {/* Content */}
-        <div className="flex flex-col items-center gap-4 p-6">
-          <h3 className="text-lg font-bold text-[var(--text-primary)]">
-            折價券兌換明細
-          </h3>
-          <p className="text-sm text-[var(--text-secondary)]">
-            可折抵總額共 {totalAmount} 元
+        {/* QR Code */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xs font-semibold text-[var(--text-secondary)]">
+            出示 QR Code 供工作人員掃描
           </p>
-
-          {/* QR Code */}
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-xs font-semibold text-[var(--text-secondary)]">
-              出示 QR Code 供工作人員掃描
-            </p>
-            <div className="rounded-2xl bg-white p-3">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(couponToken)}`}
-                alt="Coupon QR Code"
-                className="h-44 w-44"
-              />
-            </div>
+          <div className="rounded-2xl bg-white p-3">
+            <LocalQRCode
+              value={couponToken}
+              size={176}
+              ariaLabel="Coupon QR Code"
+              className="h-44 w-44"
+            />
           </div>
-
-          {/* Location info */}
-          <p className="text-sm font-medium text-[var(--text-secondary)]">
-            請至 2F 紀念品攤位使用
-          </p>
         </div>
 
-        {/* Close button */}
-        <div className="px-6 pb-6">
-          <button
-            onClick={onClose}
-            className="w-full rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95"
-          >
-            關閉
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
+        {/* Location info */}
+        <p className="text-sm font-medium text-[var(--text-secondary)]">
+          請至 2F 紀念品攤位使用
+        </p>
+      </div>
+
+      {/* Close button */}
+      <div className="px-6 pb-6">
+        <button
+          onClick={onClose}
+          className="w-full rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95"
+        >
+          關閉
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -302,15 +273,20 @@ export default function CouponPage() {
         </p>
 
         {/* Rules */}
-        <div className="mx-auto my-4 flex max-w-xs items-center gap-2 rounded-lg border border-[var(--accent-bronze)]/30 bg-[var(--accent-bronze)]/10 px-4 py-3 text-left text-xs text-[var(--text-primary)]">
-          <span className="text-xl">⚠️</span>
+        <div className="mx-auto my-4 flex max-w-xs items-center rounded-lg border border-[var(--accent-bronze)]/30 bg-[var(--accent-bronze)]/10 px-4 py-3 text-left text-xs text-[var(--text-primary)]">
           <div className="flex flex-col gap-1">
             <p>
               <span className="font-bold">限時</span> 獲得期限僅至 16:00
             </p>
             <p>
+              <span className="font-bold">使用</span> 折價券使用至 16:30 收攤
+            </p>
+            <p>
+              <span className="font-bold">門檻</span> 單筆消費滿 200 元才能折抵
+            </p>
+            <p>
               <span className="font-bold">單次</span>{" "}
-              每張限用一次，不提供分次折抵
+              每張限用一次，且使用時會折抵當下獲得的所有折價券
             </p>
           </div>
         </div>
@@ -352,15 +328,12 @@ export default function CouponPage() {
       </div>
 
       {/* Receipt Modal */}
-      <AnimatePresence>
-        {showReceipt && user?.coupon_token && (
-          <RedeemReceiptModal
-            totalAmount={totalUnusedAmount}
-            couponToken={user.coupon_token}
-            onClose={() => setShowReceipt(false)}
-          />
-        )}
-      </AnimatePresence>
+      <RedeemReceiptModal
+        open={showReceipt && !!user?.coupon_token}
+        totalAmount={totalUnusedAmount}
+        couponToken={user?.coupon_token ?? ""}
+        onClose={() => setShowReceipt(false)}
+      />
     </div>
   );
 }
