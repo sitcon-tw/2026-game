@@ -48,13 +48,13 @@ export default function GlobalPopup() {
 			{/* Buttons */}
 			<div className="space-y-3 px-6 pb-6">
 				{current.cta && (
-					<button onClick={handleCta} className="w-full rounded-full bg-[var(--accent-gold)] py-3 text-base font-bold tracking-widest text-white shadow-md transition-transform active:scale-95">
+					<button onClick={handleCta} className="w-full cursor-pointer rounded-full bg-[var(--accent-gold)] py-3 text-base font-bold tracking-widest text-white shadow-md transition-transform active:scale-95">
 						{current.cta.name}
 					</button>
 				)}
 				<button
 					onClick={handleDone}
-					className="w-full rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95"
+					className="w-full cursor-pointer rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95"
 				>
 					{current.doneText ?? "關閉"}
 				</button>
