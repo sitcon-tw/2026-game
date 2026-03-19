@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { usePopupStore } from "@/stores";
 import {
   useFriendCount,
   useAddFriend,
@@ -25,6 +26,7 @@ export default function ScanPage() {
   const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
   const [newFriend, setNewFriend] = useState<FriendPublicProfile | null>(null);
 
+  const showPopup = usePopupStore((s) => s.showPopup);
   const { data: oneTimeQR } = useOneTimeQR();
   const { data: currentUser } = useCurrentUser();
   const { data: friendData } = useFriendCount();
@@ -116,7 +118,7 @@ export default function ScanPage() {
           </>
         ) : remaining <= 0 ? (
           <span className="font-semibold text-[var(--text-primary)]">
-            你太 E 了，好友解鎖完了！
+            你太 E 了，已達加好友上限。
           </span>
         ) : (
           <>
@@ -132,13 +134,28 @@ export default function ScanPage() {
       </p>
 
       <div
-        className={`mt-3 h-2.5 w-40 overflow-hidden rounded-full bg-[rgba(93,64,55,0.2)]${!friendData ? " animate-pulse" : ""}`}
+        className={`mt-3 h-2.5 w-40 overflow-hidden rounded-full bg-[rgba(93,64,55,0.15)]${!friendData ? " animate-pulse" : ""}`}
       >
         <div
           className="h-full rounded-full bg-[var(--text-primary)] transition-all"
           style={{ width: `${progress * 100}%` }}
         />
       </div>
+
+      {friendData && remaining <= 0 && (
+        <button
+          type="button"
+          className="mt-2 cursor-pointer font-serif text-sm underline text-[var(--text-secondary)]"
+          onClick={() =>
+            showPopup({
+              title: "解鎖更多好友額度",
+              description: "打卡更多攤位，解鎖加朋友額度。",
+            })
+          }
+        >
+          了解更多
+        </button>
+      )}
     </>
   );
 
