@@ -63,7 +63,7 @@ export default function QrScanner({
   const showScanner = !showAlternate;
 
   return (
-    <div className="relative w-full max-w-[300px] aspect-square rounded-lg overflow-hidden bg-[#6b6b6b]">
+    <div className="relative h-[300px] w-[300px] rounded-lg overflow-hidden bg-[#6b6b6b]">
       {/* Flip camera button */}
       {showScanner && cameras.length > 1 && (
         <button
@@ -111,8 +111,8 @@ export default function QrScanner({
           }
           styles={{
             container: {
-              width: "100%",
-              height: "100%",
+              width: "300px",
+              height: "300px",
             },
             video: {
               objectFit: "cover",
