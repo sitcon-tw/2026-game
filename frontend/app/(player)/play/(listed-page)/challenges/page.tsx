@@ -66,7 +66,7 @@ export default function ChallengesListPage() {
             <button
               type="button"
               onClick={() => setSelectedItem(null)}
-              className="w-full rounded-full bg-[var(--bg-header)] px-4 py-2.5 text-sm font-semibold text-[var(--text-light)]"
+              className="w-full cursor-pointer rounded-full bg-[var(--bg-header)] px-4 py-2.5 text-sm font-semibold text-[var(--text-light)]"
             >
               關閉
             </button>
