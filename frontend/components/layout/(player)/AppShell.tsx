@@ -4,12 +4,14 @@ import BottomNav from "@/components/layout/(player)/BottomNav";
 import Header from "@/components/layout/(player)/Header";
 import AuthGuard from "@/components/providers/AuthGuard";
 import { useCouponPolling } from "@/hooks/useCouponPolling";
+import { useScheduledNotifications } from "@/hooks/useScheduledNotifications";
 import { usePathname } from "next/navigation";
 
 const HIDE_SHELL_PATHS = new Set(["/"]);
 
 function PlayerShell({ children }: { children: React.ReactNode }) {
 	useCouponPolling();
+	useScheduledNotifications();
 
 	return (
 		<div className="flex h-dvh max-w-[430px] flex-col mx-auto">
