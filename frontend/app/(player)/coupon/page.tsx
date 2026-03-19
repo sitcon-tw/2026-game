@@ -9,6 +9,7 @@ import { useCouponDefinitions, useCoupons, useRedeemGiftCoupon } from "@/hooks/a
 import { useUserStore } from "@/stores/userStore";
 import type { CouponDefinition, DiscountCoupon } from "@/types/api";
 import { usePopupStore } from "@/stores";
+import { Clock, Zap, Trophy, ShoppingBag, Ticket, Info } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
@@ -215,19 +216,53 @@ export default function CouponPage() {
 				</p>
 
 				{/* Rules */}
-				<div className="mx-auto my-4 flex max-w-xs items-center rounded-lg border border-[var(--accent-bronze)]/30 bg-[var(--accent-bronze)]/10 px-4 py-3 text-left text-xs text-[var(--text-primary)]">
-					<div className="flex flex-col gap-1">
-						<p>
-							<span className="font-bold">限時</span> 獲得期限僅至 16:00
+				<div className="mx-auto my-4 grid max-w-xs grid-cols-2 gap-2">
+					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
+						<Zap size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
+						<p className="text-xs text-[var(--text-primary)]">
+							<span className="font-bold">限時動態</span>
+							<br />
+							10:10–12:00
 						</p>
-						<p>
-							<span className="font-bold">使用</span> 折價券使用至 16:30 收攤
+					</div>
+					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
+						<Trophy size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
+						<p className="text-xs text-[var(--text-primary)]">
+							<span className="font-bold">排行榜結算</span>
+							<br />
+							16:00
 						</p>
-						<p>
-							<span className="font-bold">門檻</span> 單筆消費滿 200 元才能折抵
+					</div>
+					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
+						<Clock size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
+						<p className="text-xs text-[var(--text-primary)]">
+							<span className="font-bold">獲得期限</span>
+							<br />
+							至 16:00
 						</p>
-						<p>
-							<span className="font-bold">單次</span> 每張限用一次，且使用時會折抵當下獲得的所有折價券
+					</div>
+					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
+						<ShoppingBag size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
+						<p className="text-xs text-[var(--text-primary)]">
+							<span className="font-bold">使用期限</span>
+							<br />
+							至 16:30 收攤
+						</p>
+					</div>
+					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
+						<Ticket size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
+						<p className="text-xs text-[var(--text-primary)]">
+							<span className="font-bold">門檻</span>
+							<br />
+							單筆滿 200 元折抵
+						</p>
+					</div>
+					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
+						<Info size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
+						<p className="text-xs text-[var(--text-primary)]">
+							<span className="font-bold">單次使用</span>
+							<br />
+							折抵所有折價券
 						</p>
 					</div>
 				</div>
