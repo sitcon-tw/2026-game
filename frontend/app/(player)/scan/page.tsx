@@ -150,9 +150,9 @@ export default function ScanPage() {
           <motion.div
             key="scanner"
             className="flex w-full flex-col items-center"
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 60 }}
+            initial={{ x: 60 }}
+            animate={{ x: 0 }}
+            exit={{ x: 60 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
             <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">
@@ -161,14 +161,9 @@ export default function ScanPage() {
               獲得碎片
             </h1>
 
-            <motion.div
-              className="mt-8"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
-            >
+            <div className="mt-8">
               <QrScanner onScan={handleScan} scanStatus={scanStatus} />
-            </motion.div>
+            </div>
 
             {friendInfo}
 
