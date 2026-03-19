@@ -28,9 +28,51 @@ function TriangleDownIcon({ className }: { className?: string }) {
 	);
 }
 
+function UserAvatar({ entry, isCurrentUser }: { entry: RankEntry; isCurrentUser: boolean }) {
+	return (
+		<div className="relative">
+			{entry.avatar ? (
+				<img src={entry.avatar} alt={entry.nickname} className="h-10 w-10 rounded-full object-cover" />
+			) : (
+				<div className="h-10 w-10 rounded-full bg-[var(--accent-bronze)] flex items-center justify-center font-serif text-base font-bold text-white">{entry.nickname.charAt(0)}</div>
+			)}
+			{isCurrentUser && (
+				<span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
+					你
+				</span>
+			)}
+		</div>
+	);
+}
+
 function LeaderboardRow({ entries, me, onSelectEntry }: { entries: RankEntry[]; me: RankEntry | null; onSelectEntry: (entry: RankEntry) => void }) {
 	const hasCurrentUser = entries.some(entry => isSameEntry(me, entry));
 	const rank = entries[0]?.rank;
+	const isSingle = entries.length === 1;
+
+	if (isSingle) {
+		const entry = entries[0];
+		const isCurrentUser = isSameEntry(me, entry);
+
+		return (
+			<motion.button
+				type="button"
+				onClick={() => {
+					if (isCurrentUser) return;
+					onSelectEntry(entry);
+				}}
+				whileTap={{ scale: 0.97 }}
+				transition={{ type: "spring", stiffness: 400, damping: 15 }}
+				className={`relative rounded-xl px-5 py-3.5 transition-colors cursor-pointer flex w-full items-center justify-between text-left ${hasCurrentUser ? "bg-[var(--bg-header)] ring-2 ring-[var(--accent-gold)]" : "bg-[var(--bg-header)]/85"}`}
+			>
+				<div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
+					<span className="tabular-nums">{rank}.</span>
+					<span>{entry.nickname}</span>
+				</div>
+				<UserAvatar entry={entry} isCurrentUser={isCurrentUser} />
+			</motion.button>
+		);
+	}
 
 	return (
 		<div className={`relative rounded-xl px-5 py-3.5 transition-colors ${hasCurrentUser ? "bg-[var(--bg-header)] ring-2 ring-[var(--accent-gold)]" : "bg-[var(--bg-header)]/85"}`}>
@@ -55,18 +97,7 @@ function LeaderboardRow({ entries, me, onSelectEntry }: { entries: RankEntry[]; 
 								transition={{ type: "spring", stiffness: 400, damping: 15 }}
 								className="relative flex flex-col items-center gap-1 cursor-pointer"
 							>
-								<div className="relative">
-									{entry.avatar ? (
-										<img src={entry.avatar} alt={entry.nickname} className="h-10 w-10 rounded-full object-cover" />
-									) : (
-										<div className="h-10 w-10 rounded-full bg-[var(--accent-bronze)] flex items-center justify-center font-serif text-base font-bold text-white">{entry.nickname.charAt(0)}</div>
-									)}
-									{isCurrentUser && (
-										<span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
-											Y
-										</span>
-									)}
-								</div>
+								<UserAvatar entry={entry} isCurrentUser={isCurrentUser} />
 								<span className="text-xs text-[var(--text-light)] font-medium max-w-[5rem] truncate">{entry.nickname}</span>
 							</motion.button>
 						);
