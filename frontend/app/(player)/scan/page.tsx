@@ -54,7 +54,29 @@ export default function ScanPage() {
       console.log("Scanned QR:", value);
       setScanStatus({ type: "scanning" });
 
-      if (value.startsWith("activity:")) {
+      if (value.startsWith("qru1.")) {
+        addFriend.mutate(value, {
+          onSuccess: (data) => {
+            setScanStatus({
+              type: "success",
+              message: translateWithContext("friendship", "friendship created"),
+            });
+            if (data && typeof data === "object" && "id" in data) {
+              setNewFriend(data);
+            }
+            setTimeout(() => setScanStatus({ type: "idle" }), 2000);
+          },
+          onError: (err) => {
+            const msg = translateWithContext(
+              "friendship",
+              err instanceof Error ? err.message : undefined,
+              "加朋友失敗，請重試",
+            );
+            setScanStatus({ type: "error", message: msg });
+            setTimeout(() => setScanStatus({ type: "idle" }), 3000);
+          },
+        });
+      } else {
         checkinActivity.mutate(value, {
           onSuccess: (data) => {
             const msg = translateWithContext(
@@ -73,28 +95,6 @@ export default function ScanPage() {
               "activity-checkin",
               err instanceof Error ? err.message : undefined,
               "打卡失敗，請重試",
-            );
-            setScanStatus({ type: "error", message: msg });
-            setTimeout(() => setScanStatus({ type: "idle" }), 3000);
-          },
-        });
-      } else {
-        addFriend.mutate(value, {
-          onSuccess: (data) => {
-            setScanStatus({
-              type: "success",
-              message: translateWithContext("friendship", "friendship created"),
-            });
-            if (data && typeof data === "object" && "id" in data) {
-              setNewFriend(data);
-            }
-            setTimeout(() => setScanStatus({ type: "idle" }), 2000);
-          },
-          onError: (err) => {
-            const msg = translateWithContext(
-              "friendship",
-              err instanceof Error ? err.message : undefined,
-              "加朋友失敗，請重試",
             );
             setScanStatus({ type: "error", message: msg });
             setTimeout(() => setScanStatus({ type: "idle" }), 3000);
