@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion } from "motion/react";
 import { useLeaderboard } from "@/hooks/api";
 import type { RankEntry } from "@/types/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -55,57 +56,63 @@ function LeaderboardRow({
   onSelectEntry: (entry: RankEntry) => void;
 }) {
   const hasCurrentUser = entries.some((entry) => isSameEntry(me, entry));
+  const rank = entries[0]?.rank;
 
   return (
     <div
-      className={`relative rounded-xl px-5 py-3.5 transition-colors ${
-        hasCurrentUser
-          ? "bg-[var(--bg-header)] ring-2 ring-[var(--accent-gold)]"
-          : "bg-[var(--bg-header)]/85"
-      }`}
+      className={`relative rounded-xl px-5 py-3.5 transition-colors ${hasCurrentUser
+        ? "bg-[var(--bg-header)] ring-2 ring-[var(--accent-gold)]"
+        : "bg-[var(--bg-header)]/85"
+        }`}
     >
-      <div className="flex flex-col divide-y divide-[var(--text-light)]/20">
-        {entries.map((entry, idx) => {
-          const isCurrentUser = isSameEntry(me, entry);
+      <div className="flex items-center gap-4">
+        {/* Left: rank number */}
+        <div className="text-[var(--text-light)] font-semibold text-lg tabular-nums shrink-0 w-8 text-center">
+          {rank}.
+        </div>
 
-          return (
-            <button
-              key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
-              type="button"
-              onClick={() => {
-                if (isCurrentUser) return;
-                onSelectEntry(entry);
-              }}
-              className="relative flex w-full items-center justify-between py-2 text-left first:pt-0 last:pb-0"
-            >
-              {/* Left: rank + name */}
-              <div className="flex items-center gap-1.5 text-[var(--text-light)] font-semibold text-lg">
-                <span className="tabular-nums">{entry.rank}.</span>
-                <span>{entry.nickname}</span>
-              </div>
+        {/* Right: grid of user avatars */}
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-y-3 gap-x-1 min-w-0 flex-1 justify-items-center">
+          {entries.map((entry, idx) => {
+            const isCurrentUser = isSameEntry(me, entry);
 
-              {/* Right: avatar + badge */}
-              <div className="relative">
-                {entry.avatar ? (
-                  <img
-                    src={entry.avatar}
-                    alt={entry.nickname}
-                    className="h-10 w-10 rounded-full object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-[var(--accent-bronze)] flex-shrink-0 flex items-center justify-center font-serif text-base font-bold text-white">
-                    {entry.nickname.charAt(0)}
-                  </div>
-                )}
-                {isCurrentUser && (
-                  <span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
-                    Y
-                  </span>
-                )}
-              </div>
-            </button>
-          );
-        })}
+            return (
+              <motion.button
+                key={`${entry.rank}-${entry.nickname}-${entry.level}-${idx}`}
+                type="button"
+                onClick={() => {
+                  if (isCurrentUser) return;
+                  onSelectEntry(entry);
+                }}
+                whileTap={{ scale: 0.85 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                className="relative flex flex-col items-center gap-1 cursor-pointer"
+              >
+                <div className="relative">
+                  {entry.avatar ? (
+                    <img
+                      src={entry.avatar}
+                      alt={entry.nickname}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-[var(--accent-bronze)] flex items-center justify-center font-serif text-base font-bold text-white">
+                      {entry.nickname.charAt(0)}
+                    </div>
+                  )}
+                  {isCurrentUser && (
+                    <span className="absolute -right-2 -bottom-1 grid h-7 w-7 place-items-center rounded-full border-2 border-[var(--accent-gold)] bg-[var(--accent-gold)] text-xs font-bold text-[var(--bg-header)] shadow">
+                      Y
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-[var(--text-light)] font-medium max-w-[5rem] truncate">
+                  {entry.nickname}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -176,8 +183,8 @@ export default function LeaderboardPage() {
   /* Split nearby into above/below the current user for the "You ▼" divider */
   const currentGroupIdx = me
     ? groupedEntries.findIndex((group) =>
-        group.entries.some((entry) => isSameEntry(me, entry)),
-      )
+      group.entries.some((entry) => isSameEntry(me, entry)),
+    )
     : -1;
   const showDivider = mode === "nearby" && currentGroupIdx > 0;
   const aboveGroups = showDivider
@@ -214,20 +221,20 @@ export default function LeaderboardPage() {
           <button
             type="button"
             onClick={() => setMode((m) => (m === "top" ? "nearby" : "top"))}
-            className="rounded-full border border-[var(--text-secondary)]/30 bg-[var(--bg-secondary)]/60 px-3 py-1 text-sm font-medium text-[var(--text-secondary)] backdrop-blur transition-colors active:bg-[var(--bg-secondary)]"
+            className="rounded-full border border-[var(--text-secondary)]/30 bg-[var(--bg-secondary)]/60 px-3 py-1 text-sm font-medium text-[var(--text-secondary)] backdrop-blur transition-colors active:bg-[var(--bg-secondary)] cursor-pointer"
           >
             {mode === "top" ? (
               <>
                 <span className="font-bold text-[var(--text-primary)]">
-                  前 {topRankCount || 10}
+                  排名前 {topRankCount || 10} 名
                 </span>{" "}
-                / 周圍
+                / 我附近的玩家
               </>
             ) : (
               <>
-                前 {topRankCount || 10} /{" "}
+                排名前 {topRankCount || 10} 名 /{" "}
                 <span className="font-bold text-[var(--text-primary)]">
-                  周圍
+                  我附近的玩家
                 </span>
               </>
             )}
@@ -291,11 +298,11 @@ export default function LeaderboardPage() {
         user={
           selectedEntry
             ? {
-                nickname: selectedEntry.nickname,
-                avatar: selectedEntry.avatar,
-                current_level: selectedEntry.level,
-                namecard: selectedEntry.namecard,
-              }
+              nickname: selectedEntry.nickname,
+              avatar: selectedEntry.avatar,
+              current_level: selectedEntry.level,
+              namecard: selectedEntry.namecard,
+            }
             : null
         }
       />
