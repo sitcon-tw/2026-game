@@ -68,7 +68,7 @@ func (h *Handler) BoothCheckIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.processBoothVisit(r.Context(), tx, targetUserID, booth.ID, booth.Type); err != nil {
+	if err = h.processBoothVisit(r.Context(), tx, targetUserID, booth.ID, booth.Name, booth.Type); err != nil {
 		var ce *checkinError
 		if errors.As(err, &ce) {
 			res.Fail(w, r, ce.status, ce.cause, ce.message)
@@ -120,7 +120,14 @@ func (h *Handler) resolveUserIDFromQRCode(r *http.Request, tx pgx.Tx, qrCode str
 	return userID, nil
 }
 
-func (h *Handler) processBoothVisit(ctx context.Context, tx pgx.Tx, userID, boothID string, boothType models.ActivitiesTypes) error {
+func (h *Handler) processBoothVisit(
+	ctx context.Context,
+	tx pgx.Tx,
+	userID string,
+	boothID string,
+	boothName string,
+	boothType models.ActivitiesTypes,
+) error {
 	inserted, err := h.Repo.AddVisited(ctx, tx, userID, boothID)
 	if err != nil {
 		return newCheckinErr(http.StatusInternalServerError, err, "failed to record visit")
@@ -140,7 +147,7 @@ func (h *Handler) processBoothVisit(ctx context.Context, tx pgx.Tx, userID, boot
 	if err = h.issueCheckInCoupon(ctx, tx, userID); err != nil {
 		return newCheckinErr(http.StatusInternalServerError, err, "failed to issue coupon")
 	}
-	if err = h.issueTourGroupChallengeCoupon(ctx, tx, userID, boothID, boothType); err != nil {
+	if err = h.issueTourGroupChallengeCoupon(ctx, tx, userID, boothName, boothType); err != nil {
 		return newCheckinErr(http.StatusInternalServerError, err, "failed to issue coupon")
 	}
 

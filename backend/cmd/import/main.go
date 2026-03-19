@@ -251,6 +251,7 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, sourc
 		NamecardEmail *string   `json:"namecard_email"`
 		QRCodeToken   string    `json:"qrcode_token"`
 		CouponToken   string    `json:"coupon_token"`
+		Group         *string   `json:"group"`
 		UnlockLevel   int       `json:"unlock_level"`
 		CurrentLevel  int       `json:"current_level"`
 		LastPassTime  time.Time `json:"last_pass_time"`
@@ -279,8 +280,8 @@ func importUsers(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, sourc
 	}()
 
 	const stmt = `
-INSERT INTO users (id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, unlock_level, current_level, last_pass_time, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+INSERT INTO users (id, auth_token, nickname, avatar, namecard_bio, namecard_links, namecard_email, qrcode_token, coupon_token, "group", unlock_level, current_level, last_pass_time, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 ON CONFLICT (id) DO UPDATE
 SET auth_token = EXCLUDED.auth_token,
     nickname = EXCLUDED.nickname,
@@ -290,6 +291,7 @@ SET auth_token = EXCLUDED.auth_token,
     namecard_email = EXCLUDED.namecard_email,
     qrcode_token = EXCLUDED.qrcode_token,
     coupon_token = EXCLUDED.coupon_token,
+    "group" = EXCLUDED."group",
     unlock_level = EXCLUDED.unlock_level,
     current_level = EXCLUDED.current_level,
     last_pass_time = EXCLUDED.last_pass_time,
@@ -317,6 +319,7 @@ SET auth_token = EXCLUDED.auth_token,
 			items[i].NamecardEmail,
 			items[i].QRCodeToken,
 			items[i].CouponToken,
+			items[i].Group,
 			items[i].UnlockLevel,
 			items[i].CurrentLevel,
 			items[i].LastPassTime,

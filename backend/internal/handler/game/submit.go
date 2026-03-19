@@ -163,7 +163,6 @@ func (h *Handler) issueCoupons(ctx context.Context, tx pgx.Tx, userID string, ne
 			userID,
 			rule.Amount,
 			rule.ID,
-			rule.MaxQty,
 		)
 		if err != nil {
 			span.RecordError(err)

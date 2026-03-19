@@ -8,7 +8,9 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/config"
 )
 
-// issueCheckInCoupon issues a coupon when a user has visited all booth and check activities.
+const checkInCouponThreshold = 18
+
+// issueCheckInCoupon issues a coupon when a user has visited at least 18 booth/check activities.
 func (h *Handler) issueCheckInCoupon(ctx context.Context, tx pgx.Tx, userID string) error {
 	rule, ok := config.GetCheckInCompletionCouponRule()
 	if !ok {
@@ -30,24 +32,22 @@ func (h *Handler) issueCheckInCoupon(ctx context.Context, tx pgx.Tx, userID stri
 		visitedSet[id] = struct{}{}
 	}
 
-	eligibleTotal := 0
 	eligibleVisited := 0
 	for _, activity := range activities {
 		if activity.Type != models.ActivitiesTypeBooth && activity.Type != models.ActivitiesTypeCheck {
 			continue
 		}
 
-		eligibleTotal++
 		if _, seen := visitedSet[activity.ID]; seen {
 			eligibleVisited++
 		}
 	}
 
-	if eligibleTotal == 0 || eligibleVisited != eligibleTotal {
+	if eligibleVisited < checkInCouponThreshold {
 		return nil
 	}
 
-	_, created, err := h.Repo.CreateDiscountCoupon(ctx, tx, userID, rule.Amount, rule.ID, rule.MaxQty)
+	_, created, err := h.Repo.CreateDiscountCoupon(ctx, tx, userID, rule.Amount, rule.ID)
 	if err != nil {
 		return err
 	}

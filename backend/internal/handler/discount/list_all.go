@@ -9,18 +9,16 @@ import (
 )
 
 type couponRuleWithStatus struct {
-	ID              string `json:"id"`
-	PassLevel       int    `json:"pass_level"`
-	Amount          int    `json:"amount"`
-	MaxQty          int    `json:"max_qty"`
-	IssuedQty       int    `json:"issued_qty"`
-	Description     string `json:"description"`
-	IsMaxQtyReached bool   `json:"is_max_qty_reached"`
+	ID          string `json:"id"`
+	PassLevel   int    `json:"pass_level"`
+	Amount      int    `json:"amount"`
+	IssuedQty   int    `json:"issued_qty"`
+	Description string `json:"description"`
 }
 
 // ListAllCoupons handles GET /discount-coupons/coupons.
 // @Summary      取得所有折扣券規則與發放狀態
-// @Description  公開回傳所有折扣券規則、目前發放數量，以及是否已達 MaxQty。
+// @Description  公開回傳所有折扣券規則與目前發放數量。
 // @Tags         discount
 // @Produce      json
 // @Success      200  {array}   couponRuleWithStatus
@@ -56,13 +54,11 @@ func (h *Handler) ListAllCoupons(w http.ResponseWriter, r *http.Request) {
 	for _, rule := range rules {
 		issuedQty := counts[rule.ID]
 		resp = append(resp, couponRuleWithStatus{
-			ID:              rule.ID,
-			PassLevel:       rule.PassLevel,
-			Amount:          rule.Amount,
-			MaxQty:          rule.MaxQty,
-			IssuedQty:       issuedQty,
-			Description:     rule.Description,
-			IsMaxQtyReached: issuedQty >= rule.MaxQty,
+			ID:          rule.ID,
+			PassLevel:   rule.PassLevel,
+			Amount:      rule.Amount,
+			IssuedQty:   issuedQty,
+			Description: rule.Description,
 		})
 	}
 

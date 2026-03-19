@@ -12,10 +12,10 @@ func (h *Handler) issueTourGroupChallengeCoupon(
 	ctx context.Context,
 	tx pgx.Tx,
 	userID string,
-	activityID string,
+	activityName string,
 	activityType models.ActivitiesTypes,
 ) error {
-	if activityType != models.ActivitiesTypeChallenge || activityID != config.TourGroupChallengeActivityID {
+	if activityType != models.ActivitiesTypeChallenge || activityName != config.TourGroupChallengeActivityName {
 		return nil
 	}
 
@@ -24,6 +24,6 @@ func (h *Handler) issueTourGroupChallengeCoupon(
 		return nil
 	}
 
-	_, _, err := h.Repo.CreateDiscountCoupon(ctx, tx, userID, rule.Amount, rule.ID, rule.MaxQty)
+	_, _, err := h.Repo.CreateDiscountCoupon(ctx, tx, userID, rule.Amount, rule.ID)
 	return err
 }

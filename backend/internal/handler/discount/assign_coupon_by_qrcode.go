@@ -27,7 +27,7 @@ var (
 
 // AssignCouponByQRCode handles POST /discount-coupons/staff/scan-assignments.
 // @Summary      掃描使用者 QR code 發放折扣券（工作人員）
-// @Description  需要 staff_token cookie。透過使用者的一次性 QR code 發放固定折扣券（SITCON 限時動態折價券，discount_id 與金額由後端固定，不接受外部傳入），並防止同一 user 重複發放。
+// @Description  需要 staff_token cookie。透過使用者的一次性 QR code 發放固定折扣券（限時動態打卡，discount_id 與金額由後端固定，不接受外部傳入），並防止同一 user 重複發放。
 // @Tags         discount
 // @Accept       json
 // @Produce      json
