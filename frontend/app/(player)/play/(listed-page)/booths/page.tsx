@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useActivityStats } from "@/hooks/api";
 import type { ActivityWithStatus } from "@/types/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Modal from "@/components/ui/Modal";
 
 export default function BoothsPage() {
   const { data: activities, isLoading } = useActivityStats();
@@ -51,26 +52,19 @@ export default function BoothsPage() {
       </div>
 
       {/* Booth Detail Modal */}
-      {selectedBooth && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
-          onClick={() => setSelectedBooth(null)}
-        >
-          <div
-            className="w-full max-w-[380px] rounded-2xl bg-white p-8 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Booth Name */}
+      <Modal
+        open={!!selectedBooth}
+        onClose={() => setSelectedBooth(null)}
+        className="w-full max-w-[380px] bg-white p-8"
+      >
+        {selectedBooth && (
+          <>
             <h2 className="text-center font-serif text-3xl font-bold text-[var(--text-primary)] mb-2">
               {selectedBooth.name}
             </h2>
-
-            {/* Status */}
             <p className="text-center text-lg text-[var(--text-secondary)] mb-6">
               {selectedBooth.visited ? "已造訪" : "未造訪"}
             </p>
-
-            {/* Map Image */}
             <div className="relative mx-auto mb-8 aspect-[4/3] w-full overflow-hidden rounded-lg">
               <Image
                 src="/assets/booths/example-map.png"
@@ -79,8 +73,6 @@ export default function BoothsPage() {
                 className="object-contain"
               />
             </div>
-
-            {/* Action Buttons */}
             <div className="flex gap-4">
               <button
                 type="button"
@@ -90,9 +82,9 @@ export default function BoothsPage() {
                 關閉
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

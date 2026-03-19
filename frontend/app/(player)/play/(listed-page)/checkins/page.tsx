@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useActivityStats } from "@/hooks/api";
 import type { ActivityWithStatus } from "@/types/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Modal from "@/components/ui/Modal";
 
 export default function CheckinsPage() {
   const { data: activities, isLoading } = useActivityStats();
@@ -53,15 +54,13 @@ export default function CheckinsPage() {
       </div>
 
       {/* Detail Modal */}
-      {selectedItem && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
-          onClick={() => setSelectedItem(null)}
-        >
-          <div
-            className="w-full max-w-[380px] rounded-2xl bg-white p-8 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Modal
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        className="w-full max-w-[380px] bg-white p-8"
+      >
+        {selectedItem && (
+          <>
             <h2 className="text-center font-serif text-3xl font-bold text-[var(--text-primary)] mb-2">
               {selectedItem.name}
             </h2>
@@ -77,9 +76,9 @@ export default function CheckinsPage() {
                 關閉
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

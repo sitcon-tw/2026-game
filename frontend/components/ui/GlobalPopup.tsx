@@ -1,9 +1,9 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePopupStore } from "@/stores";
+import Modal from "@/components/ui/Modal";
 
 export default function GlobalPopup() {
   const router = useRouter();
@@ -11,6 +11,8 @@ export default function GlobalPopup() {
   const dismissPopup = usePopupStore((s) => s.dismissPopup);
 
   const current = popups[0] ?? null;
+
+  if (!current) return null;
 
   const handleCta = () => {
     if (!current?.cta) return;
@@ -29,25 +31,7 @@ export default function GlobalPopup() {
   };
 
   return (
-    <AnimatePresence>
-      {current && (
-        <motion.div
-          key={current.id}
-          className="fixed inset-0 z-50 flex items-center justify-center px-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50" />
-
-          {/* Card */}
-          <motion.div
-            className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-[var(--bg-primary)] shadow-2xl"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-          >
+    <Modal open={!!current} className="w-full max-w-sm overflow-hidden p-0">
             {/* Image */}
             {current.image && (
               <div className="relative aspect-[4/3] w-full">
@@ -89,9 +73,6 @@ export default function GlobalPopup() {
                 {current.doneText ?? "關閉"}
               </button>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    </Modal>
   );
 }

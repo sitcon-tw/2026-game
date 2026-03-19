@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { Trash2 } from "lucide-react";
 import { useUpdateNamecard } from "@/hooks/api";
+import Modal from "@/components/ui/Modal";
 
 interface UpdateMyNamecardModalProps {
   open: boolean;
@@ -47,29 +48,7 @@ export default function UpdateMyNamecardModal({
   );
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <button
-            type="button"
-            aria-label="關閉更新名牌視窗"
-            className="absolute inset-0 cursor-pointer bg-black/50"
-            onClick={onClose}
-          />
-
-          <motion.div
-            className="relative max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-[var(--bg-primary)] p-5 shadow-2xl"
-            initial={{ opacity: 0, scale: 0.8, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.7, y: 40 }}
-            transition={{ type: "spring", damping: 18, stiffness: 400, mass: 0.8 }}
-          >
+    <Modal open={open} onClose={onClose}>
             <h2 className="font-serif text-2xl font-bold text-[var(--text-primary)]">
               更新我的名牌
             </h2>
@@ -223,9 +202,6 @@ export default function UpdateMyNamecardModal({
                 {isSaving ? "儲存中..." : "儲存名牌"}
               </motion.button>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    </Modal>
   );
 }

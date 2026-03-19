@@ -182,6 +182,58 @@ showPopup({ title: "第一個通知", description: "這是佇列中的第一個"
 showPopup({ title: "第二個通知", description: "關掉第一個後會看到我" });
 ```
 
+### Modal（共用彈出視窗）
+
+**元件位置：** `components/ui/Modal.tsx`
+
+統一的 modal shell 元件，封裝 backdrop、spring 進出動畫、圓角卡片容器。所有彈出視窗應使用此元件，不要自行寫 `AnimatePresence` + `fixed inset-0` 的 pattern。
+
+**Props：**
+
+| Prop | 型別 | 必填 | 預設值 | 說明 |
+|------|------|------|--------|------|
+| `open` | `boolean` | ✅ | — | 是否顯示 |
+| `onClose` | `() => void` | ❌ | — | 點擊 backdrop 時呼叫；省略則 backdrop 不可關閉 |
+| `className` | `string` | ❌ | `"w-full max-w-md p-5"` | 卡片容器的額外 class（寬度、padding 等） |
+| `children` | `ReactNode` | ✅ | — | 卡片內容 |
+
+**內建行為：**
+- `AnimatePresence` + spring 動畫（scale 0.8→1, y 30→0）
+- `max-h-[85vh]` + `overflow-y-auto` 防溢出
+- `rounded-2xl` + `shadow-2xl` + `bg-[var(--bg-primary)]`（可透過 className 覆蓋背景色）
+- Backdrop 為 `bg-black/50`；有 `onClose` 時為可點擊 `<button>`，否則為純 `<div>`
+
+**已套用的元件：**
+- `GlobalPopup`（全站，無 backdrop dismiss）
+- `UpdateMyNamecardModal`、`UserNamecardModal`（/scan）
+- scan page QR 放大（/scan，`bg-white`）
+- `RedeemReceiptModal`（/coupon，`p-0`）
+- booths、checkins、challenges detail modal（/play/*，`bg-white`）
+
+**新增彈出視窗時，一律使用此元件，不要自行寫 `AnimatePresence` + `fixed inset-0` 的 pattern。**
+
+**範例：**
+
+```tsx
+import Modal from "@/components/ui/Modal";
+
+{/* 一般 modal（backdrop 可關閉） */}
+<Modal open={isOpen} onClose={() => setIsOpen(false)}>
+  <h2>標題</h2>
+  <p>內容</p>
+</Modal>
+
+{/* 不可 backdrop 關閉（如 GlobalPopup） */}
+<Modal open={!!data} className="w-full max-w-sm overflow-hidden p-0">
+  {/* 自訂 padding、背景色等 */}
+</Modal>
+
+{/* 覆蓋背景色 */}
+<Modal open={show} onClose={close} className="flex flex-col items-center gap-4 bg-white p-6">
+  {/* 白色背景的 modal */}
+</Modal>
+```
+
 ### ProgressBar（共用進度條）
 
 **元件位置：** `components/ui/ProgressBar.tsx`
@@ -237,7 +289,7 @@ components/
 ├── coupon/           # 折價券相關元件
 ├── staff/            # 工作人員相關元件
 ├── unlock/           # 解鎖方式卡片
-├── ui/               # 共用 UI 元件（LoadingSpinner, ProgressBar 等）
+├── ui/               # 共用 UI 元件（Modal, ProgressBar, LoadingSpinner 等）
 └── QrScanner.tsx     # QR 掃描器元件
 ```
 

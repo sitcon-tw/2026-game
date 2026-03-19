@@ -18,6 +18,7 @@ import MyNamecardCard from "@/components/namecard/MyNamecardCard";
 import UpdateMyNamecardModal from "@/components/namecard/UpdateMyNamecardModal";
 import UserNamecardModal from "@/components/namecard/UserNamecardModal";
 import LocalQRCode from "@/components/ui/LocalQRCode";
+import Modal from "@/components/ui/Modal";
 import ProgressBar from "@/components/ui/ProgressBar";
 
 export default function ScanPage() {
@@ -247,58 +248,33 @@ export default function ScanPage() {
       </AnimatePresence>
 
       {/* Enlarged QR modal */}
-      <AnimatePresence>
-        {qrEnlarged && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <button
-              type="button"
-              aria-label="關閉 QR Code"
-              className="absolute inset-0 cursor-pointer bg-black/50"
-              onClick={() => setQrEnlarged(false)}
-            />
-            <motion.div
-              className="relative flex flex-col items-center gap-4 rounded-2xl bg-white p-6 shadow-2xl"
-              initial={{ opacity: 0, scale: 0.8, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.7, y: 40 }}
-              transition={{
-                type: "spring",
-                damping: 18,
-                stiffness: 400,
-                mass: 0.8,
-              }}
-            >
-              {oneTimeQR?.token ? (
-                <LocalQRCode
-                  value={oneTimeQR.token}
-                  size={256}
-                  ariaLabel="我的 QR Code"
-                  className="h-64 w-64 overflow-hidden rounded-md"
-                />
-              ) : (
-                <div className="h-64 w-64 animate-pulse rounded-md bg-[#ccc]" />
-              )}
-              <p className="text-sm text-[var(--text-secondary)]">
-                讓朋友掃描你的 QR Code
-              </p>
-              <motion.button
-                type="button"
-                onClick={() => setQrEnlarged(false)}
-                className="cursor-pointer rounded-full bg-[var(--bg-header)] px-6 py-2 text-sm font-semibold text-[var(--text-light)]"
-                whileTap={{ scale: 0.95 }}
-              >
-                關閉
-              </motion.button>
-            </motion.div>
-          </motion.div>
+      <Modal
+        open={qrEnlarged}
+        onClose={() => setQrEnlarged(false)}
+        className="flex flex-col items-center gap-4 bg-white p-6"
+      >
+        {oneTimeQR?.token ? (
+          <LocalQRCode
+            value={oneTimeQR.token}
+            size={256}
+            ariaLabel="我的 QR Code"
+            className="h-64 w-64 overflow-hidden rounded-md"
+          />
+        ) : (
+          <div className="h-64 w-64 animate-pulse rounded-md bg-[#ccc]" />
         )}
-      </AnimatePresence>
+        <p className="text-sm text-[var(--text-secondary)]">
+          讓朋友掃描你的 QR Code
+        </p>
+        <motion.button
+          type="button"
+          onClick={() => setQrEnlarged(false)}
+          className="cursor-pointer rounded-full bg-[var(--bg-header)] px-6 py-2 text-sm font-semibold text-[var(--text-light)]"
+          whileTap={{ scale: 0.95 }}
+        >
+          關閉
+        </motion.button>
+      </Modal>
 
       <UpdateMyNamecardModal
         open={showEditNamecard}

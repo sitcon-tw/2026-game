@@ -1,7 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import type { PublicNamecard } from "@/types/api";
+import Modal from "@/components/ui/Modal";
 
 interface UserNamecardModalProps {
   open: boolean;
@@ -24,29 +25,7 @@ export default function UserNamecardModal({
   const links = user.namecard?.links ?? [];
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <button
-            type="button"
-            aria-label="關閉名牌"
-            className="absolute inset-0 bg-black/50"
-            onClick={onClose}
-          />
-
-          <motion.div
-            className="relative w-full max-w-md rounded-2xl bg-[var(--bg-primary)] p-5 shadow-2xl"
-            initial={{ opacity: 0, scale: 0.8, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.7, y: 40 }}
-            transition={{ type: "spring", damping: 18, stiffness: 400, mass: 0.8 }}
-          >
+    <Modal open={open} onClose={onClose}>
             <div className="flex items-center gap-3">
               {user.avatar ? (
                 <img
@@ -118,9 +97,6 @@ export default function UserNamecardModal({
             >
               關閉
             </motion.button>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    </Modal>
   );
 }
