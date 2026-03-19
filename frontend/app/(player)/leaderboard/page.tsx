@@ -149,20 +149,20 @@ export default function LeaderboardPage() {
 	return (
 		<div className="px-5 pb-10 pt-6">
 			{/* ── Header row ── */}
-			<div className="mb-6 flex items-start justify-between">
-				<h1 className="font-serif text-3xl font-bold text-[var(--text-primary)]">排行榜</h1>
-
+			<div className="mb-6 flex items-center justify-between">
 				<div className="flex items-center gap-2">
+					<h1 className="font-serif text-3xl font-bold text-[var(--text-primary)]">排行榜</h1>
 					{/* Refresh */}
 					<button
 						type="button"
 						onClick={() => refetch()}
-						className="grid h-9 w-9 place-items-center rounded-full text-[var(--text-secondary)] active:scale-90 transition-transform"
+						className="grid h-9 w-9 place-items-center rounded-full text-[var(--text-secondary)] active:scale-90 transition-transform cursor-pointer"
 						aria-label="重新整理"
 					>
 						<RefreshIcon />
 					</button>
-
+				</div>
+				<div className="flex items-center gap-2">
 					{/* Toggle: 前 N / 周圍 */}
 					<button
 						type="button"
