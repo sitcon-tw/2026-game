@@ -1,0 +1,25 @@
+{
+	"name": "docs",
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"astro": "astro",
+		"build": "astro build",
+		"dev": "astro dev",
+		"format": "prettier --write .",
+		"preinstall": "npx only-allow pnpm",
+		"preview": "astro preview",
+		"test": "astro check"
+	},
+	"dependencies": {
+		"@astrojs/starlight": "^0.38.1",
+		"astro": "^6.0.1",
+		"sharp": "^0.34.2"
+	},
+	"devDependencies": {
+		"prettier": "^3.8.1",
+		"prettier-plugin-astro": "^0.14.1",
+		"prettier-plugin-organize-imports": "^4.3.0",
+		"prettier-plugin-packagejson": "^3.0.2"
+	}
+}
