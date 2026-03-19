@@ -39,8 +39,12 @@ export default function CouponTicket({
 						<span className={`mt-6 ml-2 text-lg font-bold ${textColor}`}>元</span>
 					</div>
 
-					{/* Right Part */}
-					<div className="flex-[2]" />
+					{/* Right Part — reason */}
+					<div className="flex flex-[2] items-center justify-center">
+						{description && status !== "locked" && (
+							<p className={`text-center text-xs font-medium ${textColor} opacity-80`}>{description}</p>
+						)}
+					</div>
 				</div>
 
 				{/* Used Stamp */}

@@ -12,10 +12,10 @@ export default function TestPage() {
 			<button
 				onClick={() =>
 					showPopup({
-						title: "獲得新優惠券！",
+						title: "獲得新折價券！",
 						description: "恭喜你獲得 50 元折價券",
 						image: "/assets/coupon-reward.png",
-						cta: { name: "查看優惠券", link: "/coupon" },
+						cta: { name: "查看折價券", link: "/coupon" },
 						doneText: "知道了"
 					})
 				}

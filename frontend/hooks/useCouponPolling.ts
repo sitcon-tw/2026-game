@@ -3,7 +3,7 @@
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { usePopupStore } from "@/stores";
-import type { DiscountCoupon } from "@/types/api";
+import type { CouponDefinition, DiscountCoupon } from "@/types/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
@@ -33,6 +33,11 @@ export function useCouponPolling() {
 		refetchInterval: POLL_INTERVAL
 	});
 
+	const { data: definitions } = useQuery({
+		queryKey: queryKeys.coupons.definitions,
+		queryFn: () => api.get<CouponDefinition[]>("/discount-coupons/coupons")
+	});
+
 	useEffect(() => {
 		if (!coupons) return;
 
@@ -50,15 +55,19 @@ export function useCouponPolling() {
 		const newCoupons = coupons.filter(c => !knownSet.has(c.id));
 
 		if (newCoupons.length > 0) {
+			const defMap = new Map((definitions ?? []).map(d => [d.id, d]));
 			for (const coupon of newCoupons) {
+				const reason = defMap.get(coupon.discount_id)?.description;
 				showPopup({
-					title: "獲得新優惠券！",
-					description: `恭喜獲得 ${coupon.price} 元折價券`,
-					cta: { name: "查看優惠券", link: "/coupon" },
+					title: "獲得新折價券！",
+					description: reason
+						? `恭喜獲得 ${coupon.price} 元折價券（${reason}）`
+						: `恭喜獲得 ${coupon.price} 元折價券`,
+					cta: { name: "查看折價券", link: "/coupon" },
 					doneText: "知道了"
 				});
 			}
 			setKnownIds(currentIds);
 		}
-	}, [coupons, showPopup]);
+	}, [coupons, definitions, showPopup]);
 }

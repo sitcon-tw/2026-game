@@ -44,6 +44,7 @@ function buildDisplayList(definitions: CouponDefinition[], userCoupons: Discount
 					status: c.used_at ? "used" : "unused",
 					coupon: c,
 					price: c.price,
+					description: def.description,
 					definitionId: def.id
 				});
 			}
