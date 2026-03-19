@@ -21,8 +21,7 @@ Zeabur 會自動識別 Next.js 項目，無需 Docker 配置。
    - 選擇你的 repository（`2026-game`）
    - Zeabur 會自動檢測為 Next.js 項目
 
-3. **設定環境變數**
-   在 Zeabur Dashboard 中設定：
+3. **設定環境變數** 在 Zeabur Dashboard 中設定：
 
    ```
    NEXT_PUBLIC_API_BASE_URL=https://2026-game.sitcon.party/api
@@ -244,8 +243,8 @@ Next.js 已內建 ISR（Incremental Static Regeneration），Zeabur 完全支援
 
 ```typescript
 export default {
-  output: "standalone",
-  // ...其他設定
+	output: "standalone"
+	// ...其他設定
 };
 ```
 

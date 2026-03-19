@@ -1,46 +1,44 @@
-import type { Metadata, Viewport } from "next";
-import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
+import "@/app/globals.css";
 import QueryProvider from "@/components/providers/QueryProvider";
 import GlobalPopup from "@/components/ui/GlobalPopup";
-import "@/app/globals.css";
+import type { Metadata, Viewport } from "next";
+import { Noto_Sans_TC, Noto_Serif_TC } from "next/font/google";
 
 const notoSans = Noto_Sans_TC({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+	variable: "--font-body",
+	subsets: ["latin"],
+	weight: ["400", "500", "700"]
 });
 
 const notoSerif = Noto_Serif_TC({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["500", "700"],
+	variable: "--font-heading",
+	subsets: ["latin"],
+	weight: ["500", "700"]
 });
 
 export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
+	width: "device-width",
+	initialScale: 1
 };
 
 export const metadata: Metadata = {
-  title: "SITCON 大地遊戲",
-  description: "SITCON 2026 OMO Rhythm Game",
+	title: "SITCON 大地遊戲",
+	description: "SITCON 2026 OMO Rhythm Game"
 };
 
 export default function RootLayout({
-  children,
+	children
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <html lang="zh-TW">
-      <body
-        className={`${notoSans.variable} ${notoSerif.variable} bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased`}
-      >
-        <QueryProvider>
-          {children}
-          <GlobalPopup />
-        </QueryProvider>
-      </body>
-    </html>
-  );
+	return (
+		<html lang="zh-TW">
+			<body className={`${notoSans.variable} ${notoSerif.variable} bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased`}>
+				<QueryProvider>
+					{children}
+					<GlobalPopup />
+				</QueryProvider>
+			</body>
+		</html>
+	);
 }
