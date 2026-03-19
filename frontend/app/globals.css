@@ -47,4 +47,5 @@ body {
     system-ui,
     -apple-system,
     sans-serif;
+  overflow-x: hidden;
 }
