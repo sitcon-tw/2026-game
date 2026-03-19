@@ -5,7 +5,6 @@ type DiscountRule struct {
 	ID          string
 	PassLevel   int
 	Amount      int
-	MaxQty      int
 	Description string
 }
 
@@ -13,12 +12,13 @@ const (
 	DiscountIDCheckInAllBoothAndCheck = "check-in-all-booth-and-check"
 	DiscountIDTourGroupChallenge      = "tour-group-challenge"
 	DiscountIDSitconSNSCoupon         = "sitcon-sns-coupon"
+	DiscountIDLeaderboardTopTen       = "leaderboard-top-10"
 
-	// TourGroupChallengeActivityID is the real activity ID for the tour-group challenge activity.
-	TourGroupChallengeActivityID = "8f1a4209-c8fc-4e21-94a2-38eaad028110"
+	// TourGroupChallengeActivityName is the official name for the tour-group challenge activity.
+	TourGroupChallengeActivityName = "導遊團"
 
-	// SitconSNSCouponPrice is the fixed price for the SITCON SNS coupon issued via staff QR scan.
-	SitconSNSCouponPrice = 50
+	// SitconSNSCouponPrice is the fixed price for the limited-time social story check-in coupon.
+	SitconSNSCouponPrice = 35
 )
 
 //nolint:mnd // config-style rule table
@@ -27,24 +27,27 @@ func couponRules() []DiscountRule {
 		{
 			ID:          DiscountIDCheckInAllBoothAndCheck,
 			PassLevel:   0,
-			Amount:      50,
-			MaxQty:      999999999,
-			Description: "打卡完所有攤位和活動場地（不含闖關）",
+			Amount:      25,
+			Description: "打卡 18 個攤位和活動場地",
 		},
 		{
 			ID:          DiscountIDTourGroupChallenge,
 			PassLevel:   0,
-			Amount:      1,
-			MaxQty:      999999999,
-			Description: "導遊團闖關",
+			Amount:      35,
+			Description: "導遊團",
 		},
-		{ID: "level-50", PassLevel: 50, Amount: 200, MaxQty: 999999999, Description: "完成 50 關"},
+		{ID: "level-50", PassLevel: 50, Amount: 25, Description: "完成 50 關"},
 		{
 			ID:          DiscountIDSitconSNSCoupon,
 			PassLevel:   0,
 			Amount:      SitconSNSCouponPrice,
-			MaxQty:      999999999,
-			Description: "SITCON 限時動態折價券",
+			Description: "限時動態打卡",
+		},
+		{
+			ID:          DiscountIDLeaderboardTopTen,
+			PassLevel:   0,
+			Amount:      50,
+			Description: "排行榜前 10 名",
 		},
 	}
 }

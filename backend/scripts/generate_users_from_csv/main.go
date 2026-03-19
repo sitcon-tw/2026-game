@@ -14,23 +14,27 @@ import (
 )
 
 const (
-	defaultInputPath  = "大地遊戲測試帳號 - 工作表1.csv"
-	defaultOutputPath = "fake_data/user.json"
+	defaultInputPath  = "data/SITCON_2026_users.csv"
+	defaultOutputPath = "data/user.json"
 	defaultUnlockLvl  = 5
 )
 
 type userRecord struct {
-	ID           string `json:"id"`
-	AuthToken    string `json:"auth_token"`
-	Nickname     string `json:"nickname"`
-	Avatar       string `json:"avatar"`
-	QRCodeToken  string `json:"qrcode_token"`
-	CouponToken  string `json:"coupon_token"`
-	UnlockLevel  int    `json:"unlock_level"`
-	CurrentLevel int    `json:"current_level"`
-	LastPassTime string `json:"last_pass_time"`
-	CreatedAt    string `json:"created_at"`
-	UpdatedAt    string `json:"updated_at"`
+	ID            string   `json:"id"`
+	AuthToken     string   `json:"auth_token"`
+	Nickname      string   `json:"nickname"`
+	Avatar        *string  `json:"avatar,omitempty"`
+	NamecardBio   *string  `json:"namecard_bio,omitempty"`
+	NamecardLinks []string `json:"namecard_links,omitempty"`
+	NamecardEmail *string  `json:"namecard_email,omitempty"`
+	QRCodeToken   string   `json:"qrcode_token"`
+	CouponToken   string   `json:"coupon_token"`
+	Group         *string  `json:"group,omitempty"`
+	UnlockLevel   int      `json:"unlock_level"`
+	CurrentLevel  int      `json:"current_level"`
+	LastPassTime  string   `json:"last_pass_time"`
+	CreatedAt     string   `json:"created_at"`
+	UpdatedAt     string   `json:"updated_at"`
 }
 
 func main() {
@@ -63,6 +67,10 @@ func run(inputPath, outputPath string) error {
 	}
 
 	header := rows[0]
+	groupIdx := findColumn(header, "組別")
+	if groupIdx == -1 {
+		groupIdx = findColumn(header, "æ")
+	}
 	codeIdx := findColumn(header, "Code")
 	nicknameIdx := findColumn(header, "暱稱")
 	if codeIdx == -1 || nicknameIdx == -1 {
@@ -84,20 +92,29 @@ func run(inputPath, outputPath string) error {
 			nickname = code
 		}
 
+		var group *string
+		groupName := strings.TrimSpace(getCell(row, groupIdx))
+		if groupName != "" {
+			group = &groupName
+		}
+
 		userID := uuid.NewString()
+		avatar := fmt.Sprintf("https://api.dicebear.com/9.x/thumbs/svg?seed=%s", userID)
 
 		users = append(users, userRecord{
-			ID:           userID,
-			AuthToken:    code,
-			Nickname:     nickname,
-			Avatar:       fmt.Sprintf("https://api.dicebear.com/9.x/thumbs/svg?seed=%s", userID),
-			QRCodeToken:  uuid.NewString(),
-			CouponToken:  uuid.NewString(),
-			UnlockLevel:  defaultUnlockLvl,
-			CurrentLevel: 0,
-			LastPassTime: now,
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			ID:            userID,
+			AuthToken:     code,
+			Nickname:      nickname,
+			Avatar:        &avatar,
+			NamecardLinks: []string{},
+			QRCodeToken:   uuid.NewString(),
+			CouponToken:   uuid.NewString(),
+			Group:         group,
+			UnlockLevel:   defaultUnlockLvl,
+			CurrentLevel:  0,
+			LastPassTime:  now,
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		})
 	}
 

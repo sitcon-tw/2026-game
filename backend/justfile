@@ -23,3 +23,15 @@ lint:
 
 generate-docs:
 	swag init -g cmd/api/main.go -o ./docs
+
+import-activities-csv csv_path:
+	go run ./scripts/generate_activities_import_json -in {{csv_path}} -out data/activities.json
+	go run ./cmd/import activities data
+
+import-checks-csv csv_path:
+	go run ./scripts/generate_checks_import_json -in {{csv_path}} -out data/activities.json
+	go run ./cmd/import activities data
+
+import-users-csv csv_path="data/SITCON_2026_users.csv":
+	go run ./scripts/generate_users_from_csv -in {{csv_path}} -out data/user.json
+	go run ./cmd/import users data

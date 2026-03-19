@@ -65,7 +65,6 @@ type Repository interface {
 		userID string,
 		price int,
 		discountID string,
-		maxQty int,
 	) (*models.DiscountCoupon, bool, error)
 	MarkDiscountUsed(ctx context.Context, tx pgx.Tx, id string, staffID string) (*models.DiscountCoupon, error)
 	MarkDiscountsUsedByUser(
