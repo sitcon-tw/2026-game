@@ -8,6 +8,7 @@ import Modal from "@/components/ui/Modal";
 import { useCouponDefinitions, useCoupons, useRedeemGiftCoupon } from "@/hooks/api";
 import { useUserStore } from "@/stores/userStore";
 import type { CouponDefinition, DiscountCoupon } from "@/types/api";
+import { usePopupStore } from "@/stores";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
@@ -83,32 +84,33 @@ function buildDisplayList(definitions: CouponDefinition[], userCoupons: Discount
 function RedeemSection() {
 	const [showInput, setShowInput] = useState(false);
 	const [redeemCode, setRedeemCode] = useState("");
-	const [message, setMessage] = useState<{
-		type: "success" | "error";
-		text: string;
-	} | null>(null);
 	const redeemGift = useRedeemGiftCoupon();
+	const showPopup = usePopupStore(s => s.showPopup);
 
 	const handleRedeem = () => {
 		if (!redeemCode.trim()) return;
-		setMessage(null);
 		redeemGift.mutate(redeemCode.trim(), {
 			onSuccess: () => {
 				setRedeemCode("");
 				setShowInput(false);
-				setMessage({ type: "success", text: "兌換成功！折價券已加入列表" });
+				showPopup({
+					title: "兌換成功！",
+					description: "折價券已加入列表",
+					cta: { name: "查看折價券", link: "/coupon" },
+				});
 			},
 			onError: (error: any) => {
 				const text = error?.response?.data?.message || error?.message || "兌換失敗，請確認代碼是否正確";
-				setMessage({ type: "error", text });
+				showPopup({
+					title: "兌換失敗",
+					description: text,
+				});
 			}
 		});
 	};
 
 	return (
 		<div className="flex flex-col items-center gap-2 py-4">
-			{message && <p className={`text-sm font-medium ${message.type === "success" ? "text-[var(--status-success)]" : "text-[var(--status-error)]"}`}>{message.text}</p>}
-
 			<AnimatePresence>
 				{showInput && (
 					<motion.div
@@ -138,10 +140,7 @@ function RedeemSection() {
 			</AnimatePresence>
 
 			<button
-				onClick={() => {
-					setShowInput(v => !v);
-					setMessage(null);
-				}}
+				onClick={() => setShowInput(v => !v)}
 				className="text-sm text-[var(--text-secondary)] underline underline-offset-2"
 			>
 				{showInput ? "收起" : "有兌換代碼？"}
