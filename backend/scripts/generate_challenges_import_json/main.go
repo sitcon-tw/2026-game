@@ -76,8 +76,8 @@ func run(outputPath string) error {
 	if err != nil {
 		return fmt.Errorf("encode output json: %w", err)
 	}
-	if err := os.WriteFile(outputPath, append(b, '\n'), 0o644); err != nil {
-		return fmt.Errorf("write output: %w", err)
+	if writeErr := os.WriteFile(outputPath, append(b, '\n'), 0o644); writeErr != nil {
+		return fmt.Errorf("write output: %w", writeErr)
 	}
 
 	return nil
@@ -97,8 +97,8 @@ func loadExistingActivities(path string) ([]activity, error) {
 	}
 
 	var items []activity
-	if err := json.Unmarshal(data, &items); err != nil {
-		return nil, fmt.Errorf("decode existing activities: %w", err)
+	if unmarshalErr := json.Unmarshal(data, &items); unmarshalErr != nil {
+		return nil, fmt.Errorf("decode existing activities: %w", unmarshalErr)
 	}
 
 	return items, nil

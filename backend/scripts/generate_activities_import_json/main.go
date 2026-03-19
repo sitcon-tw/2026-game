@@ -167,12 +167,12 @@ func loadCSVActivities(src []byte) ([]inputActivity, error) {
 
 	rows := make([]inputActivity, 0)
 	for rowNum := 2; ; rowNum++ {
-		record, err := reader.Read()
-		if err != nil {
-			if err == io.EOF {
+		record, readErr := reader.Read()
+		if readErr != nil {
+			if readErr == io.EOF {
 				break
 			}
-			return nil, fmt.Errorf("read csv row %d: %w", rowNum, err)
+			return nil, fmt.Errorf("read csv row %d: %w", rowNum, readErr)
 		}
 
 		item := csvActivity{
