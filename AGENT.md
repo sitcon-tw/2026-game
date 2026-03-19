@@ -96,6 +96,38 @@ hooks/api/
 
 ---
 
+## `frontend/hooks/` — 非 API Hooks
+
+```
+hooks/
+├── useCouponPolling.ts          # 每 30 秒輪詢折價券，偵測新券時彈 popup（含獲得原因）
+├── useScheduledNotifications.ts # 活動日（2026-03-28 GMT+8）排程通知，每 30 秒檢查
+└── api/                         # API hooks（見上方）
+```
+
+### 折價券通知（useCouponPolling）
+
+- 輪詢 `GET /discount-coupons`，比對 localStorage 已知 ID
+- 新券出現時，用 `discount_id` 比對 `CouponDefinition.description` 取得獲得原因
+- Popup 文字：`獲得新折價券！` + `恭喜獲得 X 元折價券（原因）`
+
+### 排程通知（useScheduledNotifications）
+
+僅在 2026-03-28（GMT+8）生效，localStorage 記錄已通知的 event ID：
+
+| 時間 | 通知 |
+|------|------|
+| 10:10 | 限時動態開始 |
+| 11:30 | 限時動態剩 30 分鐘 |
+| 12:00 | 限時動態已截止 |
+| 15:40 | 排行榜 20 分鐘後結算 |
+| 15:55 | 排行榜 5 分鐘後結算 |
+| 16:00 | 排行榜已結算（提醒 16:30 前用完折價券） |
+
+兩個 hook 都掛載於 `components/layout/(player)/AppShell.tsx` 的 `PlayerShell`。
+
+---
+
 ## `frontend/lib/` — 工具與底層邏輯
 
 ```
