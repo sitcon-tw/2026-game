@@ -182,6 +182,47 @@ showPopup({ title: "第一個通知", description: "這是佇列中的第一個"
 showPopup({ title: "第二個通知", description: "關掉第一個後會看到我" });
 ```
 
+### ProgressBar（共用進度條）
+
+**元件位置：** `components/ui/ProgressBar.tsx`
+
+統一的進度條元件，透過 `variant` 選擇配色以搭配不同背景。
+
+**Props：**
+
+| Prop | 型別 | 必填 | 預設值 | 說明 |
+|------|------|------|--------|------|
+| `percent` | `number` | ✅ | — | 進度百分比（0–100） |
+| `variant` | `"bronze" \| "light" \| "subtle"` | ❌ | `"subtle"` | 配色方案 |
+| `height` | `string` | ❌ | `"h-2.5"` | Tailwind 高度 class |
+| `loading` | `boolean` | ❌ | `false` | 顯示 pulse 載入動畫 |
+| `className` | `string` | ❌ | `""` | 額外 class（寬度等） |
+
+**Variant 配色指引：**
+
+| Variant | 適用場景 | Track 底色 | Fill 填充色 |
+|---------|----------|------------|-------------|
+| `bronze` | 深色銅色背景（如 UnlockMethodCard） | `#D7994A` | `#945B17` |
+| `light` | 深色 header 背景 | `white` | `accent-gold` |
+| `subtle` | 淺色 / 紙張背景（如 scan page） | `rgba(93,64,55,0.15)` | `text-primary` |
+
+新增配色時，在元件內的 `variants` 物件加一組即可。
+
+**範例：**
+
+```tsx
+import ProgressBar from "@/components/ui/ProgressBar";
+
+{/* 淺色背景上的進度條 */}
+<ProgressBar percent={60} variant="subtle" className="w-40" />
+
+{/* 深色 header 上，載入中 */}
+<ProgressBar percent={0} variant="light" loading className="w-full" />
+
+{/* 銅色卡片上，較粗的進度條 */}
+<ProgressBar percent={75} variant="bronze" height="h-3" className="w-40" />
+```
+
 ---
 
 ## `frontend/components/` — 元件組織
@@ -196,7 +237,7 @@ components/
 ├── coupon/           # 折價券相關元件
 ├── staff/            # 工作人員相關元件
 ├── unlock/           # 解鎖方式卡片
-├── ui/               # 共用 UI 元件（LoadingSpinner 等）
+├── ui/               # 共用 UI 元件（LoadingSpinner, ProgressBar 等）
 └── QrScanner.tsx     # QR 掃描器元件
 ```
 

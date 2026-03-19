@@ -18,6 +18,7 @@ import MyNamecardCard from "@/components/namecard/MyNamecardCard";
 import UpdateMyNamecardModal from "@/components/namecard/UpdateMyNamecardModal";
 import UserNamecardModal from "@/components/namecard/UserNamecardModal";
 import LocalQRCode from "@/components/ui/LocalQRCode";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export default function ScanPage() {
   const [showScanner, setShowScanner] = useState(false);
@@ -133,14 +134,12 @@ export default function ScanPage() {
         )}
       </p>
 
-      <div
-        className={`mt-3 h-2.5 w-40 overflow-hidden rounded-full bg-[rgba(93,64,55,0.15)]${!friendData ? " animate-pulse" : ""}`}
-      >
-        <div
-          className="h-full rounded-full bg-[var(--text-primary)] transition-all"
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
+      <ProgressBar
+        percent={progress * 100}
+        variant="subtle"
+        loading={!friendData}
+        className="mt-3 w-40"
+      />
 
       {friendData && remaining <= 0 && (
         <button
