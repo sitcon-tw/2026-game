@@ -31,7 +31,7 @@ export default function BoothsLayout({
       </div>
 
       {/* Page Content */}
-      <div className="pb-[var(--navbar-height)]">
+      <div className="pb-[calc(var(--navbar-height)+1.5rem)]">
         {children}
       </div>
     </div>
