@@ -1,39 +1,41 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
-hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
-  actions:
-    - text: Example Guide
-      link: /guides/example/
-      icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+title: 大地遊戲文件總覽
+description: 依照前端實作整理的角色功能文件，每個功能各自拆頁。
 ---
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-## Next steps
+這份文件依照目前前端頁面與流程整理，並改成「每個角色一個類別、每個功能一個頁面」的結構，方便直接對照實際操作入口。
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="會眾" icon="open-book">
+		拆成登入、闖關、各種解鎖方式、好友名片、指南針計畫、排行榜與折價券等獨立頁面。
 	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a sidebar on this page.
+	<Card title="攤位 / 移動攤位" icon="document">
+		拆成登入方式、掃碼打卡、訪客統計與共用頁面限制說明。
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="紀念品收銀員" icon="star">
+		拆成登入、核銷、發券、紀錄與身份切換等獨立頁面。
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
+	<Card title="管理員" icon="setting">
+		拆成登入導頁、Gift Coupon 管理、手動發券等獨立頁面。
 	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="打卡點" icon="warning">
+		拆開說明目前沒有獨立工作人員頁面，以及玩家側打卡入口與進度查看方式。
 	</Card>
 </CardGrid>
+
+## 角色分類
+
+- `會眾`
+- `攤位`
+- `移動攤位`
+- `紀念品收銀員`
+- `管理員`
+- `打卡點`
+
+## 文件範圍
+
+- 內容以目前前端程式碼可見功能為主，不延伸推測尚未實作的後台或現場 SOP。
+- 若同一功能存在不同頁面，文件會以「實際操作入口」為優先整理，並在不同頁面互相連結。
+- 若某個角色目前沒有獨立頁面，會在該角色頁中直接註明限制與替代流程。
