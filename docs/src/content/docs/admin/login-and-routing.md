@@ -3,6 +3,8 @@ title: 登入與導向
 description: 管理員如何透過 token 進入後台並被導向可操作頁面。
 ---
 
+<img src="/docs/attendee/opass.png" alt="OPass" style="width: 50%;" />
+
 ## 對應頁面
 
 - `/admin?token=...`
