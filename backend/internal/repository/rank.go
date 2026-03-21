@@ -8,17 +8,17 @@ import (
 	"github.com/sitcon-tw/2026-game/internal/models"
 )
 
-// GetTopUsers returns users ordered by level then last_pass_time with pagination.
+// GetTopUsers returns users ordered by pass level, unlock level, then last_pass_time with pagination.
 func (r *PGRepository) GetTopUsers(ctx context.Context, tx pgx.Tx, limit, offset int) ([]RankedUser, error) {
 	const query = `
 WITH ranked AS (
-    SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
-           RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
-    FROM users
+	    SELECT id, nickname, avatar, unlock_level, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
+	           RANK() OVER (ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC) AS rank
+	    FROM users
 )
 SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank
 FROM ranked
-ORDER BY current_level DESC, last_pass_time ASC, id ASC
+ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC, id ASC
 LIMIT $1 OFFSET $2`
 
 	rows, err := tx.Query(ctx, query, limit, offset)
@@ -53,13 +53,13 @@ LIMIT $1 OFFSET $2`
 }
 
 // GetUserWithRank fetches a user and their rank.
-// Ranking rule: higher level first, then earlier last_pass_time.
+// Ranking rule: higher pass level first, then higher unlock level, then earlier last_pass_time.
 func (r *PGRepository) GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error) {
 	const query = `
 SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank FROM (
-    SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
-           RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank
-    FROM users
+	    SELECT id, nickname, avatar, unlock_level, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
+	           RANK() OVER (ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC) AS rank
+	    FROM users
 ) ranked
 WHERE id = $1`
 
@@ -88,10 +88,10 @@ WHERE id = $1`
 func (r *PGRepository) GetAroundUsers(ctx context.Context, tx pgx.Tx, userID string, span int) ([]RankedUser, error) {
 	const query = `
 WITH ranked AS (
-    SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
-           RANK() OVER (ORDER BY current_level DESC, last_pass_time ASC) AS rank,
-           ROW_NUMBER() OVER (ORDER BY current_level DESC, last_pass_time ASC, id ASC) AS rn
-    FROM users
+	    SELECT id, nickname, avatar, unlock_level, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
+	           RANK() OVER (ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC) AS rank,
+	           ROW_NUMBER() OVER (ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC, id ASC) AS rn
+	    FROM users
 ), my_row AS (
     SELECT rn FROM ranked WHERE id = $1
 )
