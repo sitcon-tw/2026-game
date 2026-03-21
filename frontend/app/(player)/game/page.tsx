@@ -4,7 +4,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useCurrentUser, useLeaderboard } from "@/hooks/api";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 function LevelNoteIcon({ className }: { className?: string }) {
 	return (
@@ -17,7 +17,7 @@ function LevelNoteIcon({ className }: { className?: string }) {
 	);
 }
 
-export default function LevelsPage() {
+function LevelsPageContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { data: user, isLoading } = useCurrentUser();
@@ -102,5 +102,13 @@ export default function LevelsPage() {
 				第一關開始後會解釋遊玩方式，開始關卡後可使用上方播放按鈕播放序列，點擊問號可重新查看說明。
 			</section>
 		</div>
+	);
+}
+
+export default function LevelsPage() {
+	return (
+		<Suspense fallback={<LoadingSpinner />}>
+			<LevelsPageContent />
+		</Suspense>
 	);
 }
