@@ -12,10 +12,6 @@ import (
 
 const defaultOutputPath = "data/staffs.json"
 
-var staffNames = []string{
-	"xx",
-}
-
 type staff struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
@@ -38,6 +34,9 @@ func main() {
 
 func run(outputPath string) error {
 	baseTime := time.Date(2026, time.January, 10, 8, 30, 0, 0, time.UTC)
+	staffNames := []string{
+		"xx",
+	}
 	staffs := make([]staff, 0, len(staffNames))
 
 	for i, name := range staffNames {
