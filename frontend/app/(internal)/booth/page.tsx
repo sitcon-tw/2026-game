@@ -15,7 +15,7 @@ function BoothScanContent() {
 	const searchParams = useSearchParams();
 
 	// Booth store
-	const { boothToken, boothName, boothDescription, setBoothToken, setBoothName, setBoothDescription } = useBoothStore();
+	const { boothToken, boothName, setBoothToken, setBoothName } = useBoothStore();
 
 	// API hooks
 	const boothLogin = useBoothLogin();
@@ -31,7 +31,6 @@ function BoothScanContent() {
 			boothLogin.mutate(tokenFromUrl, {
 				onSuccess: (data: any) => {
 					if (data?.name) setBoothName(data.name);
-					if (data?.description) setBoothDescription(data.description);
 				},
 				onError: error => {
 					console.error("Booth login failed:", error);
@@ -88,7 +87,6 @@ function BoothScanContent() {
 		<div className="flex flex-1 flex-col items-center px-6 py-8">
 			{/* Title */}
 			<h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">{boothName ?? "攤位掃描器"}</h1>
-			{boothDescription && <p className="mt-2 text-sm text-[var(--text-secondary)] text-center max-w-[300px]">{boothDescription}</p>}
 
 			{/* Login error */}
 			{boothLogin.isError && <div className="mt-4 rounded-lg bg-red-100 px-4 py-3 text-red-700 text-sm w-full max-w-[300px] text-center">攤位登入失敗，請確認連結是否正確</div>}
