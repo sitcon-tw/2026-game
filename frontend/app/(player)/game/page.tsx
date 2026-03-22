@@ -2,6 +2,7 @@
 
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useCurrentUser, useLeaderboard } from "@/hooks/api";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
@@ -49,7 +50,7 @@ function LevelsPageContent() {
 			<section className="rounded-[20px] bg-[var(--bg-secondary)]/70 p-4 shadow-sm">
 				<div className="flex items-center justify-between gap-3">
 					<div className="text-sm font-semibold text-[var(--text-secondary)]">目前排名</div>
-					<div className="font-serif text-2xl text-[var(--text-gold)]">
+					<div className="font-serif text-2xl text-[var(--text-primary)]">
 						{rank != null ? `第 ${rank} 名` : leaderboardLoaded ? "尚無排名" : <div className="h-7 w-24 animate-pulse rounded bg-current opacity-20" />}
 					</div>
 				</div>
@@ -81,7 +82,7 @@ function LevelsPageContent() {
 											<LevelNoteIcon className="h-full w-full text-[var(--text-primary)]" />
 											<span className="absolute -top-1 left-1 text-sm font-semibold text-[var(--text-primary)]">{level}</span>
 										</div>
-										<span className={`text-xs font-medium ${isCompleted ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>{isCompleted ? "已遊玩" : "未遊玩"}</span>
+										<span className={`text-xs font-medium ${isCompleted ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>{isCompleted ? "已通關" : "尚未遊玩"}</span>
 									</Link>
 								) : (
 									<div className="flex flex-col items-center gap-2 cursor-not-allowed" aria-label={`第 ${level} 關，尚未開放`}>
@@ -98,8 +99,8 @@ function LevelsPageContent() {
 				</div>
 			</section>
 
-			<section className="mt-8 rounded-[16px] border border-[rgba(93,64,55,0.2)] bg-[rgba(239,235,233,0.65)] p-4 text-sm text-[var(--text-secondary)]">
-				第一關開始後會解釋遊玩方式，開始關卡後可使用上方播放按鈕播放序列，點擊問號可重新查看說明。
+			<section className="mt-8 rounded-[16px] border border-[rgba(93,64,55,0.2)] bg-[rgba(239,235,233,0.65)] p-4 text-sm text-[var(--text-secondary)] leading-7">
+				第一關開始後會解釋遊玩方式，開始關卡後可使用上方 <Image src="/assets/challenge/play.svg" alt="Play" width={24} height={24} className="inline brightness-50 align-middle" /> 按鈕播放序列，按一下上方 <Image src="/assets/challenge/help.svg" alt="Help" width={24} height={24} className="inline brightness-50 align-middle" /> 按鈕可隨時查看遊戲規則與提示。
 			</section>
 		</div>
 	);

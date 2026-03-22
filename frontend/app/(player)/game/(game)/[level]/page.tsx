@@ -103,6 +103,9 @@ export default function ChallengesPage() {
 	const [submitResult, setSubmitResult] = useState<SubmitResponse | null>(null);
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [showIosMuteHint, setShowIosMuteHint] = useState(false);
+	// Capture whether this was a replay at the moment of success, so that
+	// subsequent user-data refetches don't flip the modal to "already passed".
+	const [wasReplayOnSuccess, setWasReplayOnSuccess] = useState(false);
 
 	// Track play/hint request counts to respond to layout button presses
 	const lastPlayRef = useRef(0);
@@ -163,6 +166,7 @@ export default function ChallengesPage() {
 		setInputIndex(0);
 		setSubmitResult(null);
 		setSubmitError(null);
+		setWasReplayOnSuccess(false);
 	}, [currentLevel, reset]);
 
 	// Abort playback on unmount (e.g. navigating away mid-sequence)
@@ -262,6 +266,7 @@ export default function ChallengesPage() {
 			if (nextIndex >= sheetButtons.length) {
 				// All correct — success!
 				setPhase("success");
+				setWasReplayOnSuccess(isReplay);
 				// Submit whenever this is a first clear (including max unlocked level).
 				if (!isReplay) {
 					submitLevel.mutate(undefined, {
@@ -345,42 +350,41 @@ export default function ChallengesPage() {
 			</div>
 
 			{/* Success modal */}
-			<Modal open={phase === "success"} className="w-full max-w-sm p-6 text-center">
-				<div className="text-4xl mb-3">🎉</div>
-				<h3 className="text-[var(--text-primary)] font-serif text-xl font-bold mb-2">通關成功！</h3>
-				{isReplay && <p className="text-[var(--text-secondary)] text-sm mb-4">（重玩關卡，不影響進度）</p>}
-				{!isReplay && isMaxLevel && <p className="text-[var(--text-secondary)] text-sm mb-4">（已達最大解鎖關卡，透過攤位互動解鎖更多關卡）</p>}
-				{!isReplay && submitResult && (
-					<div className="space-y-2 mb-4">
-						<p className="text-[var(--text-secondary)] text-sm">目前進度：第 {submitResult.current_level} 關</p>
-						{submitResult.coupons.length > 0 && <p className="text-[var(--accent-gold)] text-sm font-semibold">🎁 獲得 {submitResult.coupons.length} 張折價券！</p>}
-					</div>
-				)}
-				{!isReplay && submitError && <p className="text-red-500 text-sm mb-4">{submitError}</p>}
-				{!isReplay && submitLevel.isPending && <p className="animate-pulse text-[var(--text-secondary)] text-sm mb-4">提交中...</p>}
-				<div className="flex gap-3 justify-center">
-					<button type="button" onClick={() => router.push("/game")} className="px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm font-medium cursor-pointer">
-						返回列表
-					</button>
+			<Modal open={phase === "success"} className="w-full max-w-sm overflow-hidden p-0">
+				<div className="space-y-3 p-6">
+					<h2 className="font-serif text-2xl font-bold text-[var(--text-primary)]">🎉 通關成功！</h2>
+					{wasReplayOnSuccess && <p className="text-sm text-[var(--text-secondary)]">這關你已經過關囉，再玩一次也很棒！</p>}
+					{!wasReplayOnSuccess && isMaxLevel && <p className="text-sm text-[var(--text-secondary)]">目前關卡已全數解鎖，去攤位互動或交朋友來開啟更多關卡吧！</p>}
+					{!wasReplayOnSuccess && submitResult && submitResult.coupons.length > 0 && (
+						<p className="text-sm font-semibold text-[var(--accent-gold)]">🎁 獲得 {submitResult.coupons.length} 張折價券！</p>
+					)}
+					{!wasReplayOnSuccess && submitError && <p className="text-sm text-red-500">{submitError}</p>}
+					{!wasReplayOnSuccess && submitLevel.isPending && <p className="animate-pulse text-sm text-[var(--text-secondary)]">提交中...</p>}
+				</div>
+				<div className="space-y-3 px-6 pb-6">
 					{!isMaxLevel && (
-						<button type="button" onClick={handleNextLevel} className="px-4 py-2 rounded-lg bg-[var(--accent-gold)] text-white text-sm font-bold cursor-pointer">
+						<button type="button" onClick={handleNextLevel} className="w-full cursor-pointer rounded-full bg-[var(--accent-gold)] py-3 text-base font-bold tracking-widest text-white shadow-md transition-transform active:scale-95">
 							下一關
 						</button>
 					)}
+					<button type="button" onClick={() => router.push("/game")} className="w-full cursor-pointer rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95">
+						返回列表
+					</button>
 				</div>
 			</Modal>
 
 			{/* Fail modal */}
-			<Modal open={phase === "fail"} className="w-full max-w-sm p-6 text-center">
-				<div className="text-4xl mb-3">😵</div>
-				<h3 className="text-[var(--text-primary)] font-serif text-xl font-bold mb-2">挑戰失敗</h3>
-				<p className="text-[var(--text-secondary)] text-sm mb-4">順序不正確，再試一次吧！</p>
-				<div className="flex gap-3 justify-center">
-					<button type="button" onClick={() => router.push("/game")} className="px-4 py-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm font-medium cursor-pointer">
-						返回列表
-					</button>
-					<button type="button" onClick={handleRetry} className="px-4 py-2 rounded-lg bg-[var(--accent-gold)] text-white text-sm font-bold cursor-pointer">
+			<Modal open={phase === "fail"} className="w-full max-w-sm overflow-hidden p-0">
+				<div className="space-y-3 p-6">
+					<h2 className="font-serif text-2xl font-bold text-[var(--text-primary)]">😵 挑戰失敗</h2>
+					<p className="text-sm text-[var(--text-secondary)]">順序不正確，再試一次吧！</p>
+				</div>
+				<div className="space-y-3 px-6 pb-6">
+					<button type="button" onClick={handleRetry} className="w-full cursor-pointer rounded-full bg-[var(--accent-gold)] py-3 text-base font-bold tracking-widest text-white shadow-md transition-transform active:scale-95">
 						重新挑戰
+					</button>
+					<button type="button" onClick={() => router.push("/game")} className="w-full cursor-pointer rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95">
+						返回列表
 					</button>
 				</div>
 			</Modal>
@@ -392,28 +396,31 @@ export default function ChallengesPage() {
 					localStorage.setItem("ios-mute-hint-dismissed", "1");
 					setShowIosMuteHint(false);
 				}}
-				className="w-full max-w-sm p-6 text-center"
+				className="w-full max-w-sm overflow-hidden p-0"
 			>
-				<div className="text-4xl mb-3">🔇</div>
-				<h3 className="text-[var(--text-primary)] font-serif text-xl font-bold mb-2">關閉靜音模式</h3>
-				<p className="text-[var(--text-secondary)] text-sm mb-3">遊戲需要播放音效，請確認你的 iPhone / iPad 已關閉靜音模式，才能聽到樂譜的聲音。</p>
-				<div className="flex gap-2 justify-center mb-3">
-					<a href="https://www.youtube.com/watch?v=OHw_kf4o8xM" target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--btn-red)] underline">🎦 無實體按鍵教學</a>
-					<a href="https://www.youtube.com/watch?v=mlNh4dM9ddE" target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--btn-red)] underline">🎦 有實體按鍵教學</a>
+				<div className="space-y-3 p-6">
+					<h2 className="font-serif text-2xl font-bold text-[var(--text-primary)]">🔇 關閉靜音模式</h2>
+					<p className="text-sm text-[var(--text-secondary)]">遊戲需要播放音效，請確認你的 iPhone / iPad 已關閉靜音模式，才能聽到樂譜的聲音。</p>
+					<div className="flex gap-3 justify-center">
+						<a href="https://www.youtube.com/watch?v=OHw_kf4o8xM" target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--btn-red)] underline">🎦 無實體按鍵教學</a>
+						<a href="https://www.youtube.com/watch?v=mlNh4dM9ddE" target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--btn-red)] underline">🎦 有實體按鍵教學</a>
+					</div>
+					<p className="text-xs text-[var(--text-secondary)] inline-flex items-center justify-center gap-1 w-full">
+						按一下上方 <Image src="/assets/challenge/help.svg" alt="Help" width={24} height={24} className="brightness-50" /> 按鈕可隨時查看遊戲規則與提示。
+					</p>
 				</div>
-				<p className="text-[var(--text-secondary)] text-xs mb-4 inline-flex items-center justify-center gap-1 w-full">
-					按一下上方 <Image src="/assets/challenge/help.svg" alt="Help" width={24} height={24} className="brightness-50" /> 按鈕可隨時查看遊戲規則與提示。
-				</p>
-				<button
-					type="button"
-					onClick={() => {
-						localStorage.setItem("ios-mute-hint-dismissed", "1");
-						setShowIosMuteHint(false);
-					}}
-					className="px-5 py-2 rounded-lg bg-[var(--accent-gold)] text-white text-sm font-bold cursor-pointer"
-				>
-					知道了
-				</button>
+				<div className="space-y-3 px-6 pb-6">
+					<button
+						type="button"
+						onClick={() => {
+							localStorage.setItem("ios-mute-hint-dismissed", "1");
+							setShowIosMuteHint(false);
+						}}
+						className="w-full cursor-pointer rounded-full bg-[var(--accent-gold)] py-3 text-base font-bold tracking-widest text-white shadow-md transition-transform active:scale-95"
+					>
+						知道了
+					</button>
+				</div>
 			</Modal>
 		</div>
 	);

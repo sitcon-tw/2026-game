@@ -59,13 +59,13 @@ export default function ChallengesPage() {
 					<div className="flex-1">
 						<h2 className="text-[var(--text-primary)] font-serif text-xl font-bold mb-1">關閉靜音模式教學</h2>
 						<div className="flex flex-col gap-2 mt-2">
-							<a href="https://www.youtube.com/watch?v=OHw_kf4o8xM" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-gold)] text-base underline">無實體按鍵操作影片</a>
-							<a href="https://www.youtube.com/watch?v=mlNh4dM9ddE" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-gold)] text-base underline">有實體按鍵操作影片</a>
+							<a href="https://www.youtube.com/watch?v=OHw_kf4o8xM" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] text-base underline">無實體按鍵操作影片</a>
+							<a href="https://www.youtube.com/watch?v=mlNh4dM9ddE" target="_blank" rel="noopener noreferrer" className="text-[var(--text-secondary)] text-base underline">有實體按鍵操作影片</a>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			</div>
+		</div>
 	);
 }
