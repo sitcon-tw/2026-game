@@ -13,6 +13,7 @@ import { isSuccessStatus, translateWithContext } from "@/lib/scanMessages";
 import { usePopupStore } from "@/stores";
 import type { FriendPublicProfile } from "@/types/api";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 
 export default function ScanPage() {
@@ -83,6 +84,7 @@ export default function ScanPage() {
   );
 
   const namecardLinks = currentUser?.namecard_links ?? [];
+  const hasCompassPlan = !!currentUser?.group;
 
   const friendInfo = (
     <>
@@ -123,6 +125,16 @@ export default function ScanPage() {
     </>
   );
 
+  const compassHint = hasCompassPlan ? (
+    <p className="mt-4 max-w-md text-center font-serif text-sm leading-relaxed text-[var(--text-secondary)]">
+      你有參與指南針計畫，指南針互簽要到
+      <Link href="/play/compass" className="mx-1 underline text-[var(--text-primary)]">
+        指南針計畫
+      </Link>
+      頁面進行，這裡只支援加好友與活動打卡。
+    </p>
+  ) : null;
+
   return (
     <div className="flex flex-1 flex-col items-center px-6 py-8">
       <AnimatePresence mode="wait">
@@ -140,6 +152,7 @@ export default function ScanPage() {
             </div>
 
             {friendInfo}
+            {compassHint}
 
             <motion.button
               type="button"
@@ -193,6 +206,8 @@ export default function ScanPage() {
                 開啟掃描器
               </motion.button>
             </motion.div>
+
+            {compassHint}
           </motion.div>
         )}
       </AnimatePresence>
