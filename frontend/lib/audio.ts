@@ -50,15 +50,34 @@ export function noteToFreq(note: string): number {
 
 let audioCtx: AudioContext | null = null;
 
-function getAudioContext(): AudioContext {
+// Safari / older WebKit may only expose webkitAudioContext
+const AudioCtxClass = typeof window !== "undefined" ? window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext : null;
+
+function getAudioContext(): AudioContext | null {
+	if (!AudioCtxClass) return null;
 	if (!audioCtx) {
-		audioCtx = new AudioContext();
+		audioCtx = new AudioCtxClass();
 	}
-	// Resume if suspended (browser autoplay policy)
-	if (audioCtx.state === "suspended") {
+	// Resume if suspended or interrupted (WebKit uses "interrupted" state)
+	if (audioCtx.state !== "running") {
 		audioCtx.resume();
 	}
 	return audioCtx;
+}
+
+/**
+ * Warm up the AudioContext during a user gesture (e.g. play button click).
+ * Call this early so that subsequent playNote() calls work reliably on WebKit.
+ */
+export function initAudio(): void {
+	const ctx = getAudioContext();
+	if (!ctx) return;
+	// Play a silent buffer to unlock audio on iOS Safari
+	const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+	const source = ctx.createBufferSource();
+	source.buffer = buffer;
+	source.connect(ctx.destination);
+	source.start(0);
 }
 
 /**
@@ -68,6 +87,7 @@ function getAudioContext(): AudioContext {
  */
 export function playNote(note: string, durationMs: number = 200): void {
 	const ctx = getAudioContext();
+	if (!ctx) return;
 	const freq = noteToFreq(note);
 	const now = ctx.currentTime;
 	const duration = durationMs / 1000;

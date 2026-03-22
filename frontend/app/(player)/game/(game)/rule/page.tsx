@@ -23,6 +23,11 @@ const GAME_RULES = [
 		icon: "🎮",
 		title: "按鈕數量",
 		description: "每關的按鈕數量依據該關使用的音符種類決定，按鈕位置每次進入關卡時隨機排列。"
+	},
+	{
+		icon: "🔇",
+		title: "iPhone / iPad 使用者",
+		description: "遊戲需要播放音效，請確認已關閉靜音模式（側邊開關），才能聽到樂譜的聲音。"
 	}
 ];
 
@@ -45,6 +50,20 @@ export default function ChallengesPage() {
 						</div>
 					</div>
 				))}
+			</div>
+
+			{/* Tutorial videos */}
+			<div className="rounded-[var(--border-radius)] bg-[var(--bg-secondary)] p-5 shadow-sm">
+				<div className="flex items-start gap-4">
+					<span className="text-3xl leading-none mt-0.5">🎬</span>
+					<div className="flex-1">
+						<h2 className="text-[var(--text-primary)] font-serif text-xl font-bold mb-1">關閉靜音模式教學</h2>
+						<div className="flex flex-col gap-2 mt-2">
+							<a href="https://www.youtube.com/watch?v=OHw_kf4o8xM" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-gold)] text-base underline">無實體按鍵操作影片</a>
+							<a href="https://www.youtube.com/watch?v=mlNh4dM9ddE" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-gold)] text-base underline">有實體按鍵操作影片</a>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			</div>
