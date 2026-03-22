@@ -39,19 +39,19 @@ export default function CouponTicket({
 			<div className="relative h-full w-full">
 				<CouponShapeSVG fillColor={ticketFillColor} />
 
-				<div className="relative z-10 flex h-full w-full items-center p-4">
+				<div className="relative z-10 flex h-full w-full items-center px-4 pt-4">
 					{/* Left Part */}
-					<div className="flex flex-[3] items-start">
-						<span className={`ml-25 font-serif text-5xl italic ${textColor}`}>{price}</span>
-						<span className={`mt-6 ml-2 text-lg font-bold ${textColor}`}>元</span>
-					</div>
-
-					{/* Right Part — reason */}
-					<div className="flex flex-[2] items-center justify-center">
+					<div className="flex flex-[3] flex-col justify-center">
+						<div className="flex items-start">
+							<span className={`ml-25 font-serif text-5xl italic ${textColor}`}>{price}</span>
+							<span className={`mt-6 ml-2 text-lg font-bold ${textColor}`}>元</span>
+						</div>
 						{description && status !== "locked" && (
-							<p className={`text-center text-xs font-medium ${textColor} opacity-80`}>{description}</p>
+							<p className={`ml-25 mt-1 text-xs font-medium ${textColor} opacity-80`}>{description}</p>
 						)}
 					</div>
+
+					<div className="flex flex-[2]" />
 				</div>
 
 				{/* Used Stamp */}

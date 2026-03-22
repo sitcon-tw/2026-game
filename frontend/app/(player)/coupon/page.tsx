@@ -25,6 +25,11 @@ interface DisplayCoupon {
 	definitionId: string;
 }
 
+function getCouponLabel(definitionId: string, description?: string) {
+	const trimmedDescription = description?.trim();
+	return trimmedDescription || definitionId;
+}
+
 function buildDisplayList(definitions: CouponDefinition[], userCoupons: DiscountCoupon[]): DisplayCoupon[] {
 	const items: DisplayCoupon[] = [];
 
@@ -47,7 +52,7 @@ function buildDisplayList(definitions: CouponDefinition[], userCoupons: Discount
 					status: c.used_at ? "used" : "unused",
 					coupon: c,
 					price: c.price,
-					description: def.description,
+					description: getCouponLabel(def.id, def.description),
 					definitionId: def.id
 				});
 			}
@@ -58,7 +63,7 @@ function buildDisplayList(definitions: CouponDefinition[], userCoupons: Discount
 			status: "locked",
 			price: def.amount,
 			passLevel: def.pass_level,
-			description: def.description,
+			description: getCouponLabel(def.id, def.description),
 			definitionId: def.id
 		});
 	}
@@ -70,6 +75,7 @@ function buildDisplayList(definitions: CouponDefinition[], userCoupons: Discount
 				status: c.used_at ? "used" : "unused",
 				coupon: c,
 				price: c.price,
+				description: getCouponLabel(c.discount_id),
 				definitionId: c.discount_id
 			});
 		}
