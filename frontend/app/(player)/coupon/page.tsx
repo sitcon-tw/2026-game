@@ -7,10 +7,10 @@ import LocalQRCode from "@/components/ui/LocalQRCode";
 import Modal from "@/components/ui/Modal";
 import { useCouponDefinitions, useCoupons, useRedeemGiftCoupon } from "@/hooks/api";
 import { ApiError } from "@/lib/api";
+import { usePopupStore } from "@/stores";
 import { useUserStore } from "@/stores/userStore";
 import type { CouponDefinition, DiscountCoupon } from "@/types/api";
-import { usePopupStore } from "@/stores";
-import { Clock, Zap, Trophy, ShoppingBag, Ticket, Info } from "lucide-react";
+import { Clock, Info, ShoppingBag, Ticket, Trophy, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
@@ -100,21 +100,21 @@ function RedeemSection() {
 
 	const handleRedeem = () => {
 		if (!redeemCode.trim()) return;
-			redeemGift.mutate(redeemCode.trim(), {
-				onSuccess: () => {
+		redeemGift.mutate(redeemCode.trim(), {
+			onSuccess: () => {
 				setRedeemCode("");
 				setShowInput(false);
 				showPopup({
 					title: "兌換成功！",
 					description: "折價券已加入列表",
-					cta: { name: "查看折價券", link: "/coupon" },
+					cta: { name: "查看折價券", link: "/coupon" }
 				});
 			},
-				onError: (error: Error) => {
-					const text = error instanceof ApiError ? error.data.message || error.message : error.message || "兌換失敗，請確認代碼是否正確";
-					showPopup({
+			onError: (error: Error) => {
+				const text = error instanceof ApiError ? error.data.message || error.message : error.message || "兌換失敗，請確認代碼是否正確";
+				showPopup({
 					title: "兌換失敗",
-					description: text,
+					description: text
 				});
 			}
 		});
@@ -150,10 +150,7 @@ function RedeemSection() {
 				)}
 			</AnimatePresence>
 
-			<button
-				onClick={() => setShowInput(v => !v)}
-				className="text-sm text-[var(--text-secondary)] underline underline-offset-2"
-			>
+			<button onClick={() => setShowInput(v => !v)} className="text-sm text-[var(--text-secondary)] underline underline-offset-2">
 				{showInput ? "收起" : "有兌換代碼？"}
 			</button>
 		</div>
@@ -210,15 +207,19 @@ function SnsCouponRuleModal({ open, onClose }: { open: boolean; onClose: () => v
 			<div className="space-y-4 px-6 py-5 text-left">
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">打卡平台</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads 的限時動態或貼文皆可。</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads 的社群發文或限動皆可。</p>
 				</div>
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">成功條件</p>
 					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">內容需提及 @sitcon.tw，才算打卡成功。</p>
 				</div>
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
+					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換時間</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">10:00-12:00</p>
+				</div>
+				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換地點</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 2F 紀念品攤位，向工作人員出示你的限動或貼文畫面兌換。</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 2F 議程組服務台，向工作人員出示你的限動或貼文畫面兌換。</p>
 				</div>
 			</div>
 
@@ -267,9 +268,9 @@ export default function CouponPage() {
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
 						<Zap size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
 						<p className="text-xs text-[var(--text-primary)]">
-							<span className="font-bold">限時動態</span>
+							<span className="font-bold">社群打卡</span>
 							<br />
-							10:10–12:00
+							10:00–12:00
 						</p>
 					</div>
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
@@ -284,16 +285,14 @@ export default function CouponPage() {
 						<Clock size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
 						<p className="text-xs text-[var(--text-primary)]">
 							<span className="font-bold">獲得期限</span>
-							<br />
-							至 16:00
+							<br />至 16:00
 						</p>
 					</div>
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
 						<ShoppingBag size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
 						<p className="text-xs text-[var(--text-primary)]">
 							<span className="font-bold">使用期限</span>
-							<br />
-							至 16:30 收攤
+							<br />至 16:30 收攤
 						</p>
 					</div>
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
