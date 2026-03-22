@@ -11,11 +11,11 @@ import (
 )
 
 // GameRoutes wires game-related endpoints.
-func GameRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+func GameRoutes(repo repository.Repository, logger *zap.Logger, sessionRateLimit func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Auth(repo, logger))
-	r.Use(middleware.SessionRateLimit())
+	r.Use(sessionRateLimit)
 
 	h := game.New(repo, logger)
 

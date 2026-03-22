@@ -4,39 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/go-chi/httprate"
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/res"
 )
 
-var (
-	sessionRateLimiter     *httprate.RateLimiter
-	sessionRateLimiterOnce sync.Once
-)
-
-// SessionRateLimit applies a shared rate limit keyed by authenticated session identity.
-func SessionRateLimit() func(http.Handler) http.Handler {
-	return getSessionRateLimiter().Handler
-}
-
-func getSessionRateLimiter() *httprate.RateLimiter {
-	sessionRateLimiterOnce.Do(func() {
-		sessionRateLimiter = httprate.NewRateLimiter(
-			config.Env().RateLimitRequestsPerWindow,
-			config.Env().RateLimitWindow,
-			httprate.WithKeyFuncs(sessionRateLimitKey),
-			httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
-				res.Fail(w, r, http.StatusTooManyRequests, errors.New("rate limit exceeded"), "rate limit exceeded")
-			}),
-			httprate.WithErrorHandler(func(w http.ResponseWriter, r *http.Request, err error) {
-				res.Fail(w, r, http.StatusInternalServerError, err, "failed to apply rate limit")
-			}),
-		)
-	})
-
-	return sessionRateLimiter
+// NewSessionRateLimit builds a rate limit middleware keyed by authenticated session identity.
+func NewSessionRateLimit() func(http.Handler) http.Handler {
+	return httprate.NewRateLimiter(
+		config.Env().RateLimitRequestsPerWindow,
+		config.Env().RateLimitWindow,
+		httprate.WithKeyFuncs(sessionRateLimitKey),
+		httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
+			res.Fail(w, r, http.StatusTooManyRequests, errors.New("rate limit exceeded"), "rate limit exceeded")
+		}),
+		httprate.WithErrorHandler(func(w http.ResponseWriter, r *http.Request, err error) {
+			res.Fail(w, r, http.StatusInternalServerError, err, "failed to apply rate limit")
+		}),
+	).Handler
 }
 
 func sessionRateLimitKey(r *http.Request) (string, error) {

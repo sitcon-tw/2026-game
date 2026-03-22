@@ -11,11 +11,11 @@ import (
 )
 
 // FriendRoutes wires friend-related endpoints.
-func FriendRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+func FriendRoutes(repo repository.Repository, logger *zap.Logger, sessionRateLimit func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Auth(repo, logger))
-	r.Use(middleware.SessionRateLimit())
+	r.Use(sessionRateLimit)
 
 	h := friend.New(repo, logger)
 

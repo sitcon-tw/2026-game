@@ -11,7 +11,7 @@ import (
 )
 
 // ActivityRoutes wires activity-related endpoints.
-func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+func ActivityRoutes(repo repository.Repository, logger *zap.Logger, sessionRateLimit func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	h := activities.New(repo, logger)
@@ -21,7 +21,7 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.BoothAuth(repo, logger))
-			r.Use(middleware.SessionRateLimit())
+			r.Use(sessionRateLimit)
 			r.Post("/user/check-ins", h.BoothCheckIn)
 			r.Get("/stats", h.BoothCount)
 		})
@@ -29,7 +29,7 @@ func ActivityRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Auth(repo, logger))
-		r.Use(middleware.SessionRateLimit())
+		r.Use(sessionRateLimit)
 
 		// List activities with user's check-in status
 		r.Get("/stats", h.List)

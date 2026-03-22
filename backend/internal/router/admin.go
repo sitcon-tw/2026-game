@@ -11,7 +11,7 @@ import (
 )
 
 // AdminRoutes wires admin-only endpoints.
-func AdminRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+func AdminRoutes(repo repository.Repository, logger *zap.Logger, sessionRateLimit func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 	h := admin.New(repo, logger)
 
@@ -19,7 +19,7 @@ func AdminRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AdminAuth)
-		r.Use(middleware.SessionRateLimit())
+		r.Use(sessionRateLimit)
 
 		r.Post("/gift-coupons", h.CreateGiftCoupon)
 		r.Delete("/gift-coupons/{id}", h.DeleteGiftCoupon)

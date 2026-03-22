@@ -11,7 +11,7 @@ import (
 )
 
 // UserRoutes wires user-related endpoints.
-func UserRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+func UserRoutes(repo repository.Repository, logger *zap.Logger, sessionRateLimit func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	h := users.New(repo, logger)
@@ -19,11 +19,11 @@ func UserRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	// The reason we need login is for store user session in cookies.
 	r.Post("/session", h.Login)
 	// Get user profile/data
-	r.With(middleware.Auth(repo, logger), middleware.SessionRateLimit()).Get("/me", h.Me)
+	r.With(middleware.Auth(repo, logger), sessionRateLimit).Get("/me", h.Me)
 	// Update user public namecard data
-	r.With(middleware.Auth(repo, logger), middleware.SessionRateLimit()).Patch("/me/namecard", h.UpdateNamecard)
+	r.With(middleware.Auth(repo, logger), sessionRateLimit).Patch("/me/namecard", h.UpdateNamecard)
 	// Get short-lived one-time token for friend QR scan
-	r.With(middleware.Auth(repo, logger), middleware.SessionRateLimit()).Get("/me/one-time-qr", h.OneTimeQR)
+	r.With(middleware.Auth(repo, logger), sessionRateLimit).Get("/me/one-time-qr", h.OneTimeQR)
 
 	return r
 }

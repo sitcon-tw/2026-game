@@ -11,11 +11,11 @@ import (
 )
 
 // GroupRoutes wires group-related endpoints.
-func GroupRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+func GroupRoutes(repo repository.Repository, logger *zap.Logger, sessionRateLimit func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Auth(repo, logger))
-	r.Use(middleware.SessionRateLimit())
+	r.Use(sessionRateLimit)
 
 	h := group.New(repo, logger)
 

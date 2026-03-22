@@ -119,6 +119,7 @@ func main() {
 
 func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
+	sessionRateLimit := middleware.NewSessionRateLimit()
 
 	// logger
 	r.Use(middleware.Logger(logger))
@@ -142,15 +143,15 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 
 	// Routes
 	r.Route("/api", func(r chi.Router) {
-		r.Mount("/users", router.UserRoutes(repo, logger))
-		r.Mount("/activities", router.ActivityRoutes(repo, logger))
-		r.Mount("/discount-coupons", router.DiscountRoutes(repo, logger))
+		r.Mount("/users", router.UserRoutes(repo, logger, sessionRateLimit))
+		r.Mount("/activities", router.ActivityRoutes(repo, logger, sessionRateLimit))
+		r.Mount("/discount-coupons", router.DiscountRoutes(repo, logger, sessionRateLimit))
 		r.Mount("/announcements", router.AnnouncementRoutes(repo, logger))
-		r.Mount("/admin", router.AdminRoutes(repo, logger))
+		r.Mount("/admin", router.AdminRoutes(repo, logger, sessionRateLimit))
 
-		r.Mount("/friendships", router.FriendRoutes(repo, logger))
-		r.Mount("/games", router.GameRoutes(repo, logger))
-		r.Mount("/group", router.GroupRoutes(repo, logger))
+		r.Mount("/friendships", router.FriendRoutes(repo, logger, sessionRateLimit))
+		r.Mount("/games", router.GameRoutes(repo, logger, sessionRateLimit))
+		r.Mount("/group", router.GroupRoutes(repo, logger, sessionRateLimit))
 	})
 
 	// Swagger API docs

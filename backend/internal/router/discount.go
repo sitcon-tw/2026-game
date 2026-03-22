@@ -11,7 +11,7 @@ import (
 )
 
 // DiscountRoutes wires discount-related endpoints.
-func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
+func DiscountRoutes(repo repository.Repository, logger *zap.Logger, sessionRateLimit func(http.Handler) http.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	h := discount.New(repo, logger)
@@ -21,7 +21,7 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.StaffAuth(repo, logger))
-			r.Use(middleware.SessionRateLimit())
+			r.Use(sessionRateLimit)
 
 			// Staff scans attendee's coupon QR code
 			r.Post("/redemptions", h.DiscountUsed)
@@ -39,8 +39,8 @@ func DiscountRoutes(repo repository.Repository, logger *zap.Logger) http.Handler
 	r.Get("/coupons", h.ListAllCoupons)
 
 	// Get the count of discounts used by the user
-	r.With(middleware.Auth(repo, logger), middleware.SessionRateLimit()).Get("/", h.GetDiscount)
+	r.With(middleware.Auth(repo, logger), sessionRateLimit).Get("/", h.GetDiscount)
 	// User consumes a gift coupon by token in request body
-	r.With(middleware.Auth(repo, logger), middleware.SessionRateLimit()).Post("/gifts", h.GetGiftCouponByToken)
+	r.With(middleware.Auth(repo, logger), sessionRateLimit).Post("/gifts", h.GetGiftCouponByToken)
 	return r
 }
