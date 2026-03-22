@@ -12,6 +12,7 @@ export default function CouponTicket({
 	status,
 	passLevel,
 	description,
+	onClick,
 	price: priceProp
 }: {
 	coupon?: DiscountCoupon;
@@ -19,6 +20,7 @@ export default function CouponTicket({
 	status: CouponStatus;
 	passLevel?: number;
 	description?: string;
+	onClick?: () => void;
 	price?: number;
 }) {
 	const price = priceProp ?? coupon?.price ?? 0;
@@ -28,7 +30,12 @@ export default function CouponTicket({
 	const textColor = status === "locked" ? "text-gray-500" : "text-white";
 
 	return (
-		<motion.div className={`relative h-32 w-full max-w-md drop-shadow-lg cursor-default`} style={{ zIndex }}>
+		<motion.button
+			type="button"
+			onClick={onClick}
+			className={`relative h-32 w-full max-w-md border-0 bg-transparent p-0 text-left drop-shadow-lg ${onClick ? "cursor-pointer" : "cursor-default"}`}
+			style={{ zIndex }}
+		>
 			<div className="relative h-full w-full">
 				<CouponShapeSVG fillColor={ticketFillColor} />
 
@@ -77,6 +84,6 @@ export default function CouponTicket({
 					</div>
 				)}
 			</div>
-		</motion.div>
+		</motion.button>
 	);
 }
