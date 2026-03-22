@@ -23,6 +23,7 @@ type assignCouponByQRCodeRequest struct {
 var (
 	errScanTargetUserNotFound = errors.New("scan target user not found")
 	errScanLookupFailed       = errors.New("scan target lookup failed")
+	errCouponEarningStopped   = errors.New("coupon earning stopped")
 )
 
 // AssignCouponByQRCode handles POST /discount-coupons/staff/scan-assignments.
@@ -55,6 +56,10 @@ func (h *Handler) AssignCouponByQRCode(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.UserQRCode == "" {
 		res.Fail(w, r, http.StatusBadRequest, errors.New("invalid user_qr_code"), "invalid payload")
+		return
+	}
+	if config.IsCouponEarningStopped(time.Now().UTC()) {
+		res.Fail(w, r, http.StatusForbidden, errCouponEarningStopped, "coupon earning stopped")
 		return
 	}
 

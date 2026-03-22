@@ -155,6 +155,11 @@ func (h *Handler) issueCoupons(ctx context.Context, tx pgx.Tx, userID string, ne
 	spanCtx, span := h.tracer.Start(ctx, "game.submit.issue_coupons")
 	defer span.End()
 
+	if config.IsCouponEarningStopped(time.Now().UTC()) {
+		span.SetAttributes(attribute.Int("game.coupons.issued_count", 0))
+		return []CouponResponse{}, nil
+	}
+
 	issued := []CouponResponse{}
 	for _, rule := range config.GetCouponRulesByLevel(newLevel) {
 		coupon, created, err := h.Repo.CreateDiscountCoupon(

@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/internal/router"
+	"github.com/sitcon-tw/2026-game/internal/service/couponsettlement"
 	"github.com/sitcon-tw/2026-game/pkg/config"
 	"github.com/sitcon-tw/2026-game/pkg/db"
 	"github.com/sitcon-tw/2026-game/pkg/logger"
@@ -82,6 +83,9 @@ func main() {
 	defer db.Close()
 
 	repo := repository.New(db, logger)
+	appCtx, cancelApp := context.WithCancel(context.Background())
+	defer cancelApp()
+	couponsettlement.New(repo, logger).StartScheduler(appCtx)
 
 	handler := initRoutes(repo, logger)
 	if config.Env().OTelEnabled {

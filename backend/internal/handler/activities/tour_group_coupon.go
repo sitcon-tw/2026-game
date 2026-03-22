@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
@@ -15,6 +16,10 @@ func (h *Handler) issueTourGroupChallengeCoupon(
 	activityName string,
 	activityType models.ActivitiesTypes,
 ) error {
+	if config.IsCouponEarningStopped(time.Now().UTC()) {
+		return nil
+	}
+
 	if activityType != models.ActivitiesTypeChallenge || activityName != config.TourGroupChallengeActivityName {
 		return nil
 	}

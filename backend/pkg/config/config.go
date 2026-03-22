@@ -26,6 +26,7 @@ type EnvConfig struct {
 	AppPort        string `env:"PORT" envDefault:"8000"`
 	AppAutoMigrate bool   `env:"APP_AUTO_MIGRATE" envDefault:"false"`
 	AppDocs        bool   `env:"APP_DOCS" envDefault:"false"`
+	CouponStopTime string `env:"COUPON_STOP_TIME"`
 
 	// OpenTelemetry settings
 	OTelEnabled    bool    `env:"OTEL_ENABLED" envDefault:"false"`
@@ -59,6 +60,8 @@ type EnvConfig struct {
 	// Rate limiting
 	RateLimitRequestsPerWindow int           `env:"RATE_LIMIT_REQUESTS_PER_WINDOW" envDefault:"20"`
 	RateLimitWindow            time.Duration `env:"RATE_LIMIT_WINDOW" envDefault:"5s"`
+
+	couponStopAt time.Time `env:"-"`
 }
 
 var (
@@ -71,6 +74,13 @@ func load() (*EnvConfig, error) {
 	cfg := &EnvConfig{}
 	if err := env.Parse(cfg); err != nil {
 		return nil, err
+	}
+	if cfg.CouponStopTime != "" {
+		couponStopAt, err := time.Parse(time.RFC3339, cfg.CouponStopTime)
+		if err != nil {
+			return nil, err
+		}
+		cfg.couponStopAt = couponStopAt
 	}
 	return cfg, nil
 }
@@ -90,4 +100,23 @@ func Env() *EnvConfig {
 		panic("config not initialized — call Init() first")
 	}
 	return appConfig
+}
+
+// CouponStopAt returns the configured coupon stop time.
+func (c *EnvConfig) CouponStopAt() (time.Time, bool) {
+	if c == nil || c.couponStopAt.IsZero() {
+		return time.Time{}, false
+	}
+
+	return c.couponStopAt, true
+}
+
+// IsCouponEarningStopped reports whether normal coupon earning has stopped.
+func IsCouponEarningStopped(now time.Time) bool {
+	stopAt, ok := Env().CouponStopAt()
+	if !ok {
+		return false
+	}
+
+	return !now.Before(stopAt)
 }

@@ -91,3 +91,14 @@ func GetTourGroupChallengeCouponRule() (DiscountRule, bool) {
 
 	return DiscountRule{}, false
 }
+
+// GetLeaderboardTopTenCouponRule returns the leaderboard top-ten coupon rule.
+func GetLeaderboardTopTenCouponRule() (DiscountRule, bool) {
+	for _, rule := range couponRules() {
+		if rule.ID == DiscountIDLeaderboardTopTen {
+			return rule, true
+		}
+	}
+
+	return DiscountRule{}, false
+}

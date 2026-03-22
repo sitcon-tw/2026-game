@@ -19,6 +19,7 @@ type Repository interface {
 	StartTransaction(ctx context.Context) (pgx.Tx, error)
 	DeferRollback(ctx context.Context, tx pgx.Tx)
 	CommitTransaction(ctx context.Context, tx pgx.Tx) error
+	TryAcquireAdvisoryXactLock(ctx context.Context, tx pgx.Tx, key int64) (bool, error)
 
 	// User operations
 	GetUserByToken(ctx context.Context, tx pgx.Tx, token string) (*models.User, error)

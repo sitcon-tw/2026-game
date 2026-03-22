@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sitcon-tw/2026-game/internal/models"
@@ -12,6 +13,10 @@ const checkInCouponThreshold = 23
 
 // issueCheckInCoupon issues a coupon when a user has visited at least 23 booth/check activities.
 func (h *Handler) issueCheckInCoupon(ctx context.Context, tx pgx.Tx, userID string) error {
+	if config.IsCouponEarningStopped(time.Now().UTC()) {
+		return nil
+	}
+
 	rule, ok := config.GetCheckInCompletionCouponRule()
 	if !ok {
 		return nil

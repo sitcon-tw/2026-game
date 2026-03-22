@@ -16,7 +16,7 @@ WITH ranked AS (
 	           RANK() OVER (ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC) AS rank
 	    FROM users
 )
-SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank
+SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank
 FROM ranked
 ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC, id ASC
 LIMIT $1 OFFSET $2`
@@ -31,6 +31,7 @@ LIMIT $1 OFFSET $2`
 	for rows.Next() {
 		var ru RankedUser
 		err = rows.Scan(
+			&ru.User.ID,
 			&ru.User.Nickname,
 			&ru.User.Avatar,
 			&ru.User.CurrentLevel,
@@ -56,7 +57,7 @@ LIMIT $1 OFFSET $2`
 // Ranking rule: higher pass level first, then higher unlock level, then earlier last_pass_time.
 func (r *PGRepository) GetUserWithRank(ctx context.Context, tx pgx.Tx, userID string) (*models.User, int, error) {
 	const query = `
-SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank FROM (
+SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank FROM (
 	    SELECT id, nickname, avatar, unlock_level, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time,
 	           RANK() OVER (ORDER BY current_level DESC, unlock_level DESC, last_pass_time ASC) AS rank
 	    FROM users
@@ -66,6 +67,7 @@ WHERE id = $1`
 	var u models.User
 	var rank int
 	err := tx.QueryRow(ctx, query, userID).Scan(
+		&u.ID,
 		&u.Nickname,
 		&u.Avatar,
 		&u.CurrentLevel,
@@ -95,7 +97,7 @@ WITH ranked AS (
 ), my_row AS (
     SELECT rn FROM ranked WHERE id = $1
 )
-SELECT nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank
+SELECT id, nickname, avatar, current_level, namecard_bio, namecard_links, namecard_email, last_pass_time, rank
 FROM ranked, my_row
 WHERE ranked.rn BETWEEN my_row.rn - $2 AND my_row.rn + $2
 ORDER BY ranked.rn`
@@ -110,6 +112,7 @@ ORDER BY ranked.rn`
 	for rows.Next() {
 		var ru RankedUser
 		err = rows.Scan(
+			&ru.User.ID,
 			&ru.User.Nickname,
 			&ru.User.Avatar,
 			&ru.User.CurrentLevel,
