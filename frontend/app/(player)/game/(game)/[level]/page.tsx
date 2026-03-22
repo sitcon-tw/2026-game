@@ -137,6 +137,13 @@ export default function ChallengesPage() {
 		setSubmitError(null);
 	}, [currentLevel, reset]);
 
+	// Abort playback on unmount (e.g. navigating away mid-sequence)
+	useEffect(() => {
+		return () => {
+			playbackAbortRef.current?.();
+		};
+	}, []);
+
 	// Playback sequence using requestAnimationFrame for precision
 	const playSequence = useCallback(() => {
 		if (!levelInfo || sheet.length === 0) return;
