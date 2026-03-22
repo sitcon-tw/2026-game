@@ -3,6 +3,10 @@ title: 攤位解鎖
 description: 玩家如何查看攤位型解鎖進度與單一攤位狀態。
 ---
 
+可以在解鎖關卡方式找到入口
+
+<img src="/docs/attendee/boothsEnter.png" alt="攤位列表頁面" width="50%" />
+
 這個頁面列出所有可以解鎖關卡的攤位（`booth` 類型活動）。已到訪的攤位用深色顯示，還沒去過的則較淺。點擊任何一個攤位可以查看細節，確認自己是否已完成打卡。
 
 <img src="/docs/attendee/booths.png" alt="攤位列表頁面" width="50%" />

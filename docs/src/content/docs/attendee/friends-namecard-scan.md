@@ -3,7 +3,7 @@ title: 好友、名片與掃描
 description: 玩家如何使用個人名片、加好友與活動掃描功能。
 ---
 
-進入 `/scan` 頁面，你會先看到自己的名片，上面顯示暱稱、頭像、目前關卡、自介與 QR Code。點擊 QR Code 可放大給別人掃，也可以切換到掃描器模式掃描別人的 QR Code。
+進入 `/scan` （下方中間掃描 Icon）頁面，你會先看到自己的名片，上面顯示暱稱、頭像、目前關卡、自介與 QR Code。點擊 QR Code 可放大給別人掃，也可以切換到掃描器模式掃描別人的 QR Code。
 
 <img src="/docs/attendee/scan.png" alt="名片與掃描頁面" width="50%" />
 

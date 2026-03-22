@@ -5,7 +5,11 @@ description: 玩家在 Compass Plan 中的互簽與組員查看功能。
 
 指南針計畫是一個小組互動功能。如果你有加入指南針計畫分組，這個頁面讓你和同組夥伴互相掃描 QR Code 完成互簽，也可以查看全組成員的遊戲進度。
 
+可以在解鎖關卡方式找到入口
+
 <img src="/docs/attendee/compass.png" alt="指南針計畫頁面" width="50%" />
+
+<img src="/docs/attendee/compassIndex.png" alt="指南針計畫頁面" width="50%" />
 
 如果你還沒有分組，頁面只會顯示：「你目前沒有參與指南針計畫。看到這個畫面代表你尚未分組。」
 
