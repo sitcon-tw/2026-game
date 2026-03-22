@@ -3,9 +3,11 @@
 import BottomNav from "@/components/layout/(player)/BottomNav";
 import Header from "@/components/layout/(player)/Header";
 import AuthGuard from "@/components/providers/AuthGuard";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useCouponPolling } from "@/hooks/useCouponPolling";
 import { useScheduledNotifications } from "@/hooks/useScheduledNotifications";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 
 const HIDE_SHELL_PATHS = new Set(["/"]);
 
@@ -31,8 +33,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 	}
 
 	return (
-		<AuthGuard>
-			<PlayerShell>{children}</PlayerShell>
-		</AuthGuard>
+		<Suspense fallback={<LoadingSpinner fullPage />}>
+			<AuthGuard>
+				<PlayerShell>{children}</PlayerShell>
+			</AuthGuard>
+		</Suspense>
 	);
 }

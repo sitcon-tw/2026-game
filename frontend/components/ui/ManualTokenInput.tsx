@@ -16,7 +16,7 @@ export default function ManualTokenInput() {
 				<span className="text-xs text-[var(--text-secondary)]">OR</span>
 				<div className="h-px flex-1 bg-[var(--text-secondary)] opacity-30" />
 			</div>
-			<button onClick={() => setShowManualInput(v => !v)} className="inline-flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+			<button onClick={() => setShowManualInput(v => !v)} className="inline-flex items-center gap-1 text-sm text-[var(--text-secondary)] cursor-pointer">
 				<motion.span animate={{ rotate: showManualInput ? 90 : 0 }} transition={{ duration: 0.2 }} className="inline-block text-xs">
 					▶
 				</motion.span>
@@ -38,7 +38,7 @@ export default function ManualTokenInput() {
 								value={manualToken}
 								onChange={e => setManualToken(e.target.value)}
 								placeholder="輸入 Token"
-								className="rounded-xl bg-[var(--bg-header)] px-4 py-3 font-mono text-sm text-[var(--text-light)] placeholder-[var(--text-secondary)] outline-none"
+								className="rounded-xl bg-[var(--bg-card)] px-4 py-3 font-mono text-sm text-[var(--text-light)] placeholder-[var(--text-secondary)] outline-none"
 							/>
 							<button
 								onClick={() => {
@@ -46,7 +46,7 @@ export default function ManualTokenInput() {
 										router.push(`/login?token=${encodeURIComponent(manualToken.trim())}`);
 									}
 								}}
-								className="rounded-xl bg-[#AC8B58] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90"
+								className="rounded-xl bg-[var(--bg-header)] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90 cursor-pointer"
 							>
 								登入
 							</button>

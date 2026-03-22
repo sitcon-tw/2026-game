@@ -26,7 +26,7 @@ var (
 	errAlreadyCheckedIn   = errors.New("already checked in with this member")
 )
 
-const unlockIncrementGroupCheckIn = 4
+const unlockIncrementGroupCheckIn = 2
 
 // CheckIn handles POST /group/check-ins.
 // @Summary      group 互相簽到

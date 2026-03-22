@@ -6,7 +6,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { useUserStore } from "@/stores/userStore";
 import type { User } from "@/types/api";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 
 /**
@@ -28,10 +28,17 @@ function useStoreHydrated() {
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const storeHydrated = useStoreHydrated();
 	const authToken = useUserStore(s => s.authToken);
 	const clearUser = useUserStore(s => s.clearUser);
 	const setUser = useUserStore(s => s.setUser);
+
+	// Build login URL, preserving token param if present
+	const loginUrl = (() => {
+		const token = searchParams.get("token");
+		return token ? `/login?token=${encodeURIComponent(token)}` : "/login";
+	})();
 
 	// Only fire the session check when we have a token AND store is hydrated
 	const shouldCheck = storeHydrated && !!authToken;
@@ -54,13 +61,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
 		if (!authToken) {
 			clearUser();
-			router.replace("/login");
+			router.replace(loginUrl);
 			return;
 		}
 
 		if (isError && error instanceof ApiError && error.status === 401) {
 			clearUser();
-			router.replace("/login");
+			router.replace(loginUrl);
 		}
 	}, [storeHydrated, authToken, isError, error, clearUser, router]);
 

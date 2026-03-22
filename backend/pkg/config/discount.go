@@ -47,7 +47,7 @@ func couponRules() []DiscountRule {
 			ID:          DiscountIDLeaderboardTopTen,
 			PassLevel:   0,
 			Amount:      50,
-			Description: "排行榜前 10 名",
+			Description: "排行榜前 10 名（16:00 截止）",
 		},
 	}
 }

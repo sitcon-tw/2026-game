@@ -43,10 +43,10 @@ description: 玩家如何使用個人名片、加好友與活動掃描功能。
 
 ### 掃描結果
 
-| QR Code 類型 | 行為                                                  |
-| ------------ | ----------------------------------------------------- |
-| `qru1.` 開頭 | 加好友流程（呼叫 `POST /api/friendships/`）           |
-| 其他活動 QR  | 活動打卡流程（呼叫 `POST /api/activities/check-ins`） |
+| QR Code 類型 | 行為 |
+|-------------|------|
+| `qru1.` 開頭 | 加好友流程（呼叫 `POST /api/friendships/`） |
+| 其他活動 QR | 活動打卡流程（呼叫 `POST /api/activities/check-ins`） |
 
 掃描成功與失敗都會顯示即時訊息，幾秒後自動消失。
 
