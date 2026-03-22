@@ -267,6 +267,13 @@ export default function CouponPage() {
 						</p>
 					</div>
 				</div>
+				<div className="mx-auto max-w-xs rounded-lg border border-[var(--accent-bronze)]/20 bg-[var(--accent-bronze)]/5 px-4 py-3 text-left">
+					<p className="text-xs font-medium text-[var(--text-primary)]">
+						<span className="font-bold">使用提醒</span>
+						<br />
+						折價券限本人使用，不可與他人共用
+					</p>
+				</div>
 
 				{/* Coupon Stack */}
 				<div className="relative my-8 flex flex-col items-center space-y-[-2rem]">
