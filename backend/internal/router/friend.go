@@ -15,6 +15,7 @@ func FriendRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Auth(repo, logger))
+	r.Use(middleware.SessionRateLimit())
 
 	h := friend.New(repo, logger)
 

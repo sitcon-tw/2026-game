@@ -19,6 +19,7 @@ func AdminRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AdminAuth)
+		r.Use(middleware.SessionRateLimit())
 
 		r.Post("/gift-coupons", h.CreateGiftCoupon)
 		r.Delete("/gift-coupons/{id}", h.DeleteGiftCoupon)

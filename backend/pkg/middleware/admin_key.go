@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -21,6 +22,16 @@ func AdminAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(contextWithAdmin(r.Context())))
 	})
+}
+
+// AdminFromContext reports whether the current request is authenticated as admin.
+func AdminFromContext(ctx context.Context) bool {
+	admin, _ := ctx.Value(adminContextKey).(bool)
+	return admin
+}
+
+func contextWithAdmin(ctx context.Context) context.Context {
+	return context.WithValue(ctx, adminContextKey, true)
 }

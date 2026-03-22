@@ -19,6 +19,7 @@ type contextKey string
 const userContextKey contextKey = "authUser"
 const boothContextKey contextKey = "boothActivity"
 const staffContextKey contextKey = "staffUser"
+const adminContextKey contextKey = "adminUser"
 
 // Auth verifies the token cookie against the users table.
 // On success, it injects the *models.User into request context under userContextKey.

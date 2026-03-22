@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httprate"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sitcon-tw/2026-game/internal/repository"
 	"github.com/sitcon-tw/2026-game/internal/router"
@@ -137,12 +136,6 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 		})
 		r.Use(corsMiddleware)
 	}
-
-	// Rate limit
-	r.Use(httprate.LimitByIP(
-		config.Env().RateLimitRequestsPerWindow,
-		config.Env().RateLimitWindow,
-	))
 
 	// Routes
 	r.Handle("/metrics", promhttp.Handler())
