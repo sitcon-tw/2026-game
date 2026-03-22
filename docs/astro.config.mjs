@@ -22,7 +22,8 @@ export default defineConfig({
 	},
 	integrations: [
 		starlight({
-			title: "SITCON 2026 大地遊戲說明文件",
+			title: "SITCON 2026 大地遊戲文件",
+			customCss: ["./src/styles/theme.css"],
 			social: [{ icon: "github", label: "GitHub", href: "https://github.com/sitcon-tw/2026-game" }],
 			sidebar: [
 				{

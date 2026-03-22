@@ -1,0 +1,170 @@
+@import url("https://font.emtech.cc/css/GenKiMinTW/700");
+@import url("https://font.emtech.cc/css/FiraCode/400");
+@import url("https://font.emtech.cc/fonts/GenKiGothicTW");
+
+:root {
+	--sl-color-accent-low: #f8f0de;
+	--sl-color-accent: #a6771f;
+	--sl-color-accent-high: #6d4b12;
+	--sl-color-white: #2b2116;
+	--sl-color-gray-1: #4f3f2e;
+	--sl-color-gray-2: #6e5a43;
+	--sl-color-gray-3: #8e7760;
+	--sl-color-gray-4: #b49b7f;
+	--sl-color-gray-5: #e1d1b9;
+	--sl-color-gray-6: #f6efe3;
+	--sl-color-black: #f6efe3;
+	--sl-font-system: "GenKiGothicTW", sans-serif;
+	--sl-font: var(--sl-font-system);
+	--sl-font-mono: "FiraCode", monospace;
+	--sl-nav-height: 4.5rem;
+	background: radial-gradient(circle at top, rgba(212, 168, 87, 0.18), transparent 32%), linear-gradient(180deg, #f8f0e3 0%, #efe4d1 48%, #e7d9c2 100%);
+}
+
+:root[data-theme="dark"] {
+	--sl-color-accent-low: #2c2114;
+	--sl-color-accent: #d2a24a;
+	--sl-color-accent-high: #f4d28f;
+	--sl-color-white: #f9f1df;
+	--sl-color-gray-1: #ead8b8;
+	--sl-color-gray-2: #d6bc95;
+	--sl-color-gray-3: #b6976a;
+	--sl-color-gray-4: #7c6240;
+	--sl-color-gray-5: #45331f;
+	--sl-color-gray-6: #231910;
+	--sl-color-black: #17110c;
+	background: radial-gradient(circle at top, rgba(219, 170, 81, 0.16), transparent 30%), linear-gradient(180deg, #22170f 0%, #18110c 100%);
+}
+
+body {
+	background: transparent;
+	color: var(--sl-color-white);
+}
+
+.page,
+.main-frame {
+	background: transparent;
+}
+
+.header,
+.sidebar-pane,
+.right-sidebar-panel,
+.card,
+.site-title,
+.pagination-links > a {
+	backdrop-filter: blur(18px);
+}
+
+.header {
+	background: rgba(246, 239, 227, 0.82);
+	border-bottom: 1px solid rgba(138, 101, 35, 0.18);
+	box-shadow: 0 18px 40px rgba(84, 57, 17, 0.08);
+}
+
+:root[data-theme="dark"] .header {
+	background: rgba(28, 20, 14, 0.82);
+	border-bottom-color: rgba(210, 162, 74, 0.16);
+	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.sidebar-pane,
+.right-sidebar-panel {
+	background: rgba(255, 251, 243, 0.52);
+	border-inline-end: 1px solid rgba(138, 101, 35, 0.12);
+}
+
+:root[data-theme="dark"] .sidebar-pane,
+:root[data-theme="dark"] .right-sidebar-panel {
+	background: rgba(35, 25, 16, 0.55);
+	border-color: rgba(210, 162, 74, 0.1);
+}
+
+.hero,
+.card,
+.pagination-links > a,
+.sl-markdown-content blockquote,
+.expressive-code {
+	border: 1px solid rgba(166, 119, 31, 0.18);
+	border-radius: 20px;
+	box-shadow: 0 20px 45px rgba(115, 81, 28, 0.08);
+}
+
+.hero,
+.card,
+.pagination-links > a,
+.sl-markdown-content blockquote {
+	background: linear-gradient(180deg, rgba(255, 251, 243, 0.9), rgba(242, 231, 210, 0.72));
+}
+
+:root[data-theme="dark"] .hero,
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .pagination-links > a,
+:root[data-theme="dark"] .sl-markdown-content blockquote {
+	background: linear-gradient(180deg, rgba(49, 35, 22, 0.9), rgba(31, 22, 15, 0.82));
+	border-color: rgba(210, 162, 74, 0.2);
+	box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+.site-title,
+h1,
+h2,
+h3,
+h4 {
+	font-family: "GenKiMinTW", serif;
+	letter-spacing: 0.01em;
+}
+
+a:hover,
+.social-icons a:hover,
+.pagination-links > a:hover {
+	color: var(--sl-color-accent-high);
+	border-color: rgba(166, 119, 31, 0.32);
+	transform: translateY(-1px);
+}
+
+.sidebar a[aria-current="page"],
+.right-sidebar a[aria-current="true"] {
+	background: linear-gradient(90deg, rgba(212, 168, 87, 0.22), rgba(212, 168, 87, 0.08));
+	border-radius: 999px;
+	color: var(--sl-color-accent-high);
+}
+
+.sl-markdown-content :is(h1, h2, h3) {
+	color: var(--sl-color-accent-high);
+}
+
+.sl-markdown-content code:not(.expressive-code code) {
+	background: rgba(166, 119, 31, 0.1);
+	border-radius: 0.45rem;
+	padding: 0.15rem 0.35rem;
+}
+
+.search-dialog,
+.menu-button {
+	border-color: rgba(166, 119, 31, 0.24);
+	background: rgba(255, 250, 240, 0.78);
+}
+
+:root[data-theme="dark"] .search-dialog,
+:root[data-theme="dark"] .menu-button {
+	background: rgba(43, 31, 21, 0.82);
+	border-color: rgba(210, 162, 74, 0.2);
+}
+
+@media (max-width: 50rem) {
+	.sidebar-pane,
+	.right-sidebar-panel {
+		background: rgba(248, 240, 227, 0.94);
+	}
+
+	:root[data-theme="dark"] .sidebar-pane,
+	:root[data-theme="dark"] .right-sidebar-panel {
+		background: rgba(23, 17, 12, 0.96);
+	}
+
+	.hero,
+	.card,
+	.pagination-links > a {
+		border-radius: 16px;
+	}
+}

@@ -1,42 +1,55 @@
-name: CI
+name: Docs CI
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - ".github/workflows/docs-ci.yaml"
   pull_request:
     paths:
       - "docs/**"
-      - ".github/workflows/docs-ci.yaml"
+      - ".github/workflows/docs-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  prettier:
-    name: Prettier Check
+  docs:
+    name: Format, check, and build docs
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: docs
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      # move to docs directory to read package.json
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Set up Node.js
-      - uses: actions/setup-node@v4
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: docs/pnpm-lock.yaml
+
       - name: Install dependencies
-        working-directory: docs
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        working-directory: docs
-        run: pnpm format:check
-      
-      - name: Check
-        working-directory: docs
+        run: pnpm exec prettier --check .
+
+      - name: Run Astro checks
         run: pnpm test
-      
-      - name: Build
-        working-directory: docs
+
+      - name: Build docs
         run: pnpm build
