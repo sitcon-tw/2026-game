@@ -47,6 +47,9 @@ func main() {
 	}
 
 	logger := logger.New()
+	defer func() {
+		_ = logger.Sync()
+	}()
 
 	levels, err := config.Levels()
 	if err != nil {

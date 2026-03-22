@@ -76,6 +76,9 @@ func main() {
 	}
 
 	log := logger.New()
+	defer func() {
+		_ = log.Sync()
+	}()
 
 	pool, err := db.InitDatabase(log)
 	if err != nil {

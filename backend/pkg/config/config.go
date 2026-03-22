@@ -22,11 +22,12 @@ const (
 //
 //nolint:golines // struct tags aligned for readability
 type EnvConfig struct {
-	AppEnv         AppEnv `env:"APP_ENV" envDefault:"dev"`
-	AppPort        string `env:"PORT" envDefault:"8000"`
-	AppAutoMigrate bool   `env:"APP_AUTO_MIGRATE" envDefault:"false"`
-	AppDocs        bool   `env:"APP_DOCS" envDefault:"false"`
-	CouponStopTime string `env:"COUPON_STOP_TIME"`
+	AppEnv         AppEnv        `env:"APP_ENV" envDefault:"dev"`
+	AppPort        string        `env:"PORT" envDefault:"8000"`
+	AppAutoMigrate bool          `env:"APP_AUTO_MIGRATE" envDefault:"false"`
+	AppDocs        bool          `env:"APP_DOCS" envDefault:"false"`
+
+	CouponStopTime string        `env:"COUPON_STOP_TIME"`
 
 	// OpenTelemetry settings
 	OTelEnabled    bool    `env:"OTEL_ENABLED" envDefault:"false"`
@@ -34,6 +35,13 @@ type EnvConfig struct {
 	OTelInsecure   bool    `env:"OTEL_INSECURE" envDefault:"true"`
 	OTelSampleRate float64 `env:"OTEL_SAMPLE_RATE" envDefault:"1.0"`
 	OTelService    string  `env:"OTEL_SERVICE_NAME" envDefault:"sitcon-2026-game-backend"`
+
+	// Loki setting
+	LokiEnabled    bool          `env:"LOKI_ENABLED" envDefault:"false"`
+	LokiURL        string        `env:"LOKI_URL" envDefault:"http://loki.zeabur.internal:3100/loki/api/v1/push"`
+	LokiService    string        `env:"LOKI_SERVICE_NAME" envDefault:"sitcon-2026-game-backend"`
+	LokiEnv        string        `env:"LOKI_ENV" envDefault:""`
+	LokiTimeout    time.Duration `env:"LOKI_TIMEOUT" envDefault:"2s"`
 
 	// Gameplay data URLs
 	LevelCSVURL      string `env:"LEVEL_CSV_URL"`
@@ -81,6 +89,9 @@ func load() (*EnvConfig, error) {
 			return nil, err
 		}
 		cfg.couponStopAt = couponStopAt
+	}
+	if cfg.LokiEnv == "" {
+		cfg.LokiEnv = string(cfg.AppEnv)
 	}
 	return cfg, nil
 }
