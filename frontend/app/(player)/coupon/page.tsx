@@ -207,7 +207,7 @@ function SnsCouponRuleModal({ open, onClose }: { open: boolean; onClose: () => v
 			<div className="space-y-4 px-6 py-5 text-left">
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">打卡平台</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads 的社群發文或限動皆可。</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads、X 的社群發文或限動皆可。</p>
 				</div>
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">成功條件</p>
