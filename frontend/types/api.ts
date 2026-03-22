@@ -23,6 +23,9 @@ export interface ActivityWithStatus {
 	id: string;
 	name: string;
 	type: "booth" | "checkin" | "check" | "challenge";
+	description?: string | null;
+	floor?: string | null;
+	link?: string | null;
 	visited: boolean;
 }
 
