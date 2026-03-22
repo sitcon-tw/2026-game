@@ -222,15 +222,17 @@ func (r *PGRepository) UpdateUserNamecard(
 	bio *string,
 	links []string,
 	email *string,
+	avatar *string,
 ) error {
 	const stmt = `
 UPDATE users
 SET namecard_bio = $2,
     namecard_links = $3,
     namecard_email = $4,
+    avatar = COALESCE($5, avatar),
     updated_at = NOW()
 WHERE id = $1`
 
-	_, err := tx.Exec(ctx, stmt, userID, bio, links, email)
+	_, err := tx.Exec(ctx, stmt, userID, bio, links, email, avatar)
 	return err
 }

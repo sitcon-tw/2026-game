@@ -1,10 +1,13 @@
 package users
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/mail"
+	"net/url"
 	"strings"
 
 	"github.com/sitcon-tw/2026-game/internal/models"
@@ -85,7 +88,9 @@ func (h *Handler) UpdateNamecard(w http.ResponseWriter, r *http.Request) {
 	}
 	defer h.Repo.DeferRollback(r.Context(), tx)
 
-	err = h.Repo.UpdateUserNamecard(r.Context(), tx, currentUser.ID, bio, links, email)
+	avatar := buildNamecardAvatar(email)
+
+	err = h.Repo.UpdateUserNamecard(r.Context(), tx, currentUser.ID, bio, links, email, avatar)
 	if err != nil {
 		res.Fail(w, r, http.StatusInternalServerError, err, "failed to update namecard")
 		return
@@ -150,8 +155,33 @@ func normalizeNamecardLinks(raw *[]string) ([]string, bool, error) {
 		if len(trimmed) > maxNamecardLinkLength {
 			return nil, true, errors.New("link is too long")
 		}
+		parsed, err := url.ParseRequestURI(trimmed)
+		if err != nil || parsed == nil {
+			return nil, true, errors.New("link format is invalid")
+		}
+		if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			return nil, true, errors.New("link must use http or https")
+		}
+		if parsed.Host == "" {
+			return nil, true, errors.New("link format is invalid")
+		}
 		links = append(links, trimmed)
 	}
 
 	return links, true, nil
+}
+
+func buildNamecardAvatar(email *string) *string {
+	if email == nil {
+		return nil
+	}
+
+	normalizedEmail := strings.ToLower(strings.TrimSpace(*email))
+	if normalizedEmail == "" {
+		return nil
+	}
+
+	hash := sha256.Sum256([]byte(normalizedEmail))
+	avatar := "https://www.gravatar.com/avatar/" + hex.EncodeToString(hash[:]) + "?s=200&d=robohash"
+	return &avatar
 }

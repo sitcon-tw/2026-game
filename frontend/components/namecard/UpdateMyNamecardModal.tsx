@@ -4,7 +4,7 @@ import Modal from "@/components/ui/Modal";
 import { useUpdateNamecard } from "@/hooks/api";
 import { Trash2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 interface UpdateMyNamecardModalProps {
 	open: boolean;
@@ -16,25 +16,56 @@ interface UpdateMyNamecardModalProps {
 	initialEmail?: string | null;
 }
 
+function isValidEmail(value: string) {
+	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidLink(value: string) {
+	try {
+		const parsed = new URL(value);
+		return parsed.protocol === "http:" || parsed.protocol === "https:";
+	} catch {
+		return false;
+	}
+}
+
 export default function UpdateMyNamecardModal({ open, onClose, nickname, avatar, initialBio, initialLinks, initialEmail }: UpdateMyNamecardModalProps) {
-	const updateNamecard = useUpdateNamecard();
-	const [bio, setBio] = useState("");
-	const [linkInputs, setLinkInputs] = useState<string[]>([""]);
-	const [email, setEmail] = useState("");
-
-	const isSaving = updateNamecard.isPending;
-
-	useEffect(() => {
-		if (!open) return;
-		setBio(initialBio ?? "");
-		setLinkInputs(initialLinks && initialLinks.length > 0 ? initialLinks : [""]);
-		setEmail(initialEmail ?? "");
-	}, [open, initialBio, initialLinks, initialEmail]);
-
-	const normalizedLinks = useMemo(() => linkInputs.map(link => link.trim()).filter(Boolean), [linkInputs]);
+	if (!open) return null;
 
 	return (
 		<Modal open={open} onClose={onClose}>
+			<UpdateMyNamecardModalContent
+				onClose={onClose}
+				nickname={nickname}
+				avatar={avatar}
+				initialBio={initialBio}
+				initialLinks={initialLinks}
+				initialEmail={initialEmail}
+			/>
+		</Modal>
+	);
+}
+
+function UpdateMyNamecardModalContent({ onClose, nickname, avatar, initialBio, initialLinks, initialEmail }: Omit<UpdateMyNamecardModalProps, "open">) {
+	const updateNamecard = useUpdateNamecard();
+	const [bio, setBio] = useState(initialBio ?? "");
+	const [linkInputs, setLinkInputs] = useState<string[]>(initialLinks && initialLinks.length > 0 ? initialLinks : [""]);
+	const [email, setEmail] = useState(initialEmail ?? "");
+
+	const isSaving = updateNamecard.isPending;
+
+	const normalizedLinks = useMemo(() => linkInputs.map(link => link.trim()).filter(Boolean), [linkInputs]);
+	const normalizedEmail = email.trim();
+	const emailError = normalizedEmail && !isValidEmail(normalizedEmail) ? "Email 格式不正確" : "";
+	const linkError = useMemo(() => {
+		const invalidLink = normalizedLinks.find(link => !isValidLink(link));
+		if (!invalidLink) return "";
+		return "連結格式不正確，請使用 http:// 或 https:// 開頭";
+	}, [normalizedLinks]);
+	const canSubmit = !isSaving && !emailError && !linkError;
+
+	return (
+		<>
 			<h2 className="font-serif text-2xl font-bold text-[var(--text-primary)]">更新我的名牌</h2>
 
 			<div className="mt-3 flex items-center gap-3 rounded-xl bg-[var(--bg-secondary)] p-3">
@@ -49,10 +80,8 @@ export default function UpdateMyNamecardModal({ open, onClose, nickname, avatar,
 				</div>
 			</div>
 
-			<p className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed">
-				大頭貼請至 Gravatar 更新，將使用報名 SITCON 的 Email 顯示。
-				<br />
-				你填寫的 email 會公開顯示在名牌上，請確認再儲存。
+			<p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+				當你更新這裡的公開 Email 時，系統會自動把大頭貼更新成該 Email 對應的 Gravatar。如果沒公開過 Email 則會用報名 SITCON 時所填的 Email。
 			</p>
 
 			<motion.a
@@ -79,7 +108,7 @@ export default function UpdateMyNamecardModal({ open, onClose, nickname, avatar,
 				</label>
 
 				<label className="block">
-					<span className="block text-sm font-semibold text-[var(--text-primary)]">公開 Email</span>
+					<span className="block text-sm font-semibold text-[var(--text-primary)]">公開聯絡 Email</span>
 					<input
 						type="email"
 						value={email}
@@ -88,6 +117,7 @@ export default function UpdateMyNamecardModal({ open, onClose, nickname, avatar,
 						className="w-full rounded-xl border border-[rgba(93,64,55,0.25)] bg-[var(--bg-secondary)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--accent-gold)]"
 						placeholder="name@example.com"
 					/>
+					{emailError && <p className="mt-1 text-xs text-[var(--status-error)]">{emailError}</p>}
 				</label>
 
 				<label className="block">
@@ -131,6 +161,7 @@ export default function UpdateMyNamecardModal({ open, onClose, nickname, avatar,
 					>
 						新增連結
 					</motion.button>
+					{linkError && <p className="mt-2 text-xs text-[var(--status-error)]">{linkError}</p>}
 				</label>
 			</div>
 
@@ -149,11 +180,12 @@ export default function UpdateMyNamecardModal({ open, onClose, nickname, avatar,
 				<motion.button
 					type="button"
 					onClick={() => {
+						if (!canSubmit) return;
 						updateNamecard.mutate(
 							{
 								bio,
 								links: normalizedLinks,
-								email
+								email: normalizedEmail
 							},
 							{
 								onSuccess: () => onClose()
@@ -161,12 +193,12 @@ export default function UpdateMyNamecardModal({ open, onClose, nickname, avatar,
 						);
 					}}
 					className="flex-1 cursor-pointer rounded-full bg-[var(--bg-header)] px-4 py-2.5 text-sm font-semibold text-[var(--text-light)] disabled:opacity-50"
-					disabled={isSaving}
+					disabled={!canSubmit}
 					whileTap={{ scale: 0.95 }}
 				>
 					{isSaving ? "儲存中..." : "儲存名牌"}
 				</motion.button>
 			</div>
-		</Modal>
+		</>
 	);
 }
