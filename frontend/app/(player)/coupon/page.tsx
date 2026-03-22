@@ -2,6 +2,7 @@
 
 import type { CouponStatus } from "@/components/coupon/CouponTicket";
 import CouponTicket from "@/components/coupon/CouponTicket";
+import SnsCouponRuleModal from "@/components/coupon/SnsCouponRuleModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import LocalQRCode from "@/components/ui/LocalQRCode";
 import Modal from "@/components/ui/Modal";
@@ -199,6 +200,7 @@ export default function CouponPage() {
 	const { data: definitions, isLoading: defsLoading } = useCouponDefinitions();
 	const user = useUserStore(state => state.user);
 	const [showReceipt, setShowReceipt] = useState(false);
+	const [showSnsRule, setShowSnsRule] = useState(false);
 
 	if (couponsLoading || defsLoading) {
 		return <LoadingSpinner />;
@@ -286,7 +288,7 @@ export default function CouponPage() {
 							price={item.price}
 							passLevel={item.passLevel}
 							description={item.description}
-							onClick={undefined}
+							onClick={item.definitionId === "sitcon-sns-coupon" ? () => setShowSnsRule(true) : undefined}
 							zIndex={displayList.length - index}
 						/>
 					))}
@@ -313,6 +315,7 @@ export default function CouponPage() {
 
 			{/* Receipt Modal */}
 			<RedeemReceiptModal open={showReceipt && !!user?.coupon_token} totalAmount={totalUnusedAmount} couponToken={user?.coupon_token ?? ""} onClose={() => setShowReceipt(false)} />
+			<SnsCouponRuleModal open={showSnsRule} onClose={() => setShowSnsRule(false)} />
 		</div>
 	);
 }
