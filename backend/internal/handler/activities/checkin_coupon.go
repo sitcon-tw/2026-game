@@ -8,9 +8,9 @@ import (
 	"github.com/sitcon-tw/2026-game/pkg/config"
 )
 
-const checkInCouponThreshold = 18
+const checkInCouponThreshold = 23
 
-// issueCheckInCoupon issues a coupon when a user has visited at least 18 booth/check activities.
+// issueCheckInCoupon issues a coupon when a user has visited at least 23 booth/check activities.
 func (h *Handler) issueCheckInCoupon(ctx context.Context, tx pgx.Tx, userID string) error {
 	rule, ok := config.GetCheckInCompletionCouponRule()
 	if !ok {
