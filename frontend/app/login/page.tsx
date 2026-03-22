@@ -3,19 +3,57 @@
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import ManualTokenInput from "@/components/ui/ManualTokenInput";
 import { useLoginWithToken } from "@/hooks/api";
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const UNLOCK_TIME = new Date("2026-03-25T00:00:00+08:00");
 
+const LOADING_PHRASES = [
+	" Loading...",
+	"暖機",
+	"開大招",
+	"蓄大絕",
+	"讀取進度條",
+	"快取",
+	"下載 DLC",
+	"解壓縮",
+	"編譯",
+	" build",
+	"煮",
+	"發酵",
+	"冥想",
+	"校準",
+];
+
 function PreEventMessage() {
+	const [index, setIndex] = useState(0);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
+		}, 2000);
+		return () => clearInterval(interval);
+	}, []);
+
 	return (
 		<div className="flex min-h-dvh items-center justify-center bg-[var(--bg-primary)] px-6">
 			<div className="text-center">
 				<div className="mb-4 text-6xl">✦</div>
-				<h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">大地遊戲尚未開放</h1>
+				<AnimatePresence mode="wait">
+					<motion.h1
+						key={index}
+						initial={{ y: 20, opacity: 0 }}
+						animate={{ y: 0, opacity: 1 }}
+						exit={{ y: -20, opacity: 0 }}
+						transition={{ duration: 0.3, ease: "easeInOut" }}
+						className="font-serif text-2xl font-bold text-[var(--text-primary)] whitespace-nowrap"
+					>
+						大地遊戲正在{LOADING_PHRASES[index]}
+					</motion.h1>
+				</AnimatePresence>
 				<p className="mt-4 text-[var(--text-secondary)]">
-					遊戲將在年會當天解鎖，敬請期待！
+					遊戲將在年會當天解凍，敬請期待！
 				</p>
 			</div>
 		</div>
