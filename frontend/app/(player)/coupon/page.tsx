@@ -200,18 +200,18 @@ function SnsCouponRuleModal({ open, onClose }: { open: boolean; onClose: () => v
 	return (
 		<Modal open={open} onClose={onClose} className="w-full max-w-sm overflow-hidden p-0">
 			<div className="bg-[var(--accent-gold)] px-6 py-5 text-white">
-				<h3 className="text-lg font-bold">社群打卡兌換方式</h3>
-				<p className="mt-1 text-sm text-white/90">完成貼文後，請至指定地點出示畫面兌換。</p>
+				<h3 className="text-lg font-bold">限時動態或貼文分享兌換方式</h3>
+				<p className="mt-1 text-sm text-white/90">完成分享後，請至指定地點出示畫面兌換。</p>
 			</div>
 
 			<div className="space-y-4 px-6 py-5 text-left">
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">打卡平台</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads、X 的社群發文或限動皆可。</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads、X 的限時動態或貼文分享皆可。</p>
 				</div>
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">成功條件</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">內容需提及 @sitcon.tw，才算打卡成功。</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">內容需提及 @sitcon.tw 並 Tag #SITCON2026，才算分享成功。</p>
 				</div>
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換時間</p>
@@ -219,7 +219,7 @@ function SnsCouponRuleModal({ open, onClose }: { open: boolean; onClose: () => v
 				</div>
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換地點</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 2F 議程組服務台，向工作人員出示你的限動或貼文畫面兌換。</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 2F 議程組服務台，向工作人員出示你的限時動態或貼文分享畫面兌換。</p>
 				</div>
 			</div>
 
@@ -268,7 +268,7 @@ export default function CouponPage() {
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
 						<Zap size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
 						<p className="text-xs text-[var(--text-primary)]">
-							<span className="font-bold">社群打卡</span>
+							<span className="font-bold">限時動態或貼文分享</span>
 							<br />
 							10:00–12:00
 						</p>
@@ -326,7 +326,7 @@ export default function CouponPage() {
 						className="mx-auto mt-3 flex max-w-xs items-center justify-center gap-2 rounded-lg border border-[var(--accent-gold)]/30 bg-[var(--accent-gold)]/10 px-4 py-3 text-center text-xs font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-gold)]/15"
 					>
 						<Info size={14} className="shrink-0 text-[var(--accent-bronze)]" />
-						查看社群打卡兌換規則
+						查看限時動態或貼文分享兌換規則
 					</button>
 				)}
 

@@ -21,22 +21,22 @@ const NOTIFICATIONS: ScheduledNotification[] = [
 	{
 		id: "flash-start",
 		time: "10:00",
-		title: "社群打卡開始！",
-		description: "社群打卡已經開始囉，快去發文吧！",
+		title: "限時動態或貼文分享開始！",
+		description: "限時動態或貼文分享已經開始囉，記得 tag #SITCON2026！",
 		cta: { name: "查看攤位", link: "/play/booths" }
 	},
 	{
 		id: "flash-30min-left",
 		time: "11:30",
-		title: "社群打卡剩 30 分鐘",
-		description: "社群打卡將在 12:00 截止，把握最後機會發文！",
+		title: "限時動態或貼文分享剩 30 分鐘",
+		description: "限時動態或貼文分享將在 12:00 截止，把握最後機會分享並 tag #SITCON2026！",
 		cta: { name: "查看攤位", link: "/play/booths" }
 	},
 	{
 		id: "flash-end",
 		time: "12:00",
-		title: "社群打卡已截止",
-		description: "社群打卡時間已結束。"
+		title: "限時動態或貼文分享已截止",
+		description: "限時動態或貼文分享時間已結束。"
 	},
 	{
 		id: "leaderboard-20min",

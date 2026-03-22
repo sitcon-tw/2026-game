@@ -41,7 +41,7 @@ func couponRules() []DiscountRule {
 			ID:          DiscountIDSitconSNSCoupon,
 			PassLevel:   0,
 			Amount:      SitconSNSCouponPrice,
-			Description: "社群打卡",
+			Description: "限時動態或貼文分享",
 		},
 		{
 			ID:          DiscountIDLeaderboardTopTen,
