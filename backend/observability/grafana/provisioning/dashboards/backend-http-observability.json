@@ -1,0 +1,1302 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "HTTP observability dashboard for this backend using Loki request logs and Prometheus runtime metrics.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1000
+              },
+              {
+                "color": "red",
+                "value": 10000
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(count_over_time(${loki_selector} |= \"http request\" | json | __error__=\"\" [$__range]))",
+          "instant": true,
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Requests",
+      "type": "stat"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.2
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "(sum(count_over_time(${loki_selector} |= \"http request\" | json | __error__=\"\" | status >= 400 [$__range])) / clamp_min(sum(count_over_time(${loki_selector} |= \"http request\" | json | __error__=\"\" [$__range])), 1))",
+          "instant": true,
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Error Ratio",
+      "type": "stat"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(rate(${loki_selector} |= \"http request\" [$__interval]))",
+          "instant": true,
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Reqs/s",
+      "type": "stat"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 300
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, ${loki_selector} |= \"http request\" | json | __error__=\"\" | unwrap latency [$__range]) / 1e6",
+          "instant": true,
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "P95 Latency",
+      "type": "stat"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^(1|2|3)..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^4..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^5..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "sum by (status) (count_over_time(${loki_selector} |= \"http request\" | json | __error__=\"\" | status < 400 [$__range]))",
+          "instant": true,
+          "legendFormat": "{{status}}",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Status Code (general)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^4..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^5..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "sum by (status) (count_over_time(${loki_selector} |= \"http request\" | json | __error__=\"\" | status >= 400 [$__range]))",
+          "instant": true,
+          "legendFormat": "{{status}}",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Status Code (error)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 7,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "manual",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "topk(10, sum by (method, path) (rate(${loki_selector} |= \"http request\" | json | __error__=\"\" [$__interval])))",
+          "instant": true,
+          "legendFormat": "{{method}} {{path}}",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Reqs/sec",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 8,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "manual",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "topk(10, avg by (method, path) (avg_over_time(${loki_selector} |= \"http request\" | json | __error__=\"\" | unwrap latency [$__interval]) / 1e6))",
+          "instant": true,
+          "legendFormat": "{{method}} {{path}}",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Request Duration (ms)",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^(1|2|3)..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^4..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^5..$"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "min",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "sum by (status) (rate(${loki_selector} |= \"http request\" | json | __error__=\"\" [$__interval]))",
+          "instant": false,
+          "legendFormat": "{{status}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Request by Status/sec",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.50, ${loki_selector} |= \"http request\" | json | __error__=\"\" | unwrap latency [$__interval]) / 1e6",
+          "legendFormat": "p50",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, ${loki_selector} |= \"http request\" | json | __error__=\"\" | unwrap latency [$__interval]) / 1e6",
+          "legendFormat": "p95",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.99, ${loki_selector} |= \"http request\" | json | __error__=\"\" | unwrap latency [$__interval]) / 1e6",
+          "legendFormat": "p99",
+          "queryType": "range",
+          "refId": "C"
+        }
+      ],
+      "title": "Request Duration Percentiles (ms)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Loki OSS Planet",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 11,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Loki OSS Planet",
+          "editorMode": "code",
+          "expr": "${loki_selector} |= \"http request\" | json | __error__=\"\" | latency >= ${slow_request_ns}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Slow Request Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": "Prometheus OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 32
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Prometheus OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(go_goroutines{job=~\"$metrics_job\",instance=~\"$metrics_instance\"})",
+          "legendFormat": "goroutines",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": "Prometheus OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(go_threads{job=~\"$metrics_job\",instance=~\"$metrics_instance\"})",
+          "legendFormat": "threads",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Go Runtime Concurrency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 32
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Prometheus OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(go_memstats_heap_alloc_bytes{job=~\"$metrics_job\",instance=~\"$metrics_instance\"})",
+          "legendFormat": "heap alloc",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": "Prometheus OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(go_memstats_heap_inuse_bytes{job=~\"$metrics_job\",instance=~\"$metrics_instance\"})",
+          "legendFormat": "heap in-use",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Heap Memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus OSS Planet",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 32
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.0",
+      "targets": [
+        {
+          "datasource": "Prometheus OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(rate(process_cpu_seconds_total{job=~\"$metrics_job\",instance=~\"$metrics_instance\"}[5m]))",
+          "legendFormat": "cpu",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": "Prometheus OSS Planet",
+          "editorMode": "code",
+          "expr": "sum(rate(promhttp_metric_handler_requests_total{job=~\"$metrics_job\",instance=~\"$metrics_instance\"}[5m]))",
+          "legendFormat": "metrics req/s",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "CPU and Metrics Endpoint",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "style": "dark",
+  "tags": [
+    "backend",
+    "http",
+    "loki",
+    "prometheus"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "{service=\"sitcon-2026-game-backend\"}",
+          "value": "{service=\"sitcon-2026-game-backend\"}"
+        },
+        "hide": 0,
+        "label": "Loki Selector",
+        "name": "loki_selector",
+        "options": [
+          {
+            "selected": true,
+            "text": "{service=\"sitcon-2026-game-backend\"}",
+            "value": "{service=\"sitcon-2026-game-backend\"}"
+          },
+          {
+            "selected": false,
+            "text": "{job=\"backend-api\"}",
+            "value": "{job=\"backend-api\"}"
+          },
+          {
+            "selected": false,
+            "text": "{container=\"backend-api\"}",
+            "value": "{container=\"backend-api\"}"
+          }
+        ],
+        "query": "{service=\"sitcon-2026-game-backend\"},{job=\"backend-api\"},{container=\"backend-api\"}",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "500000000",
+          "value": "500000000"
+        },
+        "hide": 0,
+        "label": "Slow Request ns",
+        "name": "slow_request_ns",
+        "options": [
+          {
+            "selected": false,
+            "text": "250000000",
+            "value": "250000000"
+          },
+          {
+            "selected": true,
+            "text": "500000000",
+            "value": "500000000"
+          },
+          {
+            "selected": false,
+            "text": "1000000000",
+            "value": "1000000000"
+          }
+        ],
+        "query": "250000000,500000000,1000000000",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "backend",
+          "value": "backend"
+        },
+        "datasource": "Prometheus OSS Planet",
+        "definition": "label_values(process_cpu_seconds_total, job)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Metrics Job",
+        "multi": false,
+        "name": "metrics_job",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(process_cpu_seconds_total, job)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": ".*"
+        },
+        "datasource": "Prometheus OSS Planet",
+        "definition": "label_values(process_cpu_seconds_total{job=~\"$metrics_job\"}, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Metrics Instance",
+        "multi": false,
+        "name": "metrics_instance",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(process_cpu_seconds_total{job=~\"$metrics_job\"}, instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Backend HTTP Observability",
+  "uid": "backend-http-obs",
+  "version": 1,
+  "weekStart": ""
+}

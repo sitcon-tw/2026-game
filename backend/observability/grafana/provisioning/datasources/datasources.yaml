@@ -1,20 +1,20 @@
 apiVersion: 1
 
 datasources:
-  - name: Prometheus
+  - name: Prometheus OSS Planet
     type: prometheus
     access: proxy
     url: http://prometheus:9090
     isDefault: true
     editable: true
 
-  - name: VictoriaTraces
+  - name: Victoriatrace OSS Planet
     type: jaeger
     access: proxy
     url: http://victoria-traces:10428/select/jaeger
     editable: true
 
-  - name: Loki
+  - name: Loki OSS Planet
     type: loki
     access: proxy
     url: http://loki:3100
