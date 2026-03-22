@@ -22,20 +22,8 @@ const GAME_RULES = [
 	{
 		icon: "🎮",
 		title: "按鈕數量",
-		description: "第一關按鈕為 2 個，2～5 關 4 個，後續每五關增加四個按鈕，最多為 32 個按鈕。"
+		description: "每關的按鈕數量依據該關使用的音符種類決定，按鈕位置每次進入關卡時隨機排列。"
 	}
-];
-
-const BUTTON_TABLE = [
-	{ range: "第 1 關", buttons: 2, grid: "1 × 2" },
-	{ range: "第 2–5 關", buttons: 4, grid: "2 × 2" },
-	{ range: "第 6–10 關", buttons: 8, grid: "2 × 4" },
-	{ range: "第 11–15 關", buttons: 12, grid: "3 × 4" },
-	{ range: "第 16–20 關", buttons: 16, grid: "4 × 4" },
-	{ range: "第 21–25 關", buttons: 20, grid: "4 × 5" },
-	{ range: "第 26–30 關", buttons: 24, grid: "4 × 6" },
-	{ range: "第 31–35 關", buttons: 28, grid: "4 × 7" },
-	{ range: "第 36–40 關", buttons: 32, grid: "4 × 8" }
 ];
 
 export default function ChallengesPage() {
@@ -59,30 +47,6 @@ export default function ChallengesPage() {
 				))}
 			</div>
 
-			{/* Button Count Table */}
-			<div className="rounded-[var(--border-radius)] bg-[var(--bg-secondary)] p-5 shadow-sm">
-				<h2 className="text-[var(--text-primary)] font-serif text-xl font-bold mb-4 text-center">各關卡按鈕數量</h2>
-				<div className="overflow-hidden rounded-lg">
-					<table className="w-full text-sm">
-						<thead>
-							<tr className="bg-[var(--bg-header)] text-[var(--text-light)]">
-								<th className="px-3 py-2 text-left font-semibold">關卡</th>
-								<th className="px-3 py-2 text-center font-semibold">按鈕數</th>
-								<th className="px-3 py-2 text-center font-semibold">排列</th>
-							</tr>
-						</thead>
-						<tbody>
-							{BUTTON_TABLE.map((row, i) => (
-								<tr key={row.range} className={i % 2 === 0 ? "bg-[var(--bg-primary)]" : "bg-[var(--bg-secondary)]"}>
-									<td className="px-3 py-2 text-[var(--text-primary)] font-medium">{row.range}</td>
-									<td className="px-3 py-2 text-center text-[var(--accent-gold)] font-bold">{row.buttons}</td>
-									<td className="px-3 py-2 text-center text-[var(--text-secondary)]">{row.grid}</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
 			</div>
-		</div>
 	);
 }

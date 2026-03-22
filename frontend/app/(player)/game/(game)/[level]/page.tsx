@@ -7,24 +7,27 @@ import { useGameStore } from "@/stores/gameStore";
 import type { SubmitResponse } from "@/types/api";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const BUTTON_COLORS = ["var(--btn-red)", "var(--btn-yellow)", "var(--btn-green)", "var(--btn-blue)", "var(--btn-orange)", "var(--btn-purple)", "var(--btn-pink)", "var(--btn-cyan)"];
 
-/** Map a note string to a deterministic button index. */
-function mapNoteToButtonIndex(noteString: string, buttonCount: number): number {
-	let hash = 0;
-	for (let i = 0; i < noteString.length; i++) {
-		hash += noteString.charCodeAt(i);
+/** Shuffle an array using Fisher-Yates with Math.random(). */
+function shuffleArray<T>(arr: T[]): T[] {
+	const result = [...arr];
+	for (let i = result.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[result[i], result[j]] = [result[j], result[i]];
 	}
-	return hash % buttonCount;
+	return result;
 }
 
-/** Derive grid dimensions from button count (API-driven). */
+/** Derive grid dimensions from button count. */
 function deriveGrid(buttonCount: number): { cols: number; rows: number } {
-	if (buttonCount <= 2) return { cols: 1, rows: 2 };
+	if (buttonCount <= 2) return { cols: 2, rows: 1 };
+	if (buttonCount <= 3) return { cols: 3, rows: 1 };
 	if (buttonCount <= 4) return { cols: 2, rows: 2 };
-	// For larger counts, use max 4 columns
+	if (buttonCount <= 6) return { cols: 3, rows: 2 };
+	if (buttonCount <= 8) return { cols: 4, rows: 2 };
 	const cols = Math.min(4, buttonCount);
 	const rows = Math.ceil(buttonCount / cols);
 	return { cols, rows };
@@ -54,7 +57,7 @@ function BlockGrid({
 			}}
 		>
 			{Array.from({ length: buttonCount }).map((_, i) => {
-				const colorIndex = buttonCount <= 4 ? i % BUTTON_COLORS.length : Math.floor(i / cols) % BUTTON_COLORS.length;
+				const colorIndex = i % BUTTON_COLORS.length;
 				const color = BUTTON_COLORS[colorIndex];
 				const isActive = activeButton === i;
 
@@ -107,26 +110,39 @@ export default function ChallengesPage() {
 	// Derive button count and grid from API data
 	const sheet = levelInfo?.sheet ?? [];
 	const speed = levelInfo?.speed ?? 120;
-	// Collect unique button indices to determine button count
-	const buttonCount = levelInfo
-		? (() => {
-				if (currentLevel <= 1) return 2;
-				if (currentLevel <= 5) return 4;
-				const base = Math.min(Math.floor((currentLevel - 6) / 5) + 2, 7);
-				return Math.min((base + 1) * 4, 32);
-			})()
-		: 4;
-	const { cols, rows } = deriveGrid(buttonCount);
 
-	// Map sheet notes to button indices based on actual button count
-	const sheetButtons = sheet.map(note => mapNoteToButtonIndex(note, buttonCount));
+	// Each unique note = one button, shuffled randomly per level visit
+	const sheetKeyRef = useRef<string>("");
+	const mappingRef = useRef<{ noteToButton: Map<string, number>; buttonToNote: Map<number, string> }>({
+		noteToButton: new Map(),
+		buttonToNote: new Map()
+	});
 
-	// Build a reverse map: button index → first note name mapped to it (for click sound)
-	const buttonNoteMap = new Map<number, string>();
-	for (const note of sheet) {
-		const idx = mapNoteToButtonIndex(note, buttonCount);
-		if (!buttonNoteMap.has(idx)) buttonNoteMap.set(idx, note);
+	const uniqueNotes = useMemo(() => [...new Set(sheet)], [sheet]);
+	const minButtons = Math.max(uniqueNotes.length, 2);
+	const { cols, rows } = deriveGrid(minButtons);
+	const buttonCount = cols * rows; // fill full grid, no missing corners
+
+	// Rebuild mapping only when sheet content changes
+	const sheetKey = uniqueNotes.join(",");
+	if (sheetKey !== sheetKeyRef.current && uniqueNotes.length > 0) {
+		sheetKeyRef.current = sheetKey;
+		// Randomly assign notes to buttonCount slots (extra slots are decoys)
+		const slots = Array.from({ length: buttonCount }, (_, i) => i);
+		const shuffledSlots = shuffleArray(slots);
+		const noteToButton = new Map<string, number>();
+		const buttonToNote = new Map<number, string>();
+		uniqueNotes.forEach((note, idx) => {
+			noteToButton.set(note, shuffledSlots[idx]);
+			buttonToNote.set(shuffledSlots[idx], note);
+		});
+		mappingRef.current = { noteToButton, buttonToNote };
 	}
+
+	const { noteToButton, buttonToNote } = mappingRef.current;
+
+	// Map sheet notes to button indices
+	const sheetButtons = sheet.map(note => noteToButton.get(note) ?? 0);
 
 	// Reset game state when level changes
 	useEffect(() => {
@@ -222,7 +238,7 @@ export default function ChallengesPage() {
 		// Flash the clicked button and play its sound
 		setActiveButton(index);
 		setTimeout(() => setActiveButton(null), 150);
-		const note = buttonNoteMap.get(index);
+		const note = buttonToNote.get(index);
 		if (note) playNote(note, 150);
 
 		if (index === sheetButtons[inputIndex]) {
