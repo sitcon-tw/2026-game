@@ -1,10 +1,50 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
 import UnlockMethodCard from "@/components/unlock/UnlockMethodCard";
-import { useActivityStats, useCurrentUser, useFriendCount, useGroupMembers } from "@/hooks/api";
+import { useActivityStats, useCoupons, useCurrentUser, useFriendCount, useGroupMembers } from "@/hooks/api";
 import type { ActivityWithStatus } from "@/types/api";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+
+function SnsCouponRuleModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+	return (
+		<Modal open={open} onClose={onClose} className="w-full max-w-sm overflow-hidden p-0">
+			<div className="bg-[var(--accent-gold)] px-6 py-5 text-white">
+				<h3 className="text-lg font-bold">限時動態或貼文分享兌換方式</h3>
+				<p className="mt-1 text-sm text-white/90">完成分享後，請至指定地點出示畫面兌換。</p>
+			</div>
+
+			<div className="space-y-4 px-6 py-5 text-left">
+				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
+					<p className="text-sm font-semibold text-[var(--text-primary)]">打卡平台</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads、X（前身是 Twitter） 的限時動態或貼文分享皆可。</p>
+				</div>
+				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
+					<p className="text-sm font-semibold text-[var(--text-primary)]">成功條件</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">內容需提及 @sitcon.tw 並 Tag #SITCON2026，才算分享成功。</p>
+				</div>
+				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
+					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換時間</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">10:00-12:00</p>
+				</div>
+				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
+					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換地點</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 2F 議程組服務台，向工作人員出示你的限時動態或貼文分享畫面兌換。</p>
+				</div>
+			</div>
+
+			<div className="px-6 pb-6">
+				<button
+					onClick={onClose}
+					className="w-full rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95"
+				>
+					知道了
+				</button>
+			</div>
+		</Modal>
+	);
+}
 
 export default function PlayPage() {
 	const router = useRouter();
@@ -13,6 +53,13 @@ export default function PlayPage() {
 	const { data: currentUser } = useCurrentUser();
 	const hasCompassPlan = !!currentUser?.group;
 	const { data: groupMembers } = useGroupMembers(hasCompassPlan);
+	const { data: coupons, isLoading: couponsLoading } = useCoupons();
+	const [showSnsRule, setShowSnsRule] = useState(false);
+
+	const hasSnsCoupon = useMemo(() => {
+		const safeCoupons = Array.isArray(coupons) ? coupons : [];
+		return safeCoupons.some(c => c.discount_id === "sitcon-sns-coupon");
+	}, [coupons]);
 
 	const counts = useMemo(() => {
 		if (!activities)
@@ -101,7 +148,18 @@ export default function PlayPage() {
 				{unlockMethods.map((method, index) => (
 					<UnlockMethodCard key={index} title={method.title} current={method.current} total={method.total} loaded={method.loaded} onClick={() => router.push(method.route)} />
 				))}
+
+				{/* SNS sharing challenge */}
+				<UnlockMethodCard
+					title="分享限動拿折價券"
+					current={hasSnsCoupon ? 1 : 0}
+					total={1}
+					loaded={!couponsLoading}
+					onClick={() => setShowSnsRule(true)}
+				/>
 			</div>
+
+			<SnsCouponRuleModal open={showSnsRule} onClose={() => setShowSnsRule(false)} />
 		</div>
 	);
 }

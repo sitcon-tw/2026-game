@@ -14,8 +14,6 @@ import { Clock, Info, ShoppingBag, Ticket, Trophy, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
-const SNS_COUPON_ID = "sitcon-sns-coupon";
-
 interface DisplayCoupon {
 	status: CouponStatus;
 	coupon?: DiscountCoupon;
@@ -196,51 +194,11 @@ function RedeemReceiptModal({ open, totalAmount, couponToken, onClose }: { open:
 	);
 }
 
-function SnsCouponRuleModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-	return (
-		<Modal open={open} onClose={onClose} className="w-full max-w-sm overflow-hidden p-0">
-			<div className="bg-[var(--accent-gold)] px-6 py-5 text-white">
-				<h3 className="text-lg font-bold">限時動態或貼文分享兌換方式</h3>
-				<p className="mt-1 text-sm text-white/90">完成分享後，請至指定地點出示畫面兌換。</p>
-			</div>
-
-			<div className="space-y-4 px-6 py-5 text-left">
-				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
-					<p className="text-sm font-semibold text-[var(--text-primary)]">打卡平台</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">IG、FB、Threads、X 的限時動態或貼文分享皆可。</p>
-				</div>
-				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
-					<p className="text-sm font-semibold text-[var(--text-primary)]">成功條件</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">內容需提及 @sitcon.tw 並 Tag #SITCON2026，才算分享成功。</p>
-				</div>
-				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
-					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換時間</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">10:00-12:00</p>
-				</div>
-				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
-					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換地點</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 2F 議程組服務台，向工作人員出示你的限時動態或貼文分享畫面兌換。</p>
-				</div>
-			</div>
-
-			<div className="px-6 pb-6">
-				<button
-					onClick={onClose}
-					className="w-full rounded-full bg-[var(--bg-header)] py-3 text-base font-bold tracking-widest text-[var(--text-light)] shadow-md transition-transform active:scale-95"
-				>
-					知道了
-				</button>
-			</div>
-		</Modal>
-	);
-}
-
 export default function CouponPage() {
 	const { data: coupons, isLoading: couponsLoading } = useCoupons();
 	const { data: definitions, isLoading: defsLoading } = useCouponDefinitions();
 	const user = useUserStore(state => state.user);
 	const [showReceipt, setShowReceipt] = useState(false);
-	const [showSnsRule, setShowSnsRule] = useState(false);
 
 	if (couponsLoading || defsLoading) {
 		return <LoadingSpinner />;
@@ -249,8 +207,6 @@ export default function CouponPage() {
 	const safeDefinitions = Array.isArray(definitions) ? definitions : [];
 	const safeCoupons = Array.isArray(coupons) ? coupons : [];
 	const displayList = buildDisplayList(safeDefinitions, safeCoupons);
-	const hasSnsCoupon = displayList.some(item => item.definitionId === SNS_COUPON_ID);
-
 	const unusedCount = displayList.filter(d => d.status === "unused").length;
 	const totalUnusedAmount = displayList.filter(d => d.status === "unused").reduce((sum, d) => sum + d.price, 0);
 
@@ -319,16 +275,6 @@ export default function CouponPage() {
 						折價券限本人使用，不可與他人共用
 					</p>
 				</div>
-				{hasSnsCoupon && (
-					<button
-						type="button"
-						onClick={() => setShowSnsRule(true)}
-						className="mx-auto mt-3 flex max-w-xs items-center justify-center gap-2 rounded-lg border border-[var(--accent-gold)]/30 bg-[var(--accent-gold)]/10 px-4 py-3 text-center text-xs font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-gold)]/15"
-					>
-						<Info size={14} className="shrink-0 text-[var(--accent-bronze)]" />
-						查看限時動態或貼文分享兌換規則
-					</button>
-				)}
 
 				{/* Coupon Stack */}
 				<div className="relative my-8 flex flex-col items-center space-y-[-2rem]">
@@ -340,7 +286,7 @@ export default function CouponPage() {
 							price={item.price}
 							passLevel={item.passLevel}
 							description={item.description}
-							onClick={item.definitionId === SNS_COUPON_ID ? () => setShowSnsRule(true) : undefined}
+							onClick={undefined}
 							zIndex={displayList.length - index}
 						/>
 					))}
@@ -367,7 +313,6 @@ export default function CouponPage() {
 
 			{/* Receipt Modal */}
 			<RedeemReceiptModal open={showReceipt && !!user?.coupon_token} totalAmount={totalUnusedAmount} couponToken={user?.coupon_token ?? ""} onClose={() => setShowReceipt(false)} />
-			<SnsCouponRuleModal open={showSnsRule} onClose={() => setShowSnsRule(false)} />
 		</div>
 	);
 }
