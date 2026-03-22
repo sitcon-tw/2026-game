@@ -40,6 +40,18 @@ const (
 )
 
 func main() {
+	log := logger.New()
+
+	if err := run(log); err != nil {
+		log.Error("import command failed", zap.Error(err))
+		_ = log.Sync()
+		os.Exit(1)
+	}
+
+	_ = log.Sync()
+}
+
+func run(log *zap.Logger) error {
 	const requiredArgs = 2
 	const argsWithSource = 3
 	if len(os.Args) < requiredArgs {
@@ -75,14 +87,9 @@ func main() {
 		panic(err)
 	}
 
-	log := logger.New()
-	defer func() {
-		_ = log.Sync()
-	}()
-
 	pool, err := db.InitDatabase(log)
 	if err != nil {
-		log.Fatal("failed to initialize database", zap.Error(err))
+		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 	defer pool.Close()
 
@@ -105,11 +112,11 @@ func main() {
 	}
 
 	if importErr != nil {
-		log.Error("import failed", zap.Error(importErr), zap.String("target", string(target)), zap.String("source", string(source)))
-		return
+		return fmt.Errorf("import %s from %s: %w", target, source, importErr)
 	}
 
 	log.Info("import completed", zap.String("target", string(target)), zap.String("source", string(source)))
+	return nil
 }
 
 func importActivities(ctx context.Context, pool *pgxpool.Pool, log *zap.Logger, source dataSource) error {

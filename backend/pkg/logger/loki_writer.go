@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -123,5 +124,5 @@ func parseLokiLevel(line []byte) string {
 }
 
 func strconvFormatInt(v int64) string {
-	return fmt.Sprintf("%d", v)
+	return strconv.FormatInt(v, 10)
 }
