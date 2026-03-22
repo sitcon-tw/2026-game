@@ -6,6 +6,7 @@ import { useActivityStats } from "@/hooks/api";
 import type { ActivityWithStatus } from "@/types/api";
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import Markdown from "react-markdown";
 
 export default function BoothsPage() {
 	const { data: activities, isLoading } = useActivityStats();
@@ -45,10 +46,27 @@ export default function BoothsPage() {
 				{selectedBooth && (
 					<>
 						<h2 className="text-center font-serif text-2xl font-bold text-[var(--text-primary)] mb-2">{selectedBooth.name}</h2>
-						<p className="text-center text-sm text-[var(--text-secondary)] mb-6">{selectedBooth.visited ? "已打卡 ✅" : "尚未到訪 🕐"}</p>
-						<div className="relative mx-auto mb-6 aspect-[4/3] w-full overflow-hidden rounded-lg">
-							<Image src="/assets/booths/example-map.png" alt={`${selectedBooth.name} 地圖`} fill className="object-contain" />
-						</div>
+						<p className="text-center text-sm text-[var(--text-secondary)] mb-4">{selectedBooth.visited ? "已打卡 ✅" : "尚未到訪 🕐"}</p>
+						{selectedBooth.description && (
+							<div className="prose prose-sm max-w-none text-sm text-[var(--text-secondary)] mb-6 [&_a]:text-[var(--accent-bronze)] [&_a]:underline">
+								<Markdown>{selectedBooth.description}</Markdown>
+							</div>
+						)}
+						{selectedBooth.floor && (
+							<div className="relative mx-auto mb-6 aspect-[4/3] w-full overflow-hidden rounded-lg">
+								<Image src={`/assets/booths/${selectedBooth.floor}.svg`} alt={`${selectedBooth.name} 地圖`} fill className="object-contain" />
+							</div>
+						)}
+						{selectedBooth.link && (
+							<a
+								href={selectedBooth.link}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="block w-full cursor-pointer rounded-full bg-[var(--accent-bronze)] px-4 py-2.5 text-center text-sm font-semibold text-white mb-3"
+							>
+								前往官網
+							</a>
+						)}
 						<button
 							type="button"
 							onClick={() => setSelectedBooth(null)}
