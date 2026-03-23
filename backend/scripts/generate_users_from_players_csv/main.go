@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,18 +15,13 @@ import (
 )
 
 const (
-	defaultInputPath  = "data/playerscsv.csv"
-	defaultOutputPath = "data/users.json"
-	defaultUnlockLvl  = 5
-)
-
-var (
-	baseTime           = time.Date(2026, time.January, 10, 8, 30, 0, 0, time.UTC)
-	userNamespace      = uuid.MustParse("8b27158b-e55d-4141-a9d0-0d1a8f38c101")
-	qrCodeNamespace    = uuid.MustParse("e643fd8b-42f7-42c2-9eb3-f6ab94c7031f")
-	couponNamespace    = uuid.MustParse("5db5aaf7-fe3e-4fbb-9682-1276ce3eaefb")
-	avatarNamespace    = uuid.MustParse("7e2d90cc-84f2-4e89-b33e-3863ac7bf0a3")
-	namecardNamespace  = uuid.MustParse("ce17370f-7b11-47a6-8e54-53f1af4be567")
+	defaultInputPath   = "data/playerscsv.csv"
+	defaultOutputPath  = "data/users.json"
+	defaultUnlockLvl   = 5
+	userNamespaceID    = "8b27158b-e55d-4141-a9d0-0d1a8f38c101"
+	qrCodeNamespaceID  = "e643fd8b-42f7-42c2-9eb3-f6ab94c7031f"
+	couponNamespaceID  = "5db5aaf7-fe3e-4fbb-9682-1276ce3eaefb"
+	avatarNamespaceID  = "7e2d90cc-84f2-4e89-b33e-3863ac7bf0a3"
 	fallbackAvatarBase = "https://api.dicebear.com/9.x/thumbs/svg?seed="
 )
 
@@ -61,6 +57,12 @@ func main() {
 }
 
 func run(inputPath, outputPath string) error {
+	baseTime := time.Date(2026, time.January, 10, 8, 30, 0, 0, time.UTC)
+	userNamespace := uuid.MustParse(userNamespaceID)
+	qrCodeNamespace := uuid.MustParse(qrCodeNamespaceID)
+	couponNamespace := uuid.MustParse(couponNamespaceID)
+	avatarNamespace := uuid.MustParse(avatarNamespaceID)
+
 	f, err := os.Open(inputPath)
 	if err != nil {
 		return fmt.Errorf("open csv: %w", err)
@@ -166,10 +168,8 @@ func findIndexes(header []string) (columnIndexes, error) {
 func findColumn(header []string, names ...string) int {
 	for i := range header {
 		cell := strings.TrimSpace(header[i])
-		for _, name := range names {
-			if cell == name {
-				return i
-			}
+		if slices.Contains(names, cell) {
+			return i
 		}
 	}
 	return -1
