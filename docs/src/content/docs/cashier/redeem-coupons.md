@@ -7,6 +7,8 @@ description: 紀念品收銀員如何查詢並核銷玩家折價券。
 
 - `/cashier?token=...`
 
+<img src="/docs/cashier/redeem.png" alt="掃描核銷介面" width="50%" />
+
 ## 功能目的
 
 這個模式用來處理玩家在紀念品攤位結帳時的折價券折抵。工作人員掃描玩家的折價券專用 QR Code，前端先查詢，再由工作人員確認核銷。

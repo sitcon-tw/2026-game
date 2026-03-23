@@ -7,6 +7,8 @@ description: 攤位工作人員如何查看訪客數與切換回玩家身份。
 
 - `/booth?token=...`
 
+<img src="/docs/booth/stats.png" alt="攤位訪客統計與身份切換" width="50%" />
+
 ## 訪客統計
 
 - 頁面會呼叫 booth stats API
