@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+staged_backend_files=$(git diff --cached --name-only --diff-filter=ACMR -- backend)
+
+if [ -z "$staged_backend_files" ]; then
+	printf '%s\n' 'No staged backend files to check.'
+	exit 0
+fi
+
+printf '%s\n' 'Running backend checks...'
+(
+	cd backend
+	just lint
+)
+
+printf '%s\n' 'Pre-commit checks passed.'
