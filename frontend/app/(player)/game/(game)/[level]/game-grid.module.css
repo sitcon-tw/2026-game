@@ -1,0 +1,13 @@
+.cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--border-radius);
+	transition: all 150ms;
+	cursor: pointer;
+}
+
+.lit {
+	filter: brightness(1.6);
+	transform: scale(1.06);
+}
