@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
 	"time"
 
@@ -34,11 +35,16 @@ func Logger(logger *zap.Logger) func(http.Handler) http.Handler {
 			r = r.WithContext(res.WithLogger(r.Context(), logger))
 			next.ServeHTTP(wrapped, r)
 
+			remoteIP := r.RemoteAddr
+			if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+				remoteIP = host
+			}
+
 			fields := []zap.Field{
 				zap.String("method", r.Method),
 				zap.String("path", r.URL.Path),
 				zap.Int("status", wrapped.statusCode),
-				zap.String("remote_ip", r.RemoteAddr),
+				zap.String("remote_ip", remoteIP),
 				zap.Duration("latency", time.Since(start)),
 				zap.String("user_agent", r.UserAgent()),
 			}
