@@ -2,12 +2,14 @@
 
 import QrScanner from "@/components/QrScanner";
 import { useBoothCheckin, useBoothLogin, useBoothStats } from "@/hooks/api";
+import { scrubTokenFromCurrentUrl } from "@/lib/authUrl";
 import type { ScanStatus } from "@/lib/scanMessages";
 import { isSuccessStatus, translateWithContext } from "@/lib/scanMessages";
 import { useBoothStore } from "@/stores";
+import type { BoothActivity } from "@/types/api";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 function BoothScanContent() {
 	const [scanStatus, setScanStatus] = useState<ScanStatus>({ type: "idle" });
@@ -15,7 +17,8 @@ function BoothScanContent() {
 	const searchParams = useSearchParams();
 
 	// Booth store
-	const { boothToken, boothName, setBoothToken, setBoothName } = useBoothStore();
+	const { boothName, setBoothName } = useBoothStore();
+	const attemptedTokenRef = useRef<string | null>(null);
 
 	// API hooks
 	const boothLogin = useBoothLogin();
@@ -26,10 +29,14 @@ function BoothScanContent() {
 	useEffect(() => {
 		const tokenFromUrl = searchParams.get("token");
 		if (tokenFromUrl) {
-			// Save token and login
-			setBoothToken(tokenFromUrl);
+			if (attemptedTokenRef.current === tokenFromUrl) {
+				return;
+			}
+
+			attemptedTokenRef.current = tokenFromUrl;
+			scrubTokenFromCurrentUrl();
 			boothLogin.mutate(tokenFromUrl, {
-				onSuccess: (data: any) => {
+				onSuccess: (data: BoothActivity) => {
 					if (data?.name) setBoothName(data.name);
 				},
 				onError: error => {
@@ -39,12 +46,6 @@ function BoothScanContent() {
 						message: translateWithContext("booth-login", error instanceof Error ? error.message : undefined, "攤位登入失敗，請確認連結是否正確")
 					});
 				}
-			});
-		} else if (!boothToken) {
-			// No token in URL and no stored token — cannot operate
-			setScanStatus({
-				type: "error",
-				message: "缺少攤位 token，請使用正確連結進入"
 			});
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps

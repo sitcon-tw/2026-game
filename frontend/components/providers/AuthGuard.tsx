@@ -3,34 +3,23 @@
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { api, ApiError } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
+import { scrubTokenFromCurrentUrl } from "@/lib/authUrl";
 import { useUserStore } from "@/stores/userStore";
 import type { User } from "@/types/api";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 
 /**
  * AuthGuard — 保護 (player) 路由群組。
- * 1. 等待 Zustand persist 從 localStorage rehydrate 完成
- * 2. 檢查 authToken 是否存在；無 token → 跳轉 /login
- * 3. 有 token 時才發 GET /users/me 驗證 session；401 → 跳轉 /login
- * 4. 驗證通過後才 render children（Header / Page / BottomNav）
+ * 1. 直接用 server-set cookie 驗證 session
+ * 2. 未登入或 session 失效時跳轉 /login
+ * 3. 驗證通過後才 render children（Header / Page / BottomNav）
  */
-
-/** Subscribe to Zustand persist hydration state (SSR-safe) */
-function useStoreHydrated() {
-	return useSyncExternalStore(
-		cb => useUserStore.persist.onFinishHydration(cb),
-		() => useUserStore.persist.hasHydrated(),
-		() => false // SSR always returns false
-	);
-}
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const storeHydrated = useStoreHydrated();
-	const authToken = useUserStore(s => s.authToken);
 	const clearUser = useUserStore(s => s.clearUser);
 	const setUser = useUserStore(s => s.setUser);
 
@@ -40,13 +29,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 		return token ? `/login?token=${encodeURIComponent(token)}` : "/login";
 	})();
 
-	// Only fire the session check when we have a token AND store is hydrated
-	const shouldCheck = storeHydrated && !!authToken;
-
 	const { data, isLoading, isError, error } = useQuery({
 		queryKey: queryKeys.user.me,
 		queryFn: () => api.get<User>("/users/me"),
-		enabled: shouldCheck,
 		retry: false // Never retry auth checks
 	});
 
@@ -57,27 +42,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
 	// Redirect on auth failure
 	useEffect(() => {
-		if (!storeHydrated) return;
-
-		if (!authToken) {
-			clearUser();
-			router.replace(loginUrl);
-			return;
-		}
-
 		if (isError && error instanceof ApiError && error.status === 401) {
 			clearUser();
+			scrubTokenFromCurrentUrl();
 			router.replace(loginUrl);
 		}
-	}, [storeHydrated, authToken, isError, error, clearUser, router]);
+	}, [isError, error, clearUser, router, loginUrl]);
 
-	// Store not yet rehydrated or session check in flight
-	if (!storeHydrated || (shouldCheck && isLoading)) {
+	if (isLoading) {
 		return <LoadingSpinner fullPage />;
 	}
-
-	// No token → redirect in progress
-	if (!authToken) return null;
 
 	// 401 → redirect in progress
 	if (isError && error instanceof ApiError && error.status === 401) return null;
