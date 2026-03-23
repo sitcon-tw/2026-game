@@ -34,14 +34,14 @@ func couponRules() []DiscountRule {
 			ID:          DiscountIDTourGroupChallenge,
 			PassLevel:   0,
 			Amount:      35,
-			Description: "導遊團",
+			Description: "參加導遊團",
 		},
 		{ID: "level-50", PassLevel: 50, Amount: 25, Description: "完成 50 關"},
 		{
 			ID:          DiscountIDSitconSNSCoupon,
 			PassLevel:   0,
 			Amount:      SitconSNSCouponPrice,
-			Description: "限時動態或貼文分享",
+			Description: "限時動態或貼文分享（點擊可見詳情）",
 		},
 		{
 			ID:          DiscountIDLeaderboardTopTen,
