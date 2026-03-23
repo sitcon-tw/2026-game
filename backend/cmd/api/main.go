@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sitcon-tw/2026-game/internal/repository"
@@ -125,6 +126,7 @@ func initRoutes(repo repository.Repository, logger *zap.Logger) http.Handler {
 	sessionRateLimit := middleware.NewSessionRateLimit()
 
 	// logger
+	r.Use(chimiddleware.RealIP)
 	r.Use(middleware.Logger(logger))
 	r.Use(middleware.TraceHandler())
 

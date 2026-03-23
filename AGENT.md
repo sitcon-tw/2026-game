@@ -395,7 +395,7 @@ backend/
 | | POST | `/friendships` | 加好友（回傳對方 `PublicUser`，雙方 unlock +1） |
 | | GET | `/friendships/stats` | 好友數量與上限 |
 | **Group** | GET | `/group/members` | 組員列表（含簽到狀態） |
-| | POST | `/group/check-ins` | 組內互掃簽到（雙方 unlock +4） |
+| | POST | `/group/check-ins` | 組內互掃簽到（雙方 unlock +2） |
 | **Discount** | GET | `/discount-coupons` | 自己的折價券 |
 | | GET | `/discount-coupons/coupons` | 所有折價券規則與發放狀態（公開） |
 | | POST | `/discount-coupons/gifts` | 用 gift token 領取折價券 |

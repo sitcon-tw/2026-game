@@ -28,20 +28,20 @@ func couponRules() []DiscountRule {
 			ID:          DiscountIDCheckInAllBoothAndCheck,
 			PassLevel:   0,
 			Amount:      25,
-			Description: "打卡 23 個攤位和活動場地",
+			Description: "解鎖 23 個攤位和打卡點",
 		},
 		{
 			ID:          DiscountIDTourGroupChallenge,
 			PassLevel:   0,
 			Amount:      35,
-			Description: "導遊團",
+			Description: "參加導遊團",
 		},
 		{ID: "level-50", PassLevel: 50, Amount: 25, Description: "完成 50 關"},
 		{
 			ID:          DiscountIDSitconSNSCoupon,
 			PassLevel:   0,
 			Amount:      SitconSNSCouponPrice,
-			Description: "限時動態或貼文分享",
+			Description: "限時動態或貼文分享（點擊可見詳情）",
 		},
 		{
 			ID:          DiscountIDLeaderboardTopTen,

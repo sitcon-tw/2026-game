@@ -179,7 +179,7 @@ function RedeemReceiptModal({ open, totalAmount, couponToken, onClose }: { open:
 				</div>
 
 				{/* Location info */}
-				<p className="text-sm font-medium text-[var(--text-secondary)]">請至 2F 紀念品攤位使用</p>
+				<p className="text-sm font-medium text-[var(--text-secondary)]">請至 4F 紀念品攤位使用</p>
 			</div>
 
 			{/* Close button */}
@@ -250,7 +250,7 @@ export default function CouponPage() {
 						<ShoppingBag size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
 						<p className="text-xs text-[var(--text-primary)]">
 							<span className="font-bold">使用期限</span>
-							<br />至 16:30 收攤
+							<br />至 16：30 紀念品收攤
 						</p>
 					</div>
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
@@ -264,9 +264,9 @@ export default function CouponPage() {
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
 						<Info size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
 						<p className="text-xs text-[var(--text-primary)]">
-							<span className="font-bold">單次使用</span>
+							<span className="font-bold">使用</span>
 							<br />
-							折抵所有折價券
+							使用時會折抵當下所有折價券
 						</p>
 					</div>
 				</div>
@@ -303,7 +303,7 @@ export default function CouponPage() {
 						>
 							兌換折價券
 						</button>
-						<p className="text-xs text-[var(--text-secondary)]">請至 2F 紀念品攤位使用</p>
+						<p className="text-xs text-[var(--text-secondary)]">請至 4F 紀念品攤位使用</p>
 					</div>
 				)}
 

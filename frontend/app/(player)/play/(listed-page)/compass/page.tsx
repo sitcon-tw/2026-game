@@ -120,6 +120,8 @@ export default function CompassPage() {
 						掃描指南針夥伴的「我的 QR Code」完成簽到
 						<br />
 						每位夥伴只能互簽一次
+						<br />
+						指南針計畫互簽與加好友是分開的，加好友與活動打卡請到掃描頁面進行。
 					</p>
 
 					<div className="mt-5 rounded-xl bg-[var(--bg-secondary)] px-5 py-3 text-center">

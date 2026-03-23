@@ -3,7 +3,7 @@ package activities
 import "github.com/sitcon-tw/2026-game/internal/models"
 
 const (
-	unlockIncrementCheck     = 1
+	unlockIncrementCheck     = 2
 	unlockIncrementBooth     = 2
 	unlockIncrementChallenge = 3
 )

@@ -19,7 +19,7 @@ description: 玩家如何查看、出示與兌換自己的折價券。
 
 ## 兌換規則區塊
 
-頁面上固定顯示六項規則：
+頁面上固定顯示六項活動規則提示：
 
 | 圖示 | 規則 |
 |------|------|
@@ -49,7 +49,7 @@ description: 玩家如何查看、出示與兌換自己的折價券。
    - 標題：「折價券兌換明細」
    - 說明：「可折抵總額共 X 元」
    - QR Code：「出示 QR Code 供工作人員掃描」
-   - 地點提醒：「請至 2F 紀念品攤位使用」
+   - 地點提醒：「請至 4F 紀念品攤位使用」
 4. 出示 QR Code 請工作人員掃描，完成核銷
 
 ## 手動輸入兌換代碼
@@ -68,3 +68,5 @@ description: 玩家如何查看、出示與兌換自己的折價券。
 - 取得折價券定義：`GET /api/discount-coupons/coupons`（列出所有獎勵定義）
 - 兌換 gift coupon：`POST /api/discount-coupons/gifts`（body: `{code}`）
 - 核銷 QR Code：由工作人員端 `POST /api/discount-coupons/staff/redemptions` 觸發
+- 目前核銷時，系統會一次使用該玩家所有尚未使用的折價券
+- 部分時間限制與現場消費規則屬於活動規則提示，實際是否可用仍以現場流程與後端設定為準

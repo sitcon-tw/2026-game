@@ -9,13 +9,21 @@ datasources:
     editable: true
 
   - name: Victoriatrace OSS Planet
+    uid: victoria-traces
     type: jaeger
     access: proxy
     url: http://victoria-traces:10428/select/jaeger
     editable: true
 
   - name: Loki OSS Planet
+    uid: loki
     type: loki
     access: proxy
     url: http://loki:3100
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherRegex: 'trace_id=([a-f0-9]{32})'
+          datasourceUid: victoria-traces
+          url: '$${__value.raw}'
     editable: true

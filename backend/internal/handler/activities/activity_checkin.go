@@ -19,7 +19,7 @@ type activityCheckInRequest struct {
 
 // ActivityCheckIn handles POST /activities/check-ins.
 // @Summary      使用者掃描活動 QR code 打卡
-// @Description  使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在 check 類型活動打卡。首次打卡成功 unlock_level +1。需要已登入的使用者 cookie。
+// @Description  使用者使用自己的 QR code 掃描器掃描活動的 QR code，幫自己在 check 類型活動打卡。首次打卡成功 unlock_level +2。需要已登入的使用者 cookie。
 // @Tags         activities
 // @Accept       json
 // @Produce      json
