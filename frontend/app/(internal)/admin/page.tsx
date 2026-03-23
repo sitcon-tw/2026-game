@@ -1,17 +1,23 @@
 "use client";
 
 import { useAdminLogin } from "@/hooks/api";
+import { scrubTokenFromCurrentUrl } from "@/lib/authUrl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 
 function AdminLoginContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const adminLogin = useAdminLogin();
+	const attemptedTokenRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		const token = searchParams.get("token");
 		if (!token) return;
+		if (attemptedTokenRef.current === token) return;
+
+		attemptedTokenRef.current = token;
+		scrubTokenFromCurrentUrl();
 
 		adminLogin.mutate(token, {
 			onSuccess: () => {
