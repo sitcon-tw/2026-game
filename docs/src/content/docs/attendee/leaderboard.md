@@ -40,7 +40,8 @@ description: 玩家如何查看排名、附近玩家與公開名牌。
 ## 後端行為
 
 - 資料來源：`GET /api/games/leaderboards`
-- 排名依據：`current_level`（已完成關卡數）降冪排序
+- 主要排名依據：`current_level`（已完成關卡數）降冪排序
+- 若 `current_level` 相同，會再依 `unlock_level` 與通關時間做排序
 - 同分玩家 rank 相同
 - Top 模式回傳前 30 名，Nearby 模式回傳玩家 ±10 排名範圍
 

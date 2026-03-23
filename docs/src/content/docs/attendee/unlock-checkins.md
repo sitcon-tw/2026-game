@@ -49,5 +49,5 @@ description: 玩家如何查看 checkin 類型活動的完成狀態。
 
 - 資料來源：`GET /api/activities/stats`，過濾 `type === "check"`
 - 打卡紀錄：`POST /api/activities/check-ins`（玩家掃描 QR Code 觸發）
-- 第一次打卡：`unlock_level += 1` 並可能取得折價券
+- 第一次打卡：`unlock_level` 會增加，並可能取得折價券
 - 重複打卡：回傳「already checked in」，不重複計算獎勵
