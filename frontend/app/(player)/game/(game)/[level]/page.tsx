@@ -13,11 +13,10 @@ export default async function ChallengesPage({ params }: { params: Promise<{ lev
 		serverGet<LevelInfoResponse>(`/games/levels/${currentLevel}`, "token")
 	]);
 
-	// Obfuscate sheet data before sending to client
-	const sheetSeed = currentLevel * 1337 + 42;
+	// Random seed per render — encoded sheet changes every page load
+	const sheetSeed = Math.floor(Math.random() * 0xffffffff);
 	const encodedSheet = levelInfo?.sheet ? encodeSheet(levelInfo.sheet, sheetSeed) : null;
 
-	// Strip raw sheet from the response, pass encoded version separately
 	const sanitizedLevelInfo = levelInfo
 		? { level: levelInfo.level, notes: levelInfo.notes, speed: levelInfo.speed }
 		: null;

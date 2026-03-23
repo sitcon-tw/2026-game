@@ -9,8 +9,51 @@ import type { SubmitResponse } from "@/types/api";
 import type { ClientUser } from "@/types/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useInsertionEffect, useMemo, useRef, useState } from "react";
 import styles from "./game-grid.module.css";
+
+/** Random hex string for class names. */
+function randomHex() {
+	return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+		.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Returns a fresh random CSS class name every time activeButton is non-null.
+ * The corresponding style rule is injected synchronously via useInsertionEffect
+ * so it's available before the browser paints.
+ */
+function useRotatingLitClass(activeButton: number | null) {
+	const styleElRef = useRef<HTMLStyleElement | null>(null);
+
+	// Compute a new class name synchronously during render
+	const litClass = useMemo(() => {
+		if (activeButton === null) return "";
+		return `_${randomHex()}`;
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [activeButton]);
+
+	// Inject the style rule synchronously before paint
+	useInsertionEffect(() => {
+		if (!styleElRef.current) {
+			const el = document.createElement("style");
+			document.head.appendChild(el);
+			styleElRef.current = el;
+		}
+		if (litClass) {
+			styleElRef.current.textContent = `.${litClass}{filter:brightness(1.6);transform:scale(1.06)}`;
+		} else {
+			styleElRef.current.textContent = "";
+		}
+	}, [litClass]);
+
+	// Cleanup on unmount
+	useEffect(() => {
+		return () => { styleElRef.current?.remove(); };
+	}, []);
+
+	return litClass;
+}
 
 const BUTTON_COLORS = ["var(--btn-red)", "var(--btn-yellow)", "var(--btn-green)", "var(--btn-blue)", "var(--btn-orange)", "var(--btn-purple)", "var(--btn-pink)", "var(--btn-cyan)"];
 
@@ -51,6 +94,8 @@ function BlockGrid({
 	inputEnabled: boolean;
 	onButtonClick: (index: number) => void;
 }) {
+	const litClass = useRotatingLitClass(activeButton);
+
 	return (
 		<div
 			className="grid gap-2 w-full h-full"
@@ -70,7 +115,7 @@ function BlockGrid({
 						type="button"
 						disabled={!inputEnabled}
 						onClick={() => onButtonClick(i)}
-						className={`${styles.cell} ${isActive ? styles.lit : ""}`}
+						className={`${styles.cell} ${isActive ? litClass : ""}`}
 						style={{
 							backgroundColor: color,
 							boxShadow: isActive ? `0 0 20px 4px ${color}` : "none"

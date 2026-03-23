@@ -6,8 +6,3 @@
 	transition: all 150ms;
 	cursor: pointer;
 }
-
-.lit {
-	filter: brightness(1.6);
-	transform: scale(1.06);
-}
