@@ -1,6 +1,7 @@
 "use client";
 
 import type { DiscountCoupon } from "@/types/api";
+import { Lock } from "lucide-react";
 import { motion } from "motion/react";
 import CouponShapeSVG from "./CouponShapeSVG";
 
@@ -24,6 +25,7 @@ export default function CouponTicket({
 	price?: number;
 }) {
 	const price = priceProp ?? coupon?.price ?? 0;
+	const lockedDescriptionLines = description ? description.split(/(?=[(（])/u) : [];
 
 	const ticketFillColor = status === "unused" ? "var(--accent-gold)" : status === "used" ? "var(--bg-header)" : "#6b6b6b";
 
@@ -46,9 +48,7 @@ export default function CouponTicket({
 							<span className={`ml-25 font-serif text-5xl italic ${textColor}`}>{price}</span>
 							<span className={`mt-6 ml-2 text-lg font-bold ${textColor}`}>元</span>
 						</div>
-						{description && status !== "locked" && (
-							<p className={`ml-25 mt-1 text-xs font-medium ${textColor} opacity-80`}>{description}</p>
-						)}
+						{description && status !== "locked" && <p className={`ml-25 mt-1 text-xs font-medium ${textColor} opacity-80`}>{description}</p>}
 					</div>
 
 					<div className="flex flex-[2]" />
@@ -73,10 +73,17 @@ export default function CouponTicket({
 				{/* Locked Overlay */}
 				{status === "locked" && (
 					<div className="absolute inset-0 z-20 flex items-center justify-center">
-						<div className="flex flex-col items-center gap-1">
-							<span className="text-3xl">🔒</span>
+						<div className="flex flex-col items-center gap-1 pt-6">
+							<Lock className="h-7 w-7 text-gray-300" strokeWidth={2.25} aria-hidden="true" />
 							{description ? (
-								<p className="text-xs font-bold text-gray-400">{description}</p>
+								<p className="pr-5 text-left text-xs font-bold text-gray-400">
+									{lockedDescriptionLines.map((line, index) => (
+										<span key={`${line}-${index}`}>
+											{index > 0 && <br />}
+											{line}
+										</span>
+									))}
+								</p>
 							) : passLevel !== undefined ? (
 								<p className="text-xs font-bold text-gray-400">通過第 {passLevel} 關解鎖</p>
 							) : null}
