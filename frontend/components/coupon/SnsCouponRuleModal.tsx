@@ -23,7 +23,7 @@ export default function SnsCouponRuleModal({ open, onClose }: { open: boolean; o
 				</div>
 				<div className="rounded-xl bg-[var(--accent-bronze)]/10 px-4 py-3">
 					<p className="text-sm font-semibold text-[var(--text-primary)]">兌換地點</p>
-					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 2F 議程組服務台，向工作人員出示你的限時動態或貼文分享畫面兌換。</p>
+					<p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">請至 3F 議程組服務台，向工作人員出示你的限時動態或貼文分享畫面兌換。</p>
 				</div>
 			</div>
 
