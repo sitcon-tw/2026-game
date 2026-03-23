@@ -684,7 +684,40 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Avg Duration (ms)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Requests"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "x": 12,
@@ -1019,7 +1052,7 @@
       "gridPos": {
         "x": 0,
         "y": 38,
-        "w": 12,
+        "w": 24,
         "h": 10
       },
       "id": 19,
@@ -1038,12 +1071,12 @@
         {
           "datasource": "Loki OSS Planet",
           "editorMode": "code",
-          "expr": "${loki_selector} |= \"http request\" | json | __error__=\"\" | status >= 400 | status < 500",
+          "expr": "${loki_selector} | json | __error__=\"\" | status >= 400 | line_format \"kind={{.msg}} | status={{.status}} | method={{.method}} | path={{.path}} | latency={{.latency}} | message={{.message}} | error={{.error}} | trace_id={{.trace_id}} | span_id={{.span_id}}\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "4xx Logs with Trace Correlation",
+      "title": "HTTP + Error Logs (4xx/5xx)",
       "type": "logs",
       "fieldConfig": {
         "defaults": {
@@ -1068,10 +1101,10 @@
     {
       "datasource": "Loki OSS Planet",
       "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 38
+        "x": 0,
+        "y": 48,
+        "w": 24,
+        "h": 14
       },
       "id": 11,
       "options": {
@@ -1089,12 +1122,12 @@
         {
           "datasource": "Loki OSS Planet",
           "editorMode": "code",
-          "expr": "${loki_selector} |= \"http request\" | json | __error__=\"\" | status >= 500",
+          "expr": "${loki_selector} | json | __error__=\"\" | status >= 500 | line_format \"kind={{.msg}} | status={{.status}} | method={{.method}} | path={{.path}} | latency={{.latency}} | message={{.message}} | error={{.error}} | trace_id={{.trace_id}} | span_id={{.span_id}} | stacktrace={{.stacktrace}}\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "5xx Logs with Trace Correlation",
+      "title": "5xx Logs with Stacktrace",
       "type": "logs",
       "fieldConfig": {
         "defaults": {
@@ -1137,7 +1170,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 48
+        "y": 62
       },
       "id": 12,
       "options": {
@@ -1189,7 +1222,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 48
+        "y": 62
       },
       "id": 13,
       "options": {
@@ -1243,7 +1276,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 72
       },
       "id": 14,
       "options": {
@@ -1329,7 +1362,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 72
       },
       "id": 15,
       "options": {
@@ -1422,7 +1455,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 68
+        "y": 82
       },
       "id": 16,
       "options": {
@@ -1515,7 +1548,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 68
+        "y": 82
       },
       "id": 17,
       "options": {
@@ -1766,7 +1799,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "SITCON Game 2026",
-  "uid": "backend-http-obs",
+  "uid": "sitcon-game-2026",
   "version": 1,
   "weekStart": ""
 }

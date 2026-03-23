@@ -28,7 +28,7 @@ func couponRules() []DiscountRule {
 			ID:          DiscountIDCheckInAllBoothAndCheck,
 			PassLevel:   0,
 			Amount:      25,
-			Description: "打卡 23 個攤位和活動場地",
+			Description: "解鎖 23 個攤位和打卡點",
 		},
 		{
 			ID:          DiscountIDTourGroupChallenge,
