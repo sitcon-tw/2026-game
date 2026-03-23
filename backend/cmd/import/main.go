@@ -40,6 +40,11 @@ const (
 )
 
 func main() {
+	if _, err := config.Init(); err != nil {
+		fmt.Fprintf(os.Stderr, "initialize config: %v\n", err)
+		os.Exit(1)
+	}
+
 	log := logger.New()
 
 	if err := run(log); err != nil {
@@ -81,10 +86,6 @@ func run(log *zap.Logger) error {
 	if source != sourceAuto && source != sourceFake && source != sourceData {
 		fmt.Fprintf(os.Stderr, "unknown source %q. valid: auto, fake, data\n", source)
 		os.Exit(1)
-	}
-
-	if _, err := config.Init(); err != nil {
-		panic(err)
 	}
 
 	pool, err := db.InitDatabase(log)
