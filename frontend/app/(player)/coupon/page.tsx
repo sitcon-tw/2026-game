@@ -250,7 +250,7 @@ export default function CouponPage() {
 						<ShoppingBag size={14} className="mt-0.5 shrink-0 text-[var(--accent-bronze)]" />
 						<p className="text-xs text-[var(--text-primary)]">
 							<span className="font-bold">使用期限</span>
-							<br />至 16：30 紀念品收攤
+							<br />至 16:30 紀念品收攤
 						</p>
 					</div>
 					<div className="flex items-start gap-2 rounded-lg bg-[var(--accent-bronze)]/10 px-3 py-2.5 text-left">
