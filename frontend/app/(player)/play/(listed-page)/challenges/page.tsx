@@ -5,6 +5,7 @@ import Modal from "@/components/ui/Modal";
 import { useActivityStats } from "@/hooks/api";
 import type { ActivityWithStatus } from "@/types/api";
 import { useMemo, useState } from "react";
+import Markdown from "react-markdown";
 
 export default function ChallengesListPage() {
 	const { data: activities, isLoading } = useActivityStats();
@@ -44,7 +45,22 @@ export default function ChallengesListPage() {
 				{selectedItem && (
 					<>
 						<h2 className="text-center font-serif text-2xl font-bold text-[var(--text-primary)] mb-2">{selectedItem.name}</h2>
-						<p className="text-center text-sm text-[var(--text-secondary)] mb-6">{selectedItem.visited ? "打卡完成 ✅" : "尚未完成"}</p>
+						<p className="text-center text-sm text-[var(--text-secondary)] mb-4">{selectedItem.visited ? "打卡完成 ✅" : "尚未完成"}</p>
+						{selectedItem.description && (
+							<div className="prose prose-sm mb-6 max-w-none text-sm text-[var(--text-secondary)] [&_a]:text-[var(--accent-bronze)] [&_a]:underline">
+								<Markdown>{selectedItem.description}</Markdown>
+							</div>
+						)}
+						{selectedItem.link && (
+							<a
+								href={selectedItem.link}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="mb-3 block w-full cursor-pointer rounded-full bg-[var(--accent-bronze)] px-4 py-2.5 text-center text-sm font-semibold text-white"
+							>
+								前往官網
+							</a>
+						)}
 						<button type="button" onClick={() => setSelectedItem(null)} className="w-full cursor-pointer rounded-full bg-[var(--bg-header)] px-4 py-2.5 text-sm font-semibold text-[var(--text-light)]">
 							關閉
 						</button>
