@@ -67,9 +67,7 @@ function LoginErrorMessage({ error }: { error: Error | null }) {
 			<div className="text-center">
 				<div className="mb-4 text-6xl">✦</div>
 				<h1 className="font-serif text-2xl font-bold text-[var(--text-primary)]">無效的登入資訊</h1>
-				<div className="mt-5 rounded-lg border border-[var(--status-error)]/30 bg-[var(--status-error)]/10 px-4 py-3">
-					<p className="text-sm font-medium text-[var(--status-error)]">{error instanceof Error ? error.message : "請稍後再試"}</p>
-				</div>
+				{error instanceof Error && <p className="mt-3 text-sm text-[var(--text-secondary)]">{error.message}</p>}
 				<p className="mt-4 text-[var(--text-secondary)]">
 					請重新從 OPass 登入，操作路徑為 <br />
 					<code className="rounded bg-[var(--bg-header)] px-1 font-mono text-sm text-[var(--text-light)] text-nowrap">OPass APP &gt; SITCON 2026 &gt; 大地遊戲</code>
@@ -95,7 +93,7 @@ function LoginContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const token = searchParams.get("token");
-	const { mutate: login, isError, error } = useLoginWithToken();
+	const { mutate: login, isPending, isError, error } = useLoginWithToken();
 	const isUnlocked = new Date() >= UNLOCK_TIME;
 	const attemptedTokenRef = useRef<string | null>(null);
 
@@ -117,14 +115,22 @@ function LoginContent() {
 		});
 	}, [token, login, router]);
 
-	if (!token || isError) {
+	if (token || isPending) {
+		return <LoadingSpinner fullPage />;
+	}
+
+	if (isError) {
 		if (!isUnlocked) {
 			return <PreEventMessage />;
 		}
 		return <LoginErrorMessage error={error instanceof Error ? error : null} />;
 	}
 
-	return <LoadingSpinner fullPage />;
+	if (!isUnlocked) {
+		return <PreEventMessage />;
+	}
+
+	return <LoginErrorMessage error={null} />;
 }
 
 export default function LoginPage() {
