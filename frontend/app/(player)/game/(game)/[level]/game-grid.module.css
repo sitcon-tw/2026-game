@@ -1,0 +1,8 @@
+.cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--border-radius);
+	transition: all 150ms;
+	cursor: pointer;
+}
