@@ -14,8 +14,9 @@ type AppEnv string
 
 // AppEnv values.
 const (
-	AppEnvDev  AppEnv = "dev"
-	AppEnvProd AppEnv = "prod"
+	AppEnvDev            AppEnv = "dev"
+	AppEnvProd           AppEnv = "prod"
+	defaultLokiBatchWait        = 2 * time.Second
 )
 
 // EnvConfig holds all environment variables for the application.
@@ -37,11 +38,13 @@ type EnvConfig struct {
 	OTelService    string  `env:"OTEL_SERVICE_NAME" envDefault:"sitcon-2026-game-backend"`
 
 	// Loki setting
-	LokiEnabled bool          `env:"LOKI_ENABLED" envDefault:"false"`
-	LokiURL     string        `env:"LOKI_URL" envDefault:"http://loki.zeabur.internal:3100/loki/api/v1/push"`
-	LokiService string        `env:"LOKI_SERVICE_NAME" envDefault:"sitcon-2026-game-backend"`
-	LokiEnv     string        `env:"LOKI_ENV" envDefault:""`
-	LokiTimeout time.Duration `env:"LOKI_TIMEOUT" envDefault:"2s"`
+	LokiEnabled   bool          `env:"LOKI_ENABLED" envDefault:"false"`
+	LokiURL       string        `env:"LOKI_URL" envDefault:"http://loki.zeabur.internal:3100/loki/api/v1/push"`
+	LokiService   string        `env:"LOKI_SERVICE_NAME" envDefault:"sitcon-2026-game-backend"`
+	LokiEnv       string        `env:"LOKI_ENV" envDefault:""`
+	LokiTimeout   time.Duration `env:"LOKI_TIMEOUT" envDefault:"2s"`
+	LokiBatchSize int           `env:"LOKI_BATCH_SIZE" envDefault:"500"`
+	LokiBatchWait time.Duration `env:"LOKI_BATCH_WAIT" envDefault:"2s"`
 
 	// Gameplay data URLs
 	LevelCSVURL      string `env:"LEVEL_CSV_URL"`
@@ -92,6 +95,12 @@ func load() (*EnvConfig, error) {
 	}
 	if cfg.LokiEnv == "" {
 		cfg.LokiEnv = string(cfg.AppEnv)
+	}
+	if cfg.LokiBatchSize <= 0 {
+		cfg.LokiBatchSize = 500
+	}
+	if cfg.LokiBatchWait <= 0 {
+		cfg.LokiBatchWait = defaultLokiBatchWait
 	}
 	return cfg, nil
 }

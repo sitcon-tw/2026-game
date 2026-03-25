@@ -19,13 +19,23 @@ import (
 const lokiContentType = "application/json"
 
 type lokiWriter struct {
-	client  *http.Client
-	url     string
-	service string
-	env     string
+	client    *http.Client
+	url       string
+	service   string
+	env       string
+	batchSize int
+	batchWait time.Duration
+	flushCh   chan struct{}
 
 	mu              sync.Mutex
+	buffer          []lokiEntry
 	lastErrorReport time.Time
+}
+
+type lokiEntry struct {
+	timestamp string
+	level     string
+	line      string
 }
 
 type lokiPushRequest struct {
@@ -42,12 +52,19 @@ type lokiLogLine struct {
 }
 
 func newLokiWriteSyncer(cfg *config.EnvConfig) zapcore.WriteSyncer {
-	return &lokiWriter{
-		client:  &http.Client{Timeout: cfg.LokiTimeout},
-		url:     cfg.LokiURL,
-		service: cfg.LokiService,
-		env:     cfg.LokiEnv,
+	w := &lokiWriter{
+		client:    &http.Client{Timeout: cfg.LokiTimeout},
+		url:       cfg.LokiURL,
+		service:   cfg.LokiService,
+		env:       cfg.LokiEnv,
+		batchSize: cfg.LokiBatchSize,
+		batchWait: cfg.LokiBatchWait,
+		flushCh:   make(chan struct{}, 1),
 	}
+
+	go w.run()
+
+	return w
 }
 
 func (w *lokiWriter) Write(p []byte) (int, error) {
@@ -56,20 +73,86 @@ func (w *lokiWriter) Write(p []byte) (int, error) {
 		return len(p), nil
 	}
 
-	level := parseLokiLevel(trimmed)
-	payload, err := json.Marshal(lokiPushRequest{
-		Streams: []lokiStream{{
+	entry := lokiEntry{
+		timestamp: strconvFormatInt(time.Now().UnixNano()),
+		level:     parseLokiLevel(trimmed),
+		line:      string(trimmed),
+	}
+
+	w.mu.Lock()
+	w.buffer = append(w.buffer, entry)
+	shouldFlush := len(w.buffer) >= w.batchSize
+	w.mu.Unlock()
+
+	if shouldFlush {
+		w.notifyFlush()
+	}
+
+	return len(p), nil
+}
+
+func (w *lokiWriter) Sync() error {
+	w.flush()
+	return nil
+}
+
+func (w *lokiWriter) run() {
+	ticker := time.NewTicker(w.batchWait)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			w.flush()
+		case <-w.flushCh:
+			w.flush()
+		}
+	}
+}
+
+func (w *lokiWriter) notifyFlush() {
+	select {
+	case w.flushCh <- struct{}{}:
+	default:
+	}
+}
+
+func (w *lokiWriter) flush() {
+	w.mu.Lock()
+	if len(w.buffer) == 0 {
+		w.mu.Unlock()
+		return
+	}
+	entries := append([]lokiEntry(nil), w.buffer...)
+	w.buffer = nil
+	w.mu.Unlock()
+
+	if err := w.push(entries); err != nil {
+		w.reportError("push log", err)
+	}
+}
+
+func (w *lokiWriter) push(entries []lokiEntry) error {
+	streamsByLevel := make(map[string][][2]string, len(entries))
+	for _, entry := range entries {
+		streamsByLevel[entry.level] = append(streamsByLevel[entry.level], [2]string{entry.timestamp, entry.line})
+	}
+
+	streams := make([]lokiStream, 0, len(streamsByLevel))
+	for level, values := range streamsByLevel {
+		streams = append(streams, lokiStream{
 			Stream: map[string]string{
 				"service": w.service,
 				"env":     w.env,
 				"level":   level,
 			},
-			Values: [][2]string{{strconvFormatInt(time.Now().UnixNano()), string(trimmed)}},
-		}},
-	})
+			Values: values,
+		})
+	}
+
+	payload, err := json.Marshal(lokiPushRequest{Streams: streams})
 	if err != nil {
-		w.reportError("marshal payload", err)
-		return len(p), nil
+		return fmt.Errorf("marshal payload: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), w.client.Timeout)
@@ -77,26 +160,20 @@ func (w *lokiWriter) Write(p []byte) (int, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, w.url, bytes.NewReader(payload))
 	if err != nil {
-		w.reportError("build request", err)
-		return len(p), nil
+		return fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("Content-Type", lokiContentType)
 
 	resp, err := w.client.Do(req)
 	if err != nil {
-		w.reportError("push log", err)
-		return len(p), nil
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusBadRequest {
-		w.reportError("push log", fmt.Errorf("unexpected status %s", resp.Status))
+		return fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
-	return len(p), nil
-}
-
-func (w *lokiWriter) Sync() error {
 	return nil
 }
 
