@@ -111,6 +111,7 @@ export default function CompassPage() {
 										</div>
 									)}
 									<span className="text-sm text-[var(--text-secondary)]">讓指南針夥伴掃描你的 QR Code</span>
+								<span className="text-xs text-[var(--text-secondary)] opacity-70">請注意，QR Code 每隔數秒會自動更新</span>
 								</div>
 							</div>
 						}
