@@ -93,7 +93,7 @@ function LoginContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const token = searchParams.get("token");
-	const { mutate: login, isPending, isError, error } = useLoginWithToken();
+	const { mutate: login, isPending, isSuccess, isError, error } = useLoginWithToken();
 	const isUnlocked = new Date() >= UNLOCK_TIME;
 	const attemptedTokenRef = useRef<string | null>(null);
 
@@ -115,7 +115,7 @@ function LoginContent() {
 		});
 	}, [token, login, router]);
 
-	if (token || isPending) {
+	if (token || isPending || isSuccess) {
 		return <LoadingSpinner fullPage />;
 	}
 

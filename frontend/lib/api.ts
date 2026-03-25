@@ -11,13 +11,14 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+	const { headers: extraHeaders, ...restOptions } = options ?? {};
 	const res = await fetch(`${API_BASE_URL}${path}`, {
 		credentials: "include",
+		...restOptions,
 		headers: {
 			"Content-Type": "application/json",
-			...options?.headers
-		},
-		...options
+			...extraHeaders
+		}
 	});
 
 	if (!res.ok) {
