@@ -3,13 +3,14 @@ import QrScanner from "@/components/QrScanner";
 import { RedemptionCard } from "@/components/staff/RedemptionCard";
 import { RedemptionHistoryList } from "@/components/staff/RedemptionHistoryList";
 import { useStaffAssignCouponByQRCode, useStaffLogin, useStaffLookupCoupons, useStaffRedeemCoupon, useStaffRedemptionHistory, useStaffScanAssignmentHistory } from "@/hooks/api";
+import { scrubTokenFromCurrentUrl } from "@/lib/authUrl";
 import type { ScanStatus } from "@/lib/scanMessages";
 import { translateWithContext } from "@/lib/scanMessages";
 import { usePopupStore, useStaffStore } from "@/stores";
 import { GetUserCouponsResponse, Staff, StaffScanAssignmentItem } from "@/types/api";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 type StaffTab = "redeem" | "assign";
 
@@ -70,7 +71,8 @@ function StaffScanContent() {
 	const showPopup = usePopupStore(s => s.showPopup);
 
 	// Staff store
-	const { staffToken, setStaffToken, setStaffName, clearStaff } = useStaffStore();
+	const { setStaffName, clearStaff } = useStaffStore();
+	const attemptedTokenRef = useRef<string | null>(null);
 
 	// API hooks
 	const staffLogin = useStaffLogin();
@@ -84,7 +86,12 @@ function StaffScanContent() {
 	useEffect(() => {
 		const tokenFromUrl = searchParams.get("token");
 		if (tokenFromUrl) {
-			setStaffToken(tokenFromUrl);
+			if (attemptedTokenRef.current === tokenFromUrl) {
+				return;
+			}
+
+			attemptedTokenRef.current = tokenFromUrl;
+			scrubTokenFromCurrentUrl();
 			staffLogin.mutate(tokenFromUrl, {
 				onSuccess: (data: Staff) => {
 					if (data?.name) setStaffName(data.name);
@@ -99,11 +106,6 @@ function StaffScanContent() {
 					setAssignScanStatus({ type: "error", message });
 				}
 			});
-		} else if (!staffToken) {
-			const message = "缺少工作人員 token，請使用正確連結進入";
-			setLoginErrorMessage(message);
-			setRedeemScanStatus({ type: "error", message });
-			setAssignScanStatus({ type: "error", message });
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [searchParams]);

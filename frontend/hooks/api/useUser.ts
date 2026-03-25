@@ -7,16 +7,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 /** GET /users/me — 取得目前登入使用者的資料
- *  只在有 authToken 時才發送請求，避免未登入時產生 401。
+	*  依賴 server-set cookie 驗證 session。
  */
 export function useCurrentUser() {
 	const setUser = useUserStore(state => state.setUser);
-	const authToken = useUserStore(state => state.authToken);
 
 	const query = useQuery({
 		queryKey: queryKeys.user.me,
-		queryFn: () => api.get<User>("/users/me"),
-		enabled: !!authToken
+		queryFn: () => api.get<User>("/users/me")
 	});
 
 	// Update store when data changes
@@ -31,12 +29,9 @@ export function useCurrentUser() {
 
 /** GET /users/me/one-time-qr — 取得每 20 秒輪替的一次性 QR token */
 export function useOneTimeQR() {
-	const authToken = useUserStore(state => state.authToken);
-
 	return useQuery({
 		queryKey: queryKeys.user.oneTimeQr,
 		queryFn: () => api.get<OneTimeQRResponse>("/users/me/one-time-qr"),
-		enabled: !!authToken,
 		refetchInterval: 15000,
 		staleTime: 0
 	});
@@ -46,7 +41,6 @@ export function useOneTimeQR() {
 export function useLoginWithToken() {
 	const queryClient = useQueryClient();
 	const setUser = useUserStore(state => state.setUser);
-	const setAuthToken = useUserStore(state => state.setAuthToken);
 
 	return useMutation({
 		mutationFn: async (token: string) => {
@@ -56,9 +50,7 @@ export function useLoginWithToken() {
 			});
 			return { user, token };
 		},
-		onSuccess: ({ user, token }) => {
-			// Persist auth token to cookie + localStorage
-			setAuthToken(token);
+		onSuccess: ({ user }) => {
 			setUser(user);
 			queryClient.invalidateQueries({ queryKey: queryKeys.user.me });
 			queryClient.invalidateQueries({ queryKey: queryKeys.user.session });

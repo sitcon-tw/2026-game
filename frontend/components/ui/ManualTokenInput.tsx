@@ -1,5 +1,6 @@
 "use client";
 
+import { useLoginWithToken } from "@/hooks/api";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,6 +9,7 @@ export default function ManualTokenInput() {
 	const router = useRouter();
 	const [manualToken, setManualToken] = useState("");
 	const [showManualInput, setShowManualInput] = useState(false);
+	const login = useLoginWithToken();
 
 	return (
 		<div className="mt-8">
@@ -43,12 +45,17 @@ export default function ManualTokenInput() {
 							<button
 								onClick={() => {
 									if (manualToken.trim()) {
-										router.push(`/login?token=${encodeURIComponent(manualToken.trim())}`);
+										login.mutate(manualToken.trim(), {
+											onSuccess: () => {
+												router.replace("/");
+											}
+										});
 									}
 								}}
+								disabled={login.isPending}
 								className="rounded-xl bg-[var(--bg-header)] px-6 py-3 font-medium text-[var(--text-light)] transition-opacity hover:opacity-90 cursor-pointer"
 							>
-								登入
+								{login.isPending ? "登入中..." : "登入"}
 							</button>
 						</div>
 					</motion.div>
