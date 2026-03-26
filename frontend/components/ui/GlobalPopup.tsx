@@ -42,7 +42,7 @@ export default function GlobalPopup() {
 			{/* Content */}
 			<div className="space-y-3 p-6">
 				<h2 className="font-serif text-2xl font-bold text-[var(--text-primary)]">{current.title}</h2>
-				{current.description && <p className="text-sm text-[var(--text-secondary)]">{current.description}</p>}
+				{current.description && <p className="whitespace-pre-line text-sm text-[var(--text-secondary)]">{current.description}</p>}
 			</div>
 
 			{/* Buttons */}

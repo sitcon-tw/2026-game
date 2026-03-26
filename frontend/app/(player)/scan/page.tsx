@@ -12,6 +12,7 @@ import type { ScanStatus } from "@/lib/scanMessages";
 import { isSuccessStatus, translateWithContext } from "@/lib/scanMessages";
 import { usePopupStore } from "@/stores";
 import type { FriendPublicProfile } from "@/types/api";
+import { ArrowRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
@@ -126,13 +127,33 @@ export default function ScanPage() {
   );
 
   const compassHint = hasCompassPlan ? (
-    <p className="mt-4 max-w-md text-center font-serif text-sm leading-relaxed text-[var(--text-secondary)]">
-      你有參與指南針計畫，指南針互簽要到
-      <Link href="/play/compass" className="mx-1 underline text-[var(--text-primary)]">
-        指南針計畫
-      </Link>
-      頁面進行，這裡只支援加好友與活動打卡。
-    </p>
+
+    <div className="my-4">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-px flex-1 bg-[var(--text-secondary)] opacity-30" />
+        <span className="text-xs text-[var(--text-secondary)]">OR</span>
+        <div className="h-px flex-1 bg-[var(--text-secondary)] opacity-30" />
+      </div>
+      <p className="mt-4 max-w-md text-center font-serif text-sm leading-relaxed text-[var(--text-secondary)]">
+        你有參與指南針計畫，指南針互相簽到請前往「
+        <Link href="/play/compass" className="mx-1 underline text-[var(--text-primary)]">
+          指南針計畫
+        </Link>
+        」頁面進行，這裡只提供加好友與活動打卡。
+      </p>
+      <motion.div className="mt-6 flex justify-center" initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.35 }}>
+        <Link href="/play/compass">
+          <motion.button
+            type="button"
+            className="flex items-center gap-2 cursor-pointer rounded-full bg-[var(--bg-header)] px-6 py-3 font-serif text-base font-semibold text-[var(--text-light)] shadow-md"
+            whileTap={{ scale: 0.95 }}
+          >
+            指南針計畫簽到
+            <ArrowRight size={18} />
+          </motion.button>
+        </Link>
+      </motion.div>
+    </div>
   ) : null;
 
   return (
@@ -152,7 +173,6 @@ export default function ScanPage() {
             </div>
 
             {friendInfo}
-            {compassHint}
 
             <motion.button
               type="button"
@@ -162,6 +182,9 @@ export default function ScanPage() {
             >
               回到我的名牌
             </motion.button>
+
+            {compassHint}
+
           </motion.div>
         ) : (
           /* ── Namecard-first view ── */
@@ -173,7 +196,7 @@ export default function ScanPage() {
             exit={{ opacity: 0, x: -60 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
-            <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">我的名片</h1>
+            <h1 className="font-serif text-3xl font-bold text-[var(--text-primary)] text-center leading-snug">我的名牌</h1>
 
             <MyNamecardCard
               nickname={currentUser?.nickname}

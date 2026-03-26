@@ -4,6 +4,8 @@ import UserNamecardModal from "@/components/namecard/UserNamecardModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useLeaderboard } from "@/hooks/api";
 import type { RankEntry } from "@/types/api";
+import { usePopupStore } from "@/stores/popupStore";
+import { CircleHelp } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
@@ -152,6 +154,7 @@ export default function LeaderboardPage() {
 	const [mode, setMode] = useState<ViewMode>("top");
 	const [selectedEntry, setSelectedEntry] = useState<RankEntry | null>(null);
 	const { data: leaderboard, isLoading, refetch } = useLeaderboard();
+	const showPopup = usePopupStore(s => s.showPopup);
 
 	const topEntries = useMemo(() => {
 		return leaderboard?.rank ?? [];
@@ -191,6 +194,20 @@ export default function LeaderboardPage() {
 						aria-label="重新整理"
 					>
 						<RefreshIcon />
+					</button>
+					{/* Help */}
+					<button
+						type="button"
+						onClick={() =>
+							showPopup({
+								title: "排行榜排序說明",
+								description: "排名依序以下列條件排序：\n1. 通過關卡數\n2. 解鎖關卡數\n3. 通關時間（越早越前面）\n\n同排名的玩家會顯示在同一列。"
+							})
+						}
+						className="grid h-9 w-9 place-items-center rounded-full text-[var(--text-secondary)] active:scale-90 transition-transform cursor-pointer"
+						aria-label="排序說明"
+					>
+						<CircleHelp size={22} />
 					</button>
 				</div>
 				<div className="flex items-center gap-2">
