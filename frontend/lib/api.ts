@@ -25,7 +25,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 		const body = await res.json().catch(() => ({}));
 
 		// Global 401 handler — clear auth state so guards redirect to /login
-		if (res.status === 401) {
+		// Skip for booth API calls since they use a separate session
+		if (res.status === 401 && !path.startsWith("/activities/booth/")) {
 			try {
 				const { useUserStore } = await import("@/stores/userStore");
 				useUserStore.getState().clearUser();

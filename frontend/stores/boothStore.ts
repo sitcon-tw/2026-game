@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface BoothState {
 	boothName: string | null;
@@ -6,8 +7,13 @@ interface BoothState {
 	clearBooth: () => void;
 }
 
-export const useBoothStore = create<BoothState>()(set => ({
-	boothName: null,
-	setBoothName: name => set({ boothName: name }),
-	clearBooth: () => set({ boothName: null })
-}));
+export const useBoothStore = create<BoothState>()(
+	persist(
+		set => ({
+			boothName: null,
+			setBoothName: name => set({ boothName: name }),
+			clearBooth: () => set({ boothName: null })
+		}),
+		{ name: "booth-store" }
+	)
+);
