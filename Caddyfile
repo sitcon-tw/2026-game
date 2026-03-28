@@ -1,0 +1,38 @@
+{
+    servers {
+        trusted_proxies static private_ranges
+        trusted_proxies_strict
+        client_ip_headers CF-Connecting-IP X-Forwarded-For X-Real-IP
+    }
+}
+
+:80 {
+    handle /api/games/submissions* {
+        respond "Forbidden" 403
+    }
+
+    handle /api/games/levels/* {
+        respond "Forbidden" 403
+    }
+
+    handle /api* {
+        reverse_proxy backend:8000 {
+            header_up X-Real-IP {client_ip}
+            header_up X-Forwarded-For {client_ip}
+        }
+    }
+
+    handle /docs* {
+        reverse_proxy backend:8000 {
+            header_up X-Real-IP {client_ip}
+            header_up X-Forwarded-For {client_ip}
+        }
+    }
+
+    handle {
+        reverse_proxy frontend:3000 {
+            header_up X-Real-IP {client_ip}
+            header_up X-Forwarded-For {client_ip}
+        }
+    }
+}
