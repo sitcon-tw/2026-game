@@ -1,0 +1,79 @@
+name: 2026-game-observe
+
+services:
+  caddy-observe:
+    image: caddy:2.10-alpine
+    container_name: sitgame-observe-caddy
+    restart: unless-stopped
+    ports:
+      - "9487:9487"
+    volumes:
+      - ./Caddyfile.observability:/etc/caddy/Caddyfile:ro
+      - caddy_observe_data:/data
+      - caddy_observe_config:/config
+    depends_on:
+      - prometheus
+      - victoriatraces
+      - loki
+    networks:
+      - app_net
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: sitgame-observe-prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus.observability.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - app_net
+
+  victoriatraces:
+    image: victoriametrics/victoria-traces:latest
+    container_name: sitgame-victoriatraces
+    restart: unless-stopped
+    command:
+      - "-storageDataPath=/victoria-traces-data"
+      - "-retentionPeriod=7d"
+      - "-otlpGRPCListenAddr=:4317"
+      - "-otlpGRPC.tls=false"
+    volumes:
+      - victoria_traces_data:/victoria-traces-data
+    networks:
+      - app_net
+
+  loki:
+    image: grafana/loki:3.5.4
+    container_name: sitgame-observe-loki
+    restart: unless-stopped
+    command:
+      - "-config.file=/etc/loki/local-config.yaml"
+    volumes:
+      - loki_data:/loki
+    networks:
+      - app_net
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: sitgame-observe-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://2026-game:2026-game-password@postgres:5432/2026-game?sslmode=disable
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    external: true
+    name: 2026-game_default
+
+volumes:
+  caddy_observe_data:
+  caddy_observe_config:
+  prometheus_data:
+  victoria_traces_data:
+  loki_data:

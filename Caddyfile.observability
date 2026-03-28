@@ -1,0 +1,38 @@
+{
+    servers {
+        trusted_proxies static private_ranges
+        trusted_proxies_strict
+        client_ip_headers X-Forwarded-For X-Real-IP
+    }
+}
+
+:9487 {
+    log
+
+    basic_auth {
+        victoria $2a$14$6AMWQNuyhw4zzaN3xnwRvuG.TU5iOKjQ3offKPePskKjV8EvygQ2C
+    }
+
+    handle_path /traces* {
+        reverse_proxy http://victoriatraces:10428
+    }
+
+    handle_path /metrics* {
+        reverse_proxy http://prometheus:9090
+    }
+
+    handle_path /loki* {
+        reverse_proxy http://loki:3100
+    }
+
+    handle {
+        respond <<EOF
+Welcome to my observe stack :)
+---
+
+VictoriaTraces: /traces
+Prometheus: /metrics
+Loki: /loki
+EOF 200
+    }
+}
