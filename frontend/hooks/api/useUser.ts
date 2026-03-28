@@ -4,7 +4,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { useUserStore } from "@/stores/userStore";
 import type { OneTimeQRResponse, UpdateNamecardRequest, User } from "@/types/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /** GET /users/me — 取得目前登入使用者的資料
 	*  依賴 server-set cookie 驗證 session。
@@ -29,12 +29,31 @@ export function useCurrentUser() {
 
 /** GET /users/me/one-time-qr — 取得每 20 秒輪替的一次性 QR token */
 export function useOneTimeQR() {
-	return useQuery({
+	const query = useQuery({
 		queryKey: queryKeys.user.oneTimeQr,
 		queryFn: () => api.get<OneTimeQRResponse>("/users/me/one-time-qr"),
 		refetchInterval: 15000,
-		staleTime: 0
+		staleTime: 0,
+		refetchOnWindowFocus: "always"
 	});
+
+	const [isExpired, setIsExpired] = useState(false);
+
+	useEffect(() => {
+		if (!query.data?.expires_at) return;
+		const check = () => {
+			setIsExpired(new Date() >= new Date(query.data!.expires_at));
+		};
+		check();
+		document.addEventListener("visibilitychange", check);
+		const id = setInterval(check, 1000);
+		return () => {
+			document.removeEventListener("visibilitychange", check);
+			clearInterval(id);
+		};
+	}, [query.data?.expires_at]);
+
+	return { ...query, isExpired };
 }
 
 /** POST /users/session — 使用 OPass token 登入，設定 cookie */

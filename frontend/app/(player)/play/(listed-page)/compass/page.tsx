@@ -8,6 +8,7 @@ import { useCurrentUser, useGroupCheckIn, useGroupMembers, useOneTimeQR } from "
 import type { ScanStatus } from "@/lib/scanMessages";
 import { translateWithContext } from "@/lib/scanMessages";
 import type { GroupMember } from "@/types/api";
+import { RefreshCw } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 type CompassTab = "scan" | "members";
@@ -22,7 +23,7 @@ export default function CompassPage() {
 	const hasGroup = !!currentUser?.group;
 
 	const { data: members, isLoading: membersLoading, isFetching: membersFetching } = useGroupMembers(hasGroup);
-	const { data: oneTimeQR } = useOneTimeQR();
+	const { data: oneTimeQR, isExpired: qrExpired } = useOneTimeQR();
 	const groupCheckIn = useGroupCheckIn();
 
 	const checkedInCount = useMemo(() => (members ?? []).filter(member => member.checked_in).length, [members]);
@@ -102,8 +103,13 @@ export default function CompassPage() {
 							<div className="flex h-full w-full items-center justify-center bg-[var(--bg-secondary)]">
 								<div className="flex flex-col items-center gap-3 p-10">
 									{oneTimeQR?.token ? (
-										<div className="rounded-2xl bg-white p-3 shadow-md">
+										<div className="relative rounded-2xl bg-white p-3 shadow-md">
 											<LocalQRCode value={oneTimeQR.token} size={192} ariaLabel="我的 QR Code" className="h-48 w-48 overflow-hidden rounded-md" />
+											{qrExpired && (
+												<div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/80">
+													<RefreshCw className="animate-spin text-gray-400" size={28} />
+												</div>
+											)}
 										</div>
 									) : (
 										<div className="rounded-2xl bg-white p-3 shadow-md">

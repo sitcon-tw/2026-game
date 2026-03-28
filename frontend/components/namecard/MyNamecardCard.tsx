@@ -1,7 +1,7 @@
 "use client";
 
 import LocalQRCode from "@/components/ui/LocalQRCode";
-import { Pencil } from "lucide-react";
+import { Pencil, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
 
 interface MyNamecardCardProps {
@@ -12,11 +12,12 @@ interface MyNamecardCardProps {
 	email?: string | null;
 	links?: string[];
 	qrToken?: string | null;
+	qrExpired?: boolean;
 	onEdit: () => void;
 	onEnlargeQR: () => void;
 }
 
-export default function MyNamecardCard({ nickname, avatar, currentLevel, bio, email, links = [], qrToken, onEdit, onEnlargeQR }: MyNamecardCardProps) {
+export default function MyNamecardCard({ nickname, avatar, currentLevel, bio, email, links = [], qrToken, qrExpired, onEdit, onEnlargeQR }: MyNamecardCardProps) {
 	return (
 		<motion.div
 			className="mt-6 w-full max-w-md rounded-2xl bg-[var(--bg-secondary)] p-5 shadow-sm"
@@ -42,11 +43,16 @@ export default function MyNamecardCard({ nickname, avatar, currentLevel, bio, em
 				</motion.button>
 
 				{/* QR Code (small, tappable to enlarge) */}
-				<motion.button type="button" onClick={onEnlargeQR} className="cursor-pointer rounded-xl bg-white p-1.5 shadow-sm" whileTap={{ scale: 0.9 }}>
+				<motion.button type="button" onClick={onEnlargeQR} className="relative cursor-pointer rounded-xl bg-white p-1.5 shadow-sm" whileTap={{ scale: 0.9 }}>
 					{qrToken ? (
 						<LocalQRCode value={qrToken} size={64} ariaLabel="我的 QR Code" className="h-16 w-16 overflow-hidden rounded-md" />
 					) : (
 						<div className="h-16 w-16 animate-pulse rounded-md bg-[#ccc]" />
+					)}
+					{qrExpired && qrToken && (
+						<div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/80">
+							<RefreshCw className="animate-spin text-gray-400" size={20} />
+						</div>
 					)}
 				</motion.button>
 			</div>

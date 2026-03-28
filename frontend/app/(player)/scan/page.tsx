@@ -12,7 +12,7 @@ import type { ScanStatus } from "@/lib/scanMessages";
 import { isSuccessStatus, translateWithContext } from "@/lib/scanMessages";
 import { usePopupStore } from "@/stores";
 import type { FriendPublicProfile } from "@/types/api";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
@@ -25,7 +25,7 @@ export default function ScanPage() {
   const [newFriend, setNewFriend] = useState<FriendPublicProfile | null>(null);
 
   const showPopup = usePopupStore(s => s.showPopup);
-  const { data: oneTimeQR } = useOneTimeQR();
+  const { data: oneTimeQR, isExpired: qrExpired } = useOneTimeQR();
   const { data: currentUser } = useCurrentUser();
   const { data: friendData } = useFriendCount();
   const addFriend = useAddFriend();
@@ -206,6 +206,7 @@ export default function ScanPage() {
               email={currentUser?.namecard_email}
               links={namecardLinks}
               qrToken={oneTimeQR?.token}
+              qrExpired={qrExpired}
               onEdit={() => setShowEditNamecard(true)}
               onEnlargeQR={() => setQrEnlarged(true)}
             />
@@ -237,11 +238,18 @@ export default function ScanPage() {
 
       {/* Enlarged QR modal */}
       <Modal open={qrEnlarged} onClose={() => setQrEnlarged(false)} className="flex flex-col items-center gap-4 bg-white p-6">
-        {oneTimeQR?.token ? (
-          <LocalQRCode value={oneTimeQR.token} size={256} ariaLabel="我的 QR Code" className="h-64 w-64 overflow-hidden rounded-md" />
-        ) : (
-          <div className="h-64 w-64 animate-pulse rounded-md bg-[#ccc]" />
-        )}
+        <div className="relative">
+          {oneTimeQR?.token ? (
+            <LocalQRCode value={oneTimeQR.token} size={256} ariaLabel="我的 QR Code" className="h-64 w-64 overflow-hidden rounded-md" />
+          ) : (
+            <div className="h-64 w-64 animate-pulse rounded-md bg-[#ccc]" />
+          )}
+          {qrExpired && oneTimeQR?.token && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-md bg-white/80">
+              <RefreshCw className="animate-spin text-gray-400" size={32} />
+            </div>
+          )}
+        </div>
         <p className="text-sm text-[var(--text-secondary)]">讓朋友掃描你的 QR Code！</p>
         <p className="text-xs text-[var(--text-secondary)] opacity-70">請注意，QR Code 每隔數秒會自動更新。</p>
         <motion.button
