@@ -1,6 +1,7 @@
 "use client";
 
 import type { RankEntry, RankResponse } from "@/types/api";
+import { motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 
 const API_BASE = "/api";
@@ -42,7 +43,7 @@ function EntryRow({ entry }: { entry: RankEntry }) {
 			</div>
 
 			{/* Level (right-aligned) */}
-			<span className="shrink-0 text-lg font-medium text-zinc-400">Lv.{entry.level}</span>
+			<span className="shrink-0 text-2xl font-medium text-zinc-400">Lv.{entry.level}</span>
 		</div>
 	);
 }
@@ -52,8 +53,10 @@ export default function WarRoomPage() {
 	const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [countdown, setCountdown] = useState(REFRESH_INTERVAL / 1000);
+	const [fetching, setFetching] = useState(false);
 
 	const refresh = useCallback(async () => {
+		setFetching(true);
 		try {
 			const data = await fetchLeaderboard();
 			setEntries(data.rank.slice(0, 30));
@@ -61,6 +64,8 @@ export default function WarRoomPage() {
 			setError(null);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Unknown error");
+		} finally {
+			setFetching(false);
 		}
 	}, []);
 
@@ -84,38 +89,65 @@ export default function WarRoomPage() {
 	const sorted = [...entries].sort((a, b) => a.rank - b.rank);
 
 	return (
-		<div className="min-h-screen bg-zinc-900 px-8 py-8 font-sans text-zinc-100">
-			{/* Header */}
-			<div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-				<div>
-					<h1 className="text-4xl font-bold tracking-tight">SITCON 2026 War Room</h1>
-					<p className="mt-1 text-base text-zinc-400">
-						Top 30 Leaderboard
-						{lastUpdated && <> &middot; updated at {lastUpdated.toLocaleTimeString("zh-TW")}</>}
-						{error && <span className="ml-2 text-red-400">{error}</span>}
-					</p>
+		<div className="min-h-screen bg-zinc-900 px-8 py-8 font-sans text-zinc-100 mx-auto">
+			<div className="max-w-screen-md mx-auto">
+				{/* Header */}
+				<div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+					<div>
+						<h1 className="text-4xl font-bold tracking-tight">SITCON 2026 War Room</h1>
+						<p className="mt-1 text-base text-zinc-400">
+							Top 30 Leaderboard
+							{lastUpdated && <> &middot; updated at {lastUpdated.toLocaleTimeString("zh-TW")}</>}
+							{error && <span className="ml-2 text-red-400">{error}</span>}
+						</p>
+					</div>
+					<div className="flex items-center gap-3">
+						<span className="tabular-nums text-base text-zinc-400 text-lg">{countdown}s</span>
+						<button
+							type="button"
+							onClick={() => { refresh(); setCountdown(REFRESH_INTERVAL / 1000); }}
+							className="grid h-10 min-w-[100px] place-items-center rounded-lg bg-zinc-700 px-5 text-base font-medium text-zinc-200 transition-colors hover:bg-zinc-600 active:bg-zinc-500 cursor-pointer"
+						>
+							{fetching ? (
+								<span className="flex items-center gap-1.5">
+									<motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} className="inline-block h-2 w-2 rounded-full bg-zinc-300" />
+									<motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }} className="inline-block h-2 w-2 rounded-full bg-zinc-300" />
+									<motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }} className="inline-block h-2 w-2 rounded-full bg-zinc-300" />
+								</span>
+							) : (
+								"Refresh"
+							)}
+						</button>
+					</div>
 				</div>
-				<div className="flex items-center gap-3">
-					<span className="tabular-nums text-base text-zinc-400 text-lg">{countdown}s</span>
-					<button
-						type="button"
-						onClick={() => { refresh(); setCountdown(REFRESH_INTERVAL / 1000); }}
-						className="rounded-lg bg-zinc-700 px-5 py-2.5 text-base font-medium text-zinc-200 transition-colors hover:bg-zinc-600 active:bg-zinc-500 cursor-pointer"
-					>
-						Refresh
-					</button>
+
+				{/* Board */}
+				{entries.length === 0 && !error && (
+					<div className="flex items-center justify-center gap-2 py-20 text-zinc-500">
+						<motion.span
+							animate={{ opacity: [0.3, 1, 0.3] }}
+							transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+							className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-500"
+						/>
+						<motion.span
+							animate={{ opacity: [0.3, 1, 0.3] }}
+							transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+							className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-500"
+						/>
+						<motion.span
+							animate={{ opacity: [0.3, 1, 0.3] }}
+							transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+							className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-500"
+						/>
+						<span className="ml-2 text-base">Thinking...</span>
+					</div>
+				)}
+
+				<div className="flex flex-col gap-2">
+					{sorted.map((entry, idx) => (
+						<EntryRow key={`${entry.rank}-${entry.nickname}-${idx}`} entry={entry} />
+					))}
 				</div>
-			</div>
-
-			{/* Board */}
-			{entries.length === 0 && !error && (
-				<div className="text-center text-zinc-500 py-20">Loading...</div>
-			)}
-
-			<div className="flex flex-col gap-2">
-				{sorted.map((entry, idx) => (
-					<EntryRow key={`${entry.rank}-${entry.nickname}-${idx}`} entry={entry} />
-				))}
 			</div>
 		</div>
 	);
